@@ -1,0 +1,6 @@
+{
+  "name": "ElectroFix BD",
+  "description": "Professional home appliance repair and servicing in Dhaka. AC, Refrigerator, Washing Machine, Microwave Oven & Circuit Board Repair.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
