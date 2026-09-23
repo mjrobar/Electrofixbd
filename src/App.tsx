@@ -15,6 +15,7 @@ import { DatabaseStatusBanner } from './components/common/DatabaseStatusBanner';
 
 import { SERVICES_DATA, getServiceBySlug } from './data/servicesData';
 import { BUSINESS_CONFIG, getWhatsAppUrl, getPhoneCallUrl } from './data/siteConfig';
+import { getLocalBooking } from './lib/bookingClient';
 import { Phone, MessageCircle, ArrowRight, ShieldCheck, Wrench, Search, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
@@ -56,20 +57,40 @@ export default function App() {
 
   const handleLookupBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!lookupQuery.trim()) return;
+    const query = lookupQuery.trim();
+    if (!query) return;
     setIsLookingUp(true);
     setLookupError(null);
     setLookupResult(null);
 
     try {
-      const res = await fetch(`/api/bookings/${encodeURIComponent(lookupQuery.trim())}`);
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'বুকিং রেকর্ড পাওয়া যায়নি। নম্বরটি আবার পরীক্ষা করুন।');
+      const res = await fetch(`/api/bookings/${encodeURIComponent(query)}`);
+      const text = await res.text();
+      let data: any = null;
+      if (text && (text.trim().startsWith('{') || text.trim().startsWith('['))) {
+        try { data = JSON.parse(text); } catch {}
       }
-      setLookupResult(data.booking);
+
+      if (res.ok && data?.booking) {
+        setLookupResult(data.booking);
+        return;
+      }
+
+      // Check local stored bookings
+      const local = getLocalBooking(query);
+      if (local) {
+        setLookupResult(local);
+        return;
+      }
+
+      throw new Error(data?.error || 'বুকিং রেকর্ড পাওয়া যায়নি। নম্বরটি আবার পরীক্ষা করুন।');
     } catch (err: any) {
-      setLookupError(err.message || 'বুকিং খোঁজা সম্ভব হয়নি।');
+      const local = getLocalBooking(query);
+      if (local) {
+        setLookupResult(local);
+      } else {
+        setLookupError(err.message || 'বুকিং খোঁজা সম্ভব হয়নি।');
+      }
     } finally {
       setIsLookingUp(false);
     }

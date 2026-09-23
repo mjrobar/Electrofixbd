@@ -1,0 +1,29 @@
+{
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/bookings/:path*",
+      "destination": "/api/bookings"
+    },
+    {
+      "source": "/api/bookings",
+      "destination": "/api/bookings"
+    },
+    {
+      "source": "/api/contact",
+      "destination": "/api/contact"
+    },
+    {
+      "source": "/api/status",
+      "destination": "/api/status"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/health"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

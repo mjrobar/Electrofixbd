@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, MessageCircle, MapPin, Clock, Send, CheckCircle2, AlertCircle, Wrench, ShieldCheck } from 'lucide-react';
 import { BUSINESS_CONFIG, getWhatsAppUrl, getPhoneCallUrl } from '../../data/siteConfig';
+import { submitContactMessage } from '../../lib/bookingClient';
 
 export const ContactSection: React.FC = () => {
   const [name, setName] = useState('');
@@ -32,20 +33,11 @@ export const ContactSection: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: cleanPhone,
-          message: message.trim()
-        })
+      await submitContactMessage({
+        name: name.trim(),
+        phone: cleanPhone,
+        message: message.trim()
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to send message.');
-      }
 
       setSuccessMsg('ধন্যবাদ! আপনার বার্তাটি সফলভাবে জমা হয়েছে। আমাদের টেকনিশিয়ান টিম দ্রুত আপনার সাথে যোগাযোগ করবে।');
       setName('');

@@ -13,9 +13,18 @@ export const DatabaseStatusBanner: React.FC = () => {
 
   useEffect(() => {
     fetch('/api/status')
-      .then((res) => res.json())
-      .then((data) => setStatusData(data))
-      .catch((err) => console.error('Status check error:', err));
+      .then(async (res) => {
+        if (!res.ok) return null;
+        const text = await res.text();
+        if (text && (text.trim().startsWith('{') || text.trim().startsWith('['))) {
+          return JSON.parse(text);
+        }
+        return null;
+      })
+      .then((data) => {
+        if (data) setStatusData(data);
+      })
+      .catch((err) => console.warn('Status check warning:', err));
   }, []);
 
   const handleCopySqlInstructions = () => {

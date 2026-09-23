@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Calendar, CheckCircle2, Copy, Check, AlertCircle, Phone, MessageCircle, Wrench } from 'lucide-react';
 import { SERVICES_DATA } from '../../data/servicesData';
 import { BUSINESS_CONFIG, getPhoneCallUrl } from '../../data/siteConfig';
+import { submitBookingRequest } from '../../lib/bookingClient';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -85,26 +86,16 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_name: customerName.trim(),
-          phone: cleanPhone,
-          address: address.trim(),
-          notes: notes.trim(),
-          service_id: selectedService.id,
-          service_name: selectedService.name
-        })
+      const booking = await submitBookingRequest({
+        customer_name: customerName.trim(),
+        phone: cleanPhone,
+        address: address.trim(),
+        notes: notes.trim(),
+        service_id: selectedService.id,
+        service_name: selectedService.name
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to submit booking request.');
-      }
-
-      setBookingSuccess(data.booking);
+      setBookingSuccess(booking);
     } catch (err: any) {
       console.error('Booking submission error:', err);
       setErrorMsg(err.message || 'We could not submit your booking right now. Please try again or contact us directly on WhatsApp/Phone.');
