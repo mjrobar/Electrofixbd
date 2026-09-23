@@ -33,3 +33,24 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #004179;
 }
+
+/* News Headline Marquee Animation */
+@keyframes ticker {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-news-ticker {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: ticker 30s linear infinite;
+  will-change: transform;
+}
+
+.animate-news-ticker:hover {
+  animation-play-state: paused;
+}

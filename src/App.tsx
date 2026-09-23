@@ -11,8 +11,6 @@ import { ServiceDetailView } from './components/services/ServiceDetailView';
 import { BookingModal } from './components/services/BookingModal';
 import { WorkGallery } from './components/works/WorkGallery';
 import { ContactSection } from './components/contact/ContactSection';
-import { DatabaseStatusBanner } from './components/common/DatabaseStatusBanner';
-
 import { SERVICES_DATA, getServiceBySlug } from './data/servicesData';
 import { BUSINESS_CONFIG, getWhatsAppUrl, getPhoneCallUrl } from './data/siteConfig';
 import { getLocalBooking } from './lib/bookingClient';
@@ -107,9 +105,6 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F7F9] text-[#17202A] selection:bg-[#004179] selection:text-white">
       
-      {/* Supabase / Database Status Header */}
-      <DatabaseStatusBanner />
-
       {/* Primary Navigation */}
       <Navbar
         currentPath={currentPath}
@@ -129,55 +124,42 @@ export default function App() {
               onNavigate={navigate}
             />
 
-            {/* Quick Feature Strip - 4x Height with Centered Badges and Red Dividers */}
-            <div className="bg-white border-b border-[#DCE3E8] py-16 sm:py-20 px-4 sm:px-6 min-h-[220px] flex items-center justify-center">
-              <div className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 lg:gap-10 text-sm text-[#5F6B76] border-0">
+            {/* Quick Feature Strip - Centered with Red Border on Every Badge (Height 2x Decreased) */}
+            <div className="bg-white border-b border-[#DCE3E8] py-8 sm:py-9 px-4 sm:px-6 flex items-center justify-center">
+              <div className="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-center gap-3.5 sm:gap-4 md:gap-5 text-sm">
                 
-                {/* Badge 1: 10+ Years Experience */}
-                <div className="flex flex-col sm:flex-row items-center justify-center text-center gap-2.5">
-                  <div className="w-10 h-10 rounded-full bg-[#004179]/10 text-[#004179] flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-5 h-5 text-[#004179]" />
+                {/* Badge 1: 10+ Years Experience - Red Border on all sides */}
+                <div className="flex items-center justify-center text-center gap-2.5 px-4 py-2.5 rounded-xl border border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200">
+                  <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+                    <ShieldCheck className="w-4 h-4 text-red-600" />
                   </div>
-                  <span className="font-bold text-[#17202A] text-sm sm:text-base">১০+ বছরের অভিজ্ঞ টেকনিশিয়ান</span>
+                  <span className="font-bold text-[#17202A] text-xs sm:text-sm">১০+ বছরের অভিজ্ঞ টেকনিশিয়ান</span>
                 </div>
 
-                {/* Red Divider Line 1 */}
-                <div className="hidden lg:block w-0.5 h-10 bg-red-500 shrink-0" aria-hidden="true"></div>
-                <div className="block lg:hidden w-16 h-0.5 bg-red-500 shrink-0 my-0.5" aria-hidden="true"></div>
-
-                {/* Badge 2: Chip Level Repair */}
-                <div className="flex flex-col sm:flex-row items-center justify-center text-center gap-2.5">
-                  <div className="w-10 h-10 rounded-full bg-[#004179]/10 text-[#004179] flex items-center justify-center shrink-0">
-                    <Wrench className="w-5 h-5 text-[#004179]" />
+                {/* Badge 2: Chip Level Repair - Red Border on all sides */}
+                <div className="flex items-center justify-center text-center gap-2.5 px-4 py-2.5 rounded-xl border border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200">
+                  <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+                    <Wrench className="w-4 h-4 text-red-600" />
                   </div>
-                  <span className="font-bold text-[#17202A] text-sm sm:text-base">চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
+                  <span className="font-bold text-[#17202A] text-xs sm:text-sm">চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
                 </div>
 
-                {/* Red Divider Line 2 */}
-                <div className="hidden lg:block w-0.5 h-10 bg-red-500 shrink-0" aria-hidden="true"></div>
-                <div className="block lg:hidden w-16 h-0.5 bg-red-500 shrink-0 my-0.5" aria-hidden="true"></div>
-
-                {/* Badge 3: Dhaka Home Service */}
-                <div className="flex flex-col sm:flex-row items-center justify-center text-center gap-2.5">
-                  <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
-                    <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                {/* Badge 3: Dhaka Home Service - Red Border on all sides */}
+                <div className="flex items-center justify-center text-center gap-2.5 px-4 py-2.5 rounded-xl border border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200">
+                  <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
                   </div>
-                  <span className="font-bold text-[#17202A] text-sm sm:text-base">ঢাকা শহর – দ্রুত হোম সার্ভিস</span>
+                  <span className="font-bold text-[#17202A] text-xs sm:text-sm">ঢাকা শহর – দ্রুত হোম সার্ভিস</span>
                 </div>
 
-                {/* Red Divider Line 3 */}
-                <div className="hidden lg:block w-0.5 h-10 bg-red-500 shrink-0" aria-hidden="true"></div>
-                <div className="block lg:hidden w-16 h-0.5 bg-red-500 shrink-0 my-0.5" aria-hidden="true"></div>
-
-                {/* Badge 4: Track Booking Status */}
-                <div className="flex flex-col sm:flex-row items-center justify-center text-center gap-2.5">
-                  <button
-                    onClick={() => setShowLookupModal(true)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#EAF3F9] text-[#004179] hover:bg-[#004179] hover:text-white transition-all text-xs sm:text-sm font-bold cursor-pointer border border-[#004179]/20"
-                  >
-                    <span>🔍 ট্র্যাক করুন বুকিং স্ট্যাটাস</span>
-                  </button>
-                </div>
+                {/* Badge 4: Track Booking Status - Red Border on all sides */}
+                <button
+                  onClick={() => setShowLookupModal(true)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-red-500 bg-red-50/60 hover:bg-red-600 text-red-700 hover:text-white transition-all duration-200 text-xs sm:text-sm font-bold shadow-xs hover:shadow-sm cursor-pointer"
+                >
+                  <Search className="w-4 h-4" />
+                  <span>ট্র্যাক করুন বুকিং স্ট্যাটাস</span>
+                </button>
 
               </div>
             </div>

@@ -4,9 +4,12 @@ import { BUSINESS_CONFIG, getPhoneCallUrl } from '../../data/siteConfig';
 
 interface AboutSectionProps {
   onOpenBooking: () => void;
+  imageUrl?: string;
 }
 
-export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking }) => {
+export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking, imageUrl }) => {
+  const displayImage = imageUrl || (BUSINESS_CONFIG as any).aboutSectionImage || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80';
+
   const features = [
     {
       icon: MapPin,
@@ -31,39 +34,38 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking }) => 
   ];
 
   return (
-    <section className="py-16 bg-white border-y border-[#DCE3E8]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative bg-white border-y border-[#DCE3E8] overflow-hidden w-full">
+      <div className="w-full">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
           
-          {/* Left Column: Visual Card / Real Tech Photo */}
-          <div className="lg:col-span-5">
-            <div className="relative rounded-2xl overflow-hidden shadow-lg border border-[#DCE3E8]">
-              <img
-                src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1000&q=80"
-                alt="Appliance technician working on circuit board"
-                className="w-full h-80 sm:h-96 object-cover"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#00325E] via-transparent to-transparent opacity-80"></div>
-              
-              {/* Floating Badge */}
-              <div className="absolute bottom-5 left-5 right-5 bg-white/95 backdrop-blur-xs p-4 rounded-xl shadow-md border border-white">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#004179] text-white flex items-center justify-center font-bold text-lg">
-                    10+
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-[#17202A]">বছরের টেকনিক্যাল অভিজ্ঞতা</h4>
-                    <p className="text-xs text-[#5F6B76]">AC, Fridge, Washing Machine & Chip-Level Repair</p>
-                  </div>
+          {/* Left Column: Real Tech Photo attached to Top, Left, and Lower Edges */}
+          <div className="lg:col-span-5 relative min-h-[380px] sm:min-h-[460px] lg:min-h-full flex flex-col justify-end overflow-hidden group border-b lg:border-b-0 lg:border-r border-[#DCE3E8]">
+            <img
+              src={displayImage}
+              alt="Appliance technician working on circuit board"
+              className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#002647]/95 via-[#002647]/30 to-transparent"></div>
+            
+            {/* Floating Badge */}
+            <div className="relative z-10 m-5 sm:m-6 bg-white/95 backdrop-blur-xs p-4 rounded-xl shadow-lg border border-white max-w-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-lg bg-[#004179] text-white flex items-center justify-center font-extrabold text-lg shadow-xs shrink-0">
+                  10+
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[#17202A]">বছরের টেকনিক্যাল অভিজ্ঞতা</h4>
+                  <p className="text-xs text-[#5F6B76]">AC, Fridge, Washing Machine & Chip-Level Repair</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Right Column: Company Story & Direct Facts */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 py-12 sm:py-16 px-6 sm:px-10 lg:px-12 xl:px-16 flex flex-col justify-center">
+            <div className="max-w-2xl space-y-6">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAF3F9] text-[#004179] text-xs font-bold uppercase tracking-wider mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-[#004179]" />
@@ -124,6 +126,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking }) => 
             </div>
 
           </div>
+
+        </div>
 
         </div>
 

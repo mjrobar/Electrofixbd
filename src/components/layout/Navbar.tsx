@@ -26,22 +26,57 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
 
   return (
     <header className="sticky top-0 z-40 w-full shadow-md">
-      {/* Top Announcement Bar */}
-      <div className="bg-[#00325E] text-white/90 text-xs py-1.5 px-4 border-b border-[#004179]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-4 text-center sm:text-left">
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>📍 ঢাকা – জরুরি হোম সার্ভিস ও চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="hidden md:inline font-medium">১০+ বছরের অভিজ্ঞ টেকনিশিয়ান</span>
+      {/* Top Announcement Bar - 2x Height & Smooth Right-to-Left News Headline Marquee */}
+      <div className="bg-[#00284d] text-white/95 text-xs sm:text-sm h-10 sm:h-11 border-b border-[#004179] flex items-center overflow-hidden relative select-none">
+        {/* Left 'HEADLINE' or 'NEWS' badge badge for authentic TV news look */}
+        <div className="hidden sm:flex items-center gap-1.5 px-3.5 h-full bg-red-600 text-white font-bold text-xs shrink-0 z-10 uppercase tracking-wider shadow-md">
+          <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+          <span>জরুরি আপডেট</span>
+        </div>
+
+        <div className="overflow-hidden w-full flex items-center">
+          <div className="animate-news-ticker flex items-center gap-8 py-1">
+            {/* Block 1 */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="font-medium">📍 ঢাকা – জরুরি হোম সার্ভিস ও চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
+            </div>
+            <span className="text-red-400 font-black shrink-0">★</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-amber-300 font-bold">১০+ বছরের অভিজ্ঞ টেকনিশিয়ান</span>
+            </div>
+            <span className="text-red-400 font-black shrink-0">★</span>
             <a 
               href={getPhoneCallUrl()} 
-              className="flex items-center gap-1.5 text-white font-bold hover:text-emerald-300 transition-colors"
+              className="inline-flex items-center gap-1.5 bg-red-600/90 hover:bg-red-600 text-white font-extrabold px-3 py-1 rounded-full transition-colors shrink-0 shadow-xs"
             >
-              <Phone className="w-3.5 h-3.5" />
-              <span>{BUSINESS_CONFIG.phone}</span>
+              <Phone className="w-3.5 h-3.5 fill-white" />
+              <span>হটলাইন: {BUSINESS_CONFIG.phone}</span>
             </a>
+            <span className="text-red-400 font-black shrink-0">★</span>
+            <span className="font-medium shrink-0">🛡️ ৩০ দিনের সার্ভিস ওয়ারেন্টি ও জেনুইন স্পেয়ার পার্টস</span>
+            <span className="text-red-400 font-black shrink-0">★</span>
+
+            {/* Block 2 (Duplicate for seamless loop) */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="font-medium">📍 ঢাকা – জরুরি হোম সার্ভিস ও চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
+            </div>
+            <span className="text-red-400 font-black shrink-0">★</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-amber-300 font-bold">১০+ বছরের অভিজ্ঞ টেকনিশিয়ান</span>
+            </div>
+            <span className="text-red-400 font-black shrink-0">★</span>
+            <a 
+              href={getPhoneCallUrl()} 
+              className="inline-flex items-center gap-1.5 bg-red-600/90 hover:bg-red-600 text-white font-extrabold px-3 py-1 rounded-full transition-colors shrink-0 shadow-xs"
+            >
+              <Phone className="w-3.5 h-3.5 fill-white" />
+              <span>হটলাইন: {BUSINESS_CONFIG.phone}</span>
+            </a>
+            <span className="text-red-400 font-black shrink-0">★</span>
+            <span className="font-medium shrink-0">🛡️ ৩০ দিনের সার্ভিস ওয়ারেন্টি ও জেনুইন স্পেয়ার পার্টস</span>
+            <span className="text-red-400 font-black shrink-0">★</span>
           </div>
         </div>
       </div>

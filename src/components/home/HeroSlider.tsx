@@ -9,6 +9,8 @@ interface HeroSliderProps {
 
 export const HeroSlider: React.FC<HeroSliderProps> = ({ onOpenBooking, onNavigate }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const slides = [
     {
@@ -65,11 +67,35 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOpenBooking, onNavigat
     setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
+  // Mobile Touch Swipe Handlers
+  const minSwipeDistance = 45;
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > minSwipeDistance) {
+      handleNext();
+    } else if (distance < -minSwipeDistance) {
+      handlePrev();
+    }
+  };
+
   return (
-    <div className="relative w-full overflow-hidden bg-[#00325E] text-white select-none">
-      {/* Slides Container */}
+    <div 
+      className="relative w-full overflow-hidden bg-[#00325E] text-white select-none"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Slides Container with generous responsive height */}
       <div 
-        className="relative min-h-[460px] sm:min-h-[520px] lg:min-h-[580px] flex items-center transition-all duration-700 ease-in-out"
+        className="relative min-h-[480px] sm:min-h-[500px] lg:min-h-[540px] flex items-center transition-all duration-700 ease-in-out"
       >
         {slides.map((slide, index) => {
           const isActive = index === currentSlide;
@@ -85,58 +111,58 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOpenBooking, onNavigat
                 <img
                   src={slide.image}
                   alt={slide.title}
-                  className="w-full h-full object-cover object-center filter brightness-40"
+                  className="w-full h-full object-cover object-center filter brightness-35 sm:brightness-40"
                   loading={index === 0 ? 'eager' : 'lazy'}
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#00325E] via-[#004179]/90 to-transparent"></div>
-                <div className="absolute inset-0 bg-black/30"></div>
+                <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-[#002647] via-[#00386b]/95 sm:via-[#004179]/90 to-transparent"></div>
+                <div className="absolute inset-0 bg-black/25"></div>
               </div>
 
-              {/* Slide Content */}
-              <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center py-12">
-                <div className="max-w-2xl space-y-4 sm:space-y-6">
+              {/* Slide Content - Clean, well-spaced, and fits completely inside the banner */}
+              <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center pt-8 pb-14 sm:py-12">
+                <div className="max-w-2xl space-y-3 sm:space-y-4 lg:space-y-5">
                   
                   {/* Badge */}
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-emerald-300 text-xs sm:text-sm font-semibold border border-white/20">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/10 backdrop-blur-md text-emerald-300 text-[11px] sm:text-xs font-semibold border border-white/20 shadow-xs">
+                    <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400 shrink-0" />
                     <span>{slide.badge}</span>
                   </div>
 
                   {/* Main Headings */}
                   <div>
-                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                    <h1 className="text-xl sm:text-3xl lg:text-5xl font-extrabold text-white tracking-tight leading-snug sm:leading-tight">
                       {slide.title}
                     </h1>
-                    <p className="mt-2 text-sm sm:text-base font-medium text-emerald-300">
+                    <p className="mt-1 sm:mt-2 text-xs sm:text-sm lg:text-base font-semibold text-emerald-300">
                       {slide.titleBn}
                     </p>
                   </div>
 
-                  {/* Supporting Description */}
-                  <p className="text-sm sm:text-base text-white/90 leading-relaxed max-w-xl">
+                  {/* Supporting Description - Clean & concise on mobile */}
+                  <p className="text-xs sm:text-sm lg:text-base text-white/90 leading-relaxed max-w-xl line-clamp-2 sm:line-clamp-none">
                     {slide.description}
                   </p>
 
                   {/* Key Highlights */}
-                  <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-white/80 pt-1">
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[11px] sm:text-xs lg:text-sm text-white/85 pt-0.5">
                     <span className="flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
                       <span>১০+ বছরের বাস্তব অভিজ্ঞতা</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Wrench className="w-4 h-4 text-emerald-400" />
-                      <span>সরাসরি কাস্টমারের বাসায় সার্ভিস</span>
+                      <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
+                      <span>সরাসরি বাসায় হোম সার্ভিস</span>
                     </span>
                   </div>
 
-                  {/* Call to Actions */}
-                  <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-3 sm:gap-4">
+                  {/* Call to Actions - Perfectly balanced inside the banner, no spilling out */}
+                  <div className="pt-2 sm:pt-3 flex flex-row items-center gap-2.5 sm:gap-4 w-full sm:w-auto">
                     <button
                       id={`hero-slide-${slide.id}-primary-btn`}
                       onClick={() => onOpenBooking(slide.serviceHint)}
-                      className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm sm:text-base rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center gap-2 cursor-pointer"
+                      className="flex-1 sm:flex-none justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-500 hover:bg-emerald-600 active:scale-98 text-white font-extrabold text-xs sm:text-sm lg:text-base rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
                     >
-                      <Calendar className="w-4 h-4" />
+                      <Calendar className="w-4 h-4 shrink-0" />
                       <span>{slide.primaryCta}</span>
                     </button>
 
@@ -144,10 +170,10 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOpenBooking, onNavigat
                       <a
                         id="hero-call-now-btn"
                         href={getPhoneCallUrl()}
-                        className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-bold text-sm sm:text-base rounded-lg transition-colors flex items-center gap-2"
+                        className="flex-1 sm:flex-none justify-center px-3.5 sm:px-5 py-2.5 sm:py-3 bg-white/15 hover:bg-white/25 active:scale-98 text-white border border-white/30 font-bold text-xs sm:text-sm lg:text-base rounded-xl transition-colors flex items-center gap-1.5 sm:gap-2 backdrop-blur-xs whitespace-nowrap"
                       >
-                        <Phone className="w-4 h-4 text-emerald-400" />
-                        <span>কল করুন: {BUSINESS_CONFIG.phone}</span>
+                        <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
+                        <span>কল: {BUSINESS_CONFIG.phone}</span>
                       </a>
                     )}
 
@@ -157,10 +183,10 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOpenBooking, onNavigat
                         href={getWhatsAppUrl(slide.serviceHint)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-5 py-3 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-sm sm:text-base rounded-lg transition-colors flex items-center gap-2 shadow-md"
+                        className="flex-1 sm:flex-none justify-center px-3.5 sm:px-5 py-2.5 sm:py-3 bg-[#25D366] hover:bg-[#1EBE5D] active:scale-98 text-white font-bold text-xs sm:text-sm lg:text-base rounded-xl transition-colors flex items-center gap-1.5 sm:gap-2 shadow-sm whitespace-nowrap"
                       >
-                        <MessageCircle className="w-4 h-4" />
-                        <span>WhatsApp-এ নক দিন</span>
+                        <MessageCircle className="w-4 h-4 shrink-0" />
+                        <span>WhatsApp</span>
                       </a>
                     )}
 
@@ -168,7 +194,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOpenBooking, onNavigat
                       <button
                         id="hero-explore-services-btn"
                         onClick={() => onNavigate('/services')}
-                        className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-bold text-sm sm:text-base rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                        className="flex-1 sm:flex-none justify-center px-3.5 sm:px-5 py-2.5 sm:py-3 bg-white/15 hover:bg-white/25 active:scale-98 text-white border border-white/30 font-bold text-xs sm:text-sm lg:text-base rounded-xl transition-colors flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
                       >
                         <span>সকল সার্ভিস দেখুন</span>
                       </button>
@@ -182,10 +208,10 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOpenBooking, onNavigat
         })}
       </div>
 
-      {/* Slider Arrow Controls */}
+      {/* Slider Arrow Controls - Hidden on mobile so they never overlap text */}
       <button
         onClick={handlePrev}
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
+        className="hidden sm:flex absolute left-3 lg:left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer shadow-md"
         aria-label="Previous slide"
       >
         <ChevronLeft className="w-6 h-6" />
@@ -193,20 +219,20 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onOpenBooking, onNavigat
 
       <button
         onClick={handleNext}
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
+        className="hidden sm:flex absolute right-3 lg:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer shadow-md"
         aria-label="Next slide"
       >
         <ChevronRight className="w-6 h-6" />
       </button>
 
       {/* Slider Dots */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+      <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
         {slides.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
-            className={`h-2.5 rounded-full transition-all cursor-pointer ${
-              idx === currentSlide ? 'w-8 bg-emerald-400' : 'w-2.5 bg-white/40 hover:bg-white/70'
+            className={`h-2 rounded-full transition-all cursor-pointer ${
+              idx === currentSlide ? 'w-7 sm:w-8 bg-emerald-400' : 'w-2 bg-white/40 hover:bg-white/70'
             }`}
             aria-label={`Go to slide ${idx + 1}`}
           />

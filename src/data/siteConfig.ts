@@ -11,6 +11,7 @@ export const BUSINESS_CONFIG = {
   businessHours: 'Open Everyday: 8:00 AM – 10:00 PM',
   experience: '10+ Years Experienced Technician',
   circuitBoardSpecialty: 'Circuit Board Repair – Chip-Level Work',
+  aboutSectionImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80',
   facebookUrl: 'https://www.facebook.com/jafransarder',
   youtubeUrl: 'https://www.youtube.com/@ElectroFixBD-d9m',
 };

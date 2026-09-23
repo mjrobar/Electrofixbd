@@ -35,6 +35,13 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
     serviceType: 'Circuit Board / Chip-Level Repair',
     review: 'The official service center wanted 18,000 BDT to replace the entire inverter AC motherboard. ElectroFix BD identified the faulty capacitor and repaired the circuit board at chip-level for a fraction of the cost!',
     rating: 5
+  },
+  {
+    id: 'test-6',
+    customerName: 'Mahmudul Hasan',
+    serviceType: 'Inverter Refrigerator & Deep Freezer Repair',
+    review: 'Our double-door inverter refrigerator stopped cooling suddenly. The ElectroFix BD technician arrived at our Gulshan home promptly, diagnosed the inverter PCB & gas pressure with professional digital gauges, and fixed it the same day. Highly skilled and dependable!',
+    rating: 5
   }
 ];
 
