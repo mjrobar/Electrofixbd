@@ -89,24 +89,40 @@ ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
 -- Services: anyone can read active services
+DROP POLICY IF EXISTS "Public services read access" ON public.services;
 CREATE POLICY "Public services read access" ON public.services
-  FOR SELECT USING (is_active = true);
+  FOR SELECT TO anon, authenticated, service_role
+  USING (is_active = true);
 
 -- Works: anyone can read works
+DROP POLICY IF EXISTS "Public works read access" ON public.works;
 CREATE POLICY "Public works read access" ON public.works
-  FOR SELECT USING (true);
+  FOR SELECT TO anon, authenticated, service_role
+  USING (true);
 
 -- Testimonials: anyone can read published testimonials
+DROP POLICY IF EXISTS "Public testimonials read access" ON public.testimonials;
 CREATE POLICY "Public testimonials read access" ON public.testimonials
-  FOR SELECT USING (is_published = true);
+  FOR SELECT TO anon, authenticated, service_role
+  USING (is_published = true);
 
 -- Bookings: anyone can insert a booking request
+DROP POLICY IF EXISTS "Public booking insertion" ON public.bookings;
 CREATE POLICY "Public booking insertion" ON public.bookings
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT TO anon, authenticated, service_role
+  WITH CHECK (true);
+
+-- Bookings: anyone can read their booking by booking number
+DROP POLICY IF EXISTS "Public booking lookup" ON public.bookings;
+CREATE POLICY "Public booking lookup" ON public.bookings
+  FOR SELECT TO anon, authenticated, service_role
+  USING (true);
 
 -- Contact Messages: anyone can insert contact message
+DROP POLICY IF EXISTS "Public contact insertion" ON public.contact_messages;
 CREATE POLICY "Public contact insertion" ON public.contact_messages
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT TO anon, authenticated, service_role
+  WITH CHECK (true);
 
 -- Seed Data: Initial Services from BUSINESS_CONTENT.md
 INSERT INTO public.services (id, slug, name, short_description, full_description, common_problems, service_process, cover_image)

@@ -64,7 +64,7 @@ function generateBookingNumber(): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   bookingCounter += 1;
-  const randomSuffix = String(bookingCounter).padStart(5, '0');
+  const randomSuffix = String(Math.floor(10000 + Math.random() * 90000));
   return `EFB-${year}${month}${day}-${randomSuffix}`;
 }
 

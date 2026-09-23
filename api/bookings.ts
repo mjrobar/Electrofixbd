@@ -32,11 +32,11 @@ function isValidPhone(phone: string): boolean {
   return clean.length >= 10 && clean.length <= 15 && /^\d+$/.test(clean);
 }
 
-// In-memory fallback across invocations in warm container
+// In-memory fallback across invocations in warm serverless containers
 const memoryBookings: any[] = [];
 
 export default async function handler(req: RequestWithBody, res: ExtendedResponse) {
-  // Enable CORS
+  // CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -54,21 +54,23 @@ export default async function handler(req: RequestWithBody, res: ExtendedRespons
     res.end(JSON.stringify(data));
   };
 
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  // Always prefer SERVICE_ROLE_KEY on backend to bypass Row-Level Security
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey && supabaseUrl.startsWith('http') && !supabaseUrl.includes('your-project-ref'));
+
   // 1. GET - Lookup booking by bookingNumber
   if (req.method === 'GET') {
     const urlObj = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
     const pathname = urlObj.pathname;
     const parts = pathname.split('/').filter(Boolean);
-    const bookingNumber = parts.length > 2 ? parts[2] : (urlObj.searchParams.get('bookingNumber') || urlObj.searchParams.get('number'));
+    const bookingNumber = parts.length > 2 ? parts[2] : (urlObj.searchParams.get('bookingNumber') || urlObj.searchParams.get('number') || urlObj.searchParams.get('path'));
 
     if (!bookingNumber) {
       return sendJson(400, { error: 'Missing booking number.' });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
-    if (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http') && !supabaseUrl.includes('your-project-ref')) {
+    if (hasSupabaseConfig && supabaseUrl && supabaseKey) {
       try {
         const supabase = createClient(supabaseUrl, supabaseKey);
         const { data, error } = await supabase
@@ -76,17 +78,18 @@ export default async function handler(req: RequestWithBody, res: ExtendedRespons
           .select('*')
           .eq('booking_number', bookingNumber)
           .single();
+
         if (!error && data) {
-          return sendJson(200, { success: true, booking: data });
+          return sendJson(200, { success: true, booking: data, source: 'supabase' });
         }
       } catch (err) {
-        console.error('Supabase query error:', err);
+        console.error('Supabase booking query exception:', err);
       }
     }
 
     const found = memoryBookings.find(b => b.booking_number === bookingNumber);
     if (found) {
-      return sendJson(200, { success: true, booking: found });
+      return sendJson(200, { success: true, booking: found, source: 'memory' });
     }
 
     return sendJson(404, { error: 'Booking not found with this booking number.' });
@@ -100,19 +103,21 @@ export default async function handler(req: RequestWithBody, res: ExtendedRespons
         try {
           body = JSON.parse(body);
         } catch {
-          return sendJson(400, { error: 'Invalid JSON payload.' });
+          return sendJson(400, { error: 'Invalid JSON payload string.' });
         }
       } else if (!body) {
         // Collect raw body chunks if not parsed by framework
-        const buffers: Buffer[] = [];
-        for await (const chunk of req) {
-          buffers.push(Buffer.from(chunk));
-        }
-        const raw = Buffer.concat(buffers).toString('utf-8');
         try {
-          body = raw ? JSON.parse(raw) : {};
-        } catch {
-          return sendJson(400, { error: 'Invalid JSON payload.' });
+          const buffers: Buffer[] = [];
+          for await (const chunk of req) {
+            buffers.push(Buffer.from(chunk));
+          }
+          if (buffers.length > 0) {
+            const raw = Buffer.concat(buffers).toString('utf-8');
+            body = raw ? JSON.parse(raw) : {};
+          }
+        } catch (e) {
+          console.warn('Could not read request body stream:', e);
         }
       }
 
@@ -138,13 +143,12 @@ export default async function handler(req: RequestWithBody, res: ExtendedRespons
       const createdAt = new Date().toISOString();
 
       let savedToSupabase = false;
-      const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+      let supabaseErrorMsg: string | null = null;
 
-      if (supabaseUrl && supabaseKey && supabaseUrl.startsWith('http') && !supabaseUrl.includes('your-project-ref')) {
+      if (hasSupabaseConfig && supabaseUrl && supabaseKey) {
         try {
           const supabase = createClient(supabaseUrl, supabaseKey);
-          const { error } = await supabase.from('bookings').insert([
+          const { data, error } = await supabase.from('bookings').insert([
             {
               booking_number,
               service_id: selectedServiceId,
@@ -155,15 +159,20 @@ export default async function handler(req: RequestWithBody, res: ExtendedRespons
               notes: cleanNotes,
               status: 'pending'
             }
-          ]);
+          ]).select().single();
+
           if (!error) {
             savedToSupabase = true;
           } else {
-            console.error('Supabase booking insert error:', error.message);
+            supabaseErrorMsg = error.message;
+            console.error('Supabase booking insert error:', error.message, 'Details:', error.details);
           }
-        } catch (err) {
-          console.error('Error inserting booking into Supabase:', err);
+        } catch (err: any) {
+          supabaseErrorMsg = err.message || String(err);
+          console.error('Exception inserting booking into Supabase:', err);
         }
+      } else {
+        supabaseErrorMsg = 'Supabase credentials not detected in server environment variables.';
       }
 
       const record = {
@@ -175,14 +184,18 @@ export default async function handler(req: RequestWithBody, res: ExtendedRespons
         notes: cleanNotes,
         status: 'pending',
         created_at: createdAt,
-        saved_to_supabase: savedToSupabase
+        saved_to_supabase: savedToSupabase,
+        supabase_error: supabaseErrorMsg
       };
+
       memoryBookings.unshift(record);
 
       return sendJson(201, {
         success: true,
         message: 'Booking request has been submitted successfully.',
-        booking: record
+        booking: record,
+        saved_to_supabase: savedToSupabase,
+        supabase_error: supabaseErrorMsg
       });
     } catch (error: any) {
       console.error('Error handling booking request:', error);
