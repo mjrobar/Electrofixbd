@@ -68,47 +68,17 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking, image
           {/* =========================================================
               LEFT COLUMN: Edge-attached Technical Image
               Strictly attached to Top, Left, and Lower edges of the section
+              Clean, authentic photography without artificial overlays
               ========================================================= */}
-          <div className="lg:col-span-5 relative min-h-[420px] sm:min-h-[500px] lg:min-h-full flex flex-col justify-end overflow-hidden group border-b lg:border-b-0 lg:border-r border-[#DCE3E8] bg-[#001D38]">
+          <div className="lg:col-span-5 relative min-h-[380px] sm:min-h-[460px] lg:min-h-full flex flex-col justify-end overflow-hidden group border-b lg:border-b-0 lg:border-r border-[#DCE3E8] bg-[#001D38]">
             <img
               src={displayImage}
               alt="ElectroFix BD Technical Specialist inspecting circuit board"
               className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
               loading="lazy"
             />
-            {/* Deep Industrial Gradient for maximum legibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#001D38] via-[#00284d]/60 to-transparent"></div>
-            <div className="absolute inset-0 bg-black/20"></div>
-
-            {/* Traditional Operational Accreditation Placard (Bottom Left) */}
-            <div className="relative z-10 m-4 sm:m-6 p-4 sm:p-5 bg-[#002647]/95 backdrop-blur-md border border-[#004179] text-white shadow-2xl rounded-[0.4rem]">
-              <div className="flex items-start gap-3.5">
-                <div className="w-12 h-12 rounded-[0.4rem] bg-[#004179] border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0 shadow-inner">
-                  <Award className="w-6 h-6 text-emerald-400" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold uppercase tracking-wider">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>প্রস্তুতি ও প্রফেশনাল সনদ</span>
-                  </div>
-                  <h4 className="text-base sm:text-lg font-extrabold text-white mt-0.5 tracking-tight">
-                    ElectroFix BD ইঞ্জিনিয়ারিং টিম
-                  </h4>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                    ১০+ বছর ধরে ইনভার্টার এসি, রেফ্রিজারেটর ও মাইক্রো-ইলেকট্রনিক্স মেরামতে ঢাকার অন্যতম নির্ভরযোগ্য কারিগরি সেবা কেন্দ্র।
-                  </p>
-                </div>
-              </div>
-
-              {/* Service Areas Tagline */}
-              <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-300 font-medium">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-red-400 shrink-0" />
-                  <span>ঢাকা মহানগরীর সকল এরিয়ায় হোম সার্ভিস</span>
-                </span>
-                <span className="text-emerald-400 font-semibold">৮:০০ AM - ১০:০০ PM</span>
-              </div>
-            </div>
+            {/* Subtle natural vignette */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10"></div>
           </div>
 
           {/* =========================================================

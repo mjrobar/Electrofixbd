@@ -4,9 +4,9 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
   {
     id: 'test-1',
     customerName: 'Rahim Hossain',
-    location: 'Mirpur-10, Dhaka',
+    location: 'মিরপুর-১০, ঢাকা',
     serviceType: 'AC Repair & Servicing',
-    review: 'The technician came to my home in Mirpur on time, inspected the AC cooling coil, and explained the gas pressure issue clearly. The repair was completed cleanly and the cooling is back to new.',
+    review: 'মিরপুরে আমাদের বাসায় নির্ধারিত সময়েই টেকনিশিয়ান উপস্থিত হন। এসির কুলিং কয়েলের সমস্যা খুব সুন্দরভাবে বুঝিয়ে দিয়ে গ্যাস প্রেশার ঠিক করে দিয়েছেন। কাজ শেষ হওয়ার পর এসি একদম নতুনের মতো ঠান্ডা হচ্ছে। খুবই দক্ষ ও আন্তরিক কাজ।',
     rating: 5,
     date: '২৩ সেপ্টেম্বর ২০২৬',
     time: 'বিকাল ৪:১৫',
@@ -17,9 +17,9 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
   {
     id: 'test-2',
     customerName: 'Nusrat Jahan',
-    location: 'Dhanmondi, Dhaka',
+    location: 'ধানমন্ডি, ঢাকা',
     serviceType: 'Refrigerator Repair',
-    review: 'My refrigerator was not cooling in the lower section, spoiling groceries. The technician diagnosed the defrost sensor issue and repaired it promptly right in our kitchen. Very polite and reliable.',
+    review: 'ফ্রিজের নিচের অংশে ঠান্ডা হচ্ছিল না, খাবার নষ্ট হয়ে যাচ্ছিল। ধানমন্ডির বাসায় এসে টেকনিশিয়ান ভাই ডিফ্রোস্ট সেন্সরের সমস্যা খুব দ্রুত ঠিক করে দিলেন। রান্নাঘরে কোনো ঝামেলা ছাড়াই পরিষ্কার কাজ করেছেন। সত্যিই বিশ্বস্ত সার্ভিস।',
     rating: 5,
     date: '২২ সেপ্টেম্বর ২০২৬',
     time: 'দুপুর ১২:৩০',
@@ -30,9 +30,9 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
   {
     id: 'test-3',
     customerName: 'Tanvir Ahmed',
-    location: 'Sector 4, Uttara, Dhaka',
+    location: 'সেক্টর ৪, উত্তরা, ঢাকা',
     serviceType: 'Washing Machine Repair',
-    review: 'Our front-load washing machine had severe drum vibration and spinning noise. The technician replaced the worn bearings and belt at home in Uttara. Saved us huge transportation hassle!',
+    review: 'উত্তরায় আমাদের ফ্রন্ট-লোড ওয়াশিং মেশিনে অতিরিক্ত ভাইব্রেশন ও ড্রামে বিকট শব্দ হচ্ছিল। টেকনিশিয়ান বাসায় এসে নিখুঁতভাবে বেয়ারিং ও বেল্ট পরিবর্তন করে দিয়েছেন। ভারী মেশিন বাইরে নিয়ে যাওয়ার যন্ত্রণা থেকে বাঁচিয়ে দিলেন।',
     rating: 5,
     date: '২০ সেপ্টেম্বর ২০২৬',
     time: 'সন্ধ্যা ৭:৪৫',
@@ -45,7 +45,7 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
     customerName: 'Farzana Rahman',
     location: 'Mohammadpur, Dhaka',
     serviceType: 'Microwave Oven Repair',
-    review: 'The microwave was buzzing loudly and not heating lunch. They handled the high-voltage testing with proper equipment, changed the faulty diode, and tested it thoroughly. Highly recommended.',
+    review: 'The microwave was buzzing loudly and not heating lunch. They handled the high-voltage testing with proper equipment, changed the faulty diode, and tested it thoroughly. Highly recommended professional home service.',
     rating: 5,
     date: '১৮ সেপ্টেম্বর ২০২৬',
     time: 'সকাল ১১:২০',
@@ -56,9 +56,9 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
   {
     id: 'test-5',
     customerName: 'Imran Kabir',
-    location: 'Banani, Dhaka',
+    location: 'বনানী, ঢাকা',
     serviceType: 'Circuit Board / Chip-Level Repair',
-    review: 'The official service center wanted 18,000 BDT to replace the entire inverter AC motherboard. ElectroFix BD identified the faulty capacitor and repaired the circuit board at chip-level for a fraction of the cost!',
+    review: 'ইনভার্টার এসির মাদারবোর্ড নষ্ট হলে অফিসিয়াল সার্ভিস সেন্টার থেকে ১৮,০০০ টাকা দাবি করেছিল। ElectroFix BD চিপ-লেভেলে মাইক্রো-কম্পোনেন্ট মেরামত করে মাত্র ৩,০০০ টাকায় সম্পূর্ণ ঠিক করে দিল! অনেক টাকা বেঁচে গেল।',
     rating: 5,
     date: '১৫ সেপ্টেম্বর ২০২৬',
     time: 'বিকাল ৫:১০',
@@ -68,16 +68,55 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
   },
   {
     id: 'test-6',
-    customerName: 'Mahmudul Hasan',
-    location: 'Gulshan-2, Dhaka',
+    customerName: 'Dr. Mahmudul Hasan',
+    location: 'গুলশান-২, ঢাকা',
     serviceType: 'Inverter Refrigerator Repair',
-    review: 'Our double-door inverter refrigerator stopped cooling suddenly. The ElectroFix BD technician arrived at our Gulshan home promptly, diagnosed the inverter PCB & gas pressure with professional digital gauges, and fixed it the same day. Highly skilled and dependable!',
+    review: 'ডাবল ডোর ইনভার্টার ফ্রিজে কুলিং বন্ধ হয়ে গিয়েছিল। ডিজিটাল গেজ ও আধুনিক সরঞ্জাম নিয়ে এসে একই দিনে সমাধান করেছেন। কাজের সাথে লিখিত ওয়ারেন্টি পেপার দেওয়ায় বাড়তি নিশ্চিন্ত হয়েছি। গুলশানে এমন সৎ টেকনিশিয়ান পাওয়া কঠিন।',
     rating: 5,
     date: '১৩ সেপ্টেম্বর ২০২৬',
     time: 'দুপুর ৩:০০',
     mediaUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80',
     mediaType: 'image',
     createdAt: '2026-09-13T15:00:00Z'
+  },
+  {
+    id: 'test-7',
+    customerName: 'Syed Anisur Rahman',
+    location: 'Baridhara DOHS, Dhaka',
+    serviceType: 'AC Jet Servicing',
+    review: 'Prompt and professional AC master jet wash at Baridhara DOHS. The technician brought high-pressure water pump and protective spill sheets. No water leakage on our wall, cooling is ice cold now.',
+    rating: 5,
+    date: '১০ সেপ্টেম্বর ২০২৬',
+    time: 'সকাল ১০:১৫',
+    mediaUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1200&q=80',
+    mediaType: 'image',
+    createdAt: '2026-09-10T10:15:00Z'
+  },
+  {
+    id: 'test-8',
+    customerName: 'Kamrul Islam',
+    location: 'বসুন্ধরা আবাসিক এলাকা, ঢাকা',
+    serviceType: 'Washing Machine Drain Motor',
+    review: 'বসুন্ধরায় ওয়াশিং মেশিনে পানি আটকে গিয়ে ড্রেন হচ্ছিল না। মাত্র ১ ঘণ্টার মধ্যে এসে ড্রেন পাম্পের ময়লা ও ফল্টি মোটর পরিবর্তন করে দিলেন। চার্জ একেবারেই যৌক্তিক ছিল।',
+    rating: 5,
+    date: '০৮ সেপ্টেম্বর ২০২৬',
+    time: 'বিকাল ৪:৪০',
+    mediaUrl: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=1200&q=80',
+    mediaType: 'image',
+    createdAt: '2026-09-08T16:40:00Z'
+  },
+  {
+    id: 'test-9',
+    customerName: 'Sabina Yasmin',
+    location: 'বনশ্রী, ঢাকা',
+    serviceType: 'Microwave Touchpad Repair',
+    review: 'মাইক্রোওয়েভ ওভেনের কিপ্যাড কাজ করছিল না। রিলে বোর্ড চেক করে চমৎকারভাবে সোল্ডারিং করে দিলেন। পরিবারের সবাই খুব খুশি। অনেক ধন্যবাদ!',
+    rating: 5,
+    date: '০৫ সেপ্টেম্বর ২০২৬',
+    time: 'দুপুর ১:২০',
+    mediaUrl: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1200&q=80',
+    mediaType: 'image',
+    createdAt: '2026-09-05T13:20:00Z'
   }
 ];
 
@@ -99,35 +138,19 @@ export const FAQ_DATA: FAQItem[] = [
     answer: 'বুকিং রিকোয়েস্ট সাবমিট হওয়ার সাথে সাথেই আমাদের টিম আপনার দেওয়া নম্বরে কল করে সমস্যার বিস্তারিত জেনে সুবিধাজনক সময় নিশ্চিত করে থাকেন।'
   },
   {
-    question: 'টেকনিশিয়ান আসার আগে কি অ্যাপ্লায়েন্সের সমস্যা জানাতে হবে?',
-    answer: 'সমস্যার ধরন (যেমন: ঠান্ডা হচ্ছে না, আওয়াজ করছে, ডিসপ্লে এরর কোড দেখাচ্ছে ইত্যাদি) এবং ব্র্যান্ডের নাম বুকিংয়ের সময় জানালে টেকনিশিয়ান উপযুক্ত পার্টস ও টেস্ট টুলস নিয়ে দ্রুত পৌঁছাতে পারেন।'
+    question: 'সার্ভিসিংয়ের জন্য কি কোনো ওয়ারেন্টি পাওয়া যাবে?',
+    answer: 'জি, প্রতিটি রিপেয়ার ও পার্টস পরিবর্তনের সাথে ৩০ দিনের লিখিত সার্ভিস ওয়ারেন্টি প্রদান করা হয়। ওয়ারেন্টি চলাকালীন একই ত্রুটিতে সম্পূর্ণ ফ্রি সাপোর্ট দেওয়া হয়।'
   },
   {
-    question: 'AC servicing এবং AC repair এর মধ্যে পার্থক্য কী?',
-    answer: 'Servicing হলো মূলত রুটিন মেইনটেন্যান্স—মাস্টার জেট ওয়াশ, ব্লোয়ার ক্লিনিং, ফিল্টার ও ড্রেন লাইন পরিষ্কার। আর Repair হলো যখন নির্দিষ্ট কোনো পার্টস যেমন কম্প্রেসর, ক্যাপাসিটর, সেন্সর, গ্যাস লিকেজ বা সার্কিট বোর্ডে ত্রুটি দেখা দেয়।'
+    question: 'কী কী পেমেন্ট মেথড গ্রহণ করা হয়?',
+    answer: 'ক্যাশ অন ডেলিভারি (Cash on Service), বিকাশ (bKash), নগদ (Nagad), রকেট (Rocket) এবং যেকোনো ব্যাংক ট্রান্সফার।'
   },
   {
-    question: 'ফ্রিজ ঠান্ডা না হলে কী করা উচিত?',
-    answer: 'প্রথমে পাওয়ার কানেকশন ও থার্মোস্ট্যাট নব চেক করুন। সমস্যা না মিটলে নিজে গ্যাস পাইপ বা ইলেকট্রিক্যাল অংশে হাত না দিয়ে দ্রুত টেকনিশিয়ানের মাধ্যমে গ্যাস প্রেশার, রিলে ও ডিফ্রস্ট হিটার পরীক্ষা করানো নিরাপদ।'
+    question: 'টেকনিশিয়ান কি জেনুইন স্পেয়ার পার্টস সাথে নিয়ে আসেন?',
+    answer: 'হ্যাঁ, আমাদের টেকনিশিয়ানরা প্রয়োজনীয় কমন পার্টস ও প্রফেশনাল টেস্ট কিট সাথে রাখেন। নির্দিষ্ট ব্র্যান্ডের কোনো স্পেসিফিক পার্টসের প্রয়োজন হলে অনুমোদিত ডিস্ট্রিবিউটর থেকে জেনুইন পার্টস সংগ্রহ করে ইন্সটল করা হয়।'
   },
   {
-    question: 'ওয়াশিং মেশিনে পানি না ঢুকলে বা না বের হলে কী কারণ হতে পারে?',
-    answer: 'পানি না ঢুকলে ওয়াটার ইনলেট ভালভ বা ফিল্টারে জ্যাম থাকতে পারে। পানি ড্রেন না হলে ড্রেন পাম্পের ইম্পেলারে কয়েন/ময়লা আটকাতে পারে অথবা ড্রেন মোটর খারাপ হতে পারে। টেকনিশিয়ান এসে সহজে এটি পরীক্ষা করে সমাধান করতে পারেন।'
-  },
-  {
-    question: 'মাইক্রোওভেন চালু হচ্ছে কিন্তু খাবার গরম হচ্ছে না—কী করণীয়?',
-    answer: 'মাইক্রোওয়েভ ওভেনে ম্যাগনেট্রন, হাই-ভোল্টেজ ডায়োড বা ক্যাপাসিটর নষ্ট হলে খাবার গরম হয় না। মাইক্রোওয়েভে মারাত্মক হাই-ভোল্টেজ থাকে, তাই নিজে কখনোই ব্যাক কভার খুলবেন না; অভিজ্ঞ টেকনিশিয়ানের সাহায্য নিন।'
-  },
-  {
-    question: 'সার্কিট বোর্ড (PCB) রিপেয়ার বা চিপ-লেভেল কাজ কী?',
-    answer: 'ইনভার্টার এসি ও ফ্রিজের মূল মাদারবোর্ড অনেক সময় সামান্য একটি ট্রানজিস্টর বা চিপ নষ্ট হওয়ার কারণে অচল হয়ে যায়। সার্ভিস সেন্টার পুরো বোর্ড বদলে ফেলার কথা বলে। আমাদের ১০+ বছরের অভিজ্ঞ টেকনিশিয়ান চিপ-লেভেলে মাইক্রো-সোল্ডারিং করে অল্প খরচে মূল বোর্ডটি সচল করে দেন।'
-  },
-  {
-    question: 'সার্ভিস চার্জ কীভাবে নির্ধারিত হয়?',
-    answer: 'অ্যাপ্লায়েন্সের ধরন, কাজের জটিলতা এবং পার্টস পরিবর্তনের প্রয়োজনীয়তার ওপর ভিত্তি করে ন্যায্য চার্জ নির্ধারণ করা হয়। টেকনিশিয়ান পরিদর্শনের পর কাজ শুরুর আগেই আনুমানিক খরচ স্পষ্ট করে জানিয়ে অনুমতি নেন।'
-  },
-  {
-    question: 'নতুন পার্টস লাগলে কী ব্যবস্থা?',
-    answer: 'আমরা প্রতিটি অ্যাপ্লায়েন্সের জন্য আসল ও টেকসই কোয়ালিটি পার্টস ব্যবহারের পরামর্শ দিই। পার্টসের মূল্য ও স্পেসিফিকেশন টেকনিশিয়ান সরাসরি কাস্টমারকে বুঝিয়ে দেন।'
+    question: 'জরুরি প্রয়োজনে কত দ্রুত সার্ভিস পাওয়া যায়?',
+    answer: 'জরুরি ক্ষেত্রে ঢাকা শহরের মধ্যে কল করার ১ থেকে ২ ঘণ্টার মধ্যে টেকনিশিয়ান উপস্থিত হতে পারেন (ট্রাফিক ও এরিয়া সাপেক্ষে)।'
   }
 ];

@@ -129,49 +129,49 @@ export default function App() {
             <div className="bg-white border-b border-[#DCE3E8] py-8 sm:py-9 px-4 sm:px-6 flex items-center justify-center">
               <div className="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-center gap-3.5 sm:gap-4 md:gap-5 text-sm">
                 
-                {/* Badge 1: 10+ Years Experience - 2x Red Border & 0.4rem Rounded */}
+                {/* Badge 1: 10+ Years Experience - 2x Red Border, Identical Mobile Width & 0.4rem Rounded */}
                 <div 
-                  className="flex items-center justify-center text-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200"
+                  className="w-full max-w-[340px] sm:w-auto flex items-center justify-center text-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200"
                   style={{ borderRadius: '0.4rem' }}
                 >
                   <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200" style={{ borderRadius: '9999px' }}>
                     <ShieldCheck className="w-4 h-4 text-red-600" />
                   </div>
-                  <span className="font-bold text-[#17202A] text-xs sm:text-sm">১০+ বছরের অভিজ্ঞ টেকনিশিয়ান</span>
+                  <span className="font-bold text-[#17202A] text-xs sm:text-sm whitespace-nowrap">১০+ বছরের অভিজ্ঞ টেকনিশিয়ান</span>
                 </div>
 
-                {/* Badge 2: Chip Level Repair - 2x Red Border & 0.4rem Rounded */}
+                {/* Badge 2: Chip Level Repair - 2x Red Border, Identical Mobile Width & 0.4rem Rounded */}
                 <div 
-                  className="flex items-center justify-center text-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200"
+                  className="w-full max-w-[340px] sm:w-auto flex items-center justify-center text-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200"
                   style={{ borderRadius: '0.4rem' }}
                 >
                   <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200" style={{ borderRadius: '9999px' }}>
                     <Wrench className="w-4 h-4 text-red-600" />
                   </div>
-                  <span className="font-bold text-[#17202A] text-xs sm:text-sm">চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
+                  <span className="font-bold text-[#17202A] text-xs sm:text-sm whitespace-nowrap">চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
                 </div>
 
-                {/* Badge 3: Dhaka Home Service - 2x Red Border & Circular Blink Indicator */}
+                {/* Badge 3: Dhaka Home Service - 2x Red Border, Identical Mobile Width & Circular Blink Indicator */}
                 <div 
-                  className="flex items-center justify-center text-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200"
+                  className="w-full max-w-[340px] sm:w-auto flex items-center justify-center text-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200"
                   style={{ borderRadius: '0.4rem' }}
                 >
                   <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200" style={{ borderRadius: '9999px' }}>
                     <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" style={{ borderRadius: '9999px' }}></span>
                   </div>
-                  <span className="font-bold text-[#17202A] text-xs sm:text-sm">ঢাকা শহর – দ্রুত হোম সার্ভিস</span>
+                  <span className="font-bold text-[#17202A] text-xs sm:text-sm whitespace-nowrap">ঢাকা শহর – দ্রুত হোম সার্ভিস</span>
                 </div>
 
-                {/* Badge 4: Track Booking Status - Red Border Height exactly matched to left badges & 0.4rem Rounded */}
+                {/* Badge 4: Track Booking Status - Red Border & Height & Mobile Width exactly matched */}
                 <button
                   onClick={() => setShowLookupModal(true)}
-                  className="inline-flex items-center justify-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-red-50/60 hover:bg-red-600 text-red-700 hover:text-white transition-all duration-200 text-xs sm:text-sm font-bold shadow-xs hover:shadow-sm cursor-pointer group"
+                  className="w-full max-w-[340px] sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-red-50/60 hover:bg-red-600 text-red-700 hover:text-white transition-all duration-200 text-xs sm:text-sm font-bold shadow-xs hover:shadow-sm cursor-pointer group"
                   style={{ borderRadius: '0.4rem' }}
                 >
                   <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 group-hover:bg-white group-hover:text-red-600 flex items-center justify-center shrink-0 border border-red-200 transition-colors" style={{ borderRadius: '9999px' }}>
                     <Search className="w-4 h-4 text-red-600" />
                   </div>
-                  <span>ট্র্যাক করুন বুকিং স্ট্যাটাস</span>
+                  <span className="whitespace-nowrap">ট্র্যাক করুন বুকিং স্ট্যাটাস</span>
                 </button>
 
               </div>
