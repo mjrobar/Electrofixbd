@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
       <div className="bg-[#00284d] text-white/95 text-xs sm:text-sm h-10 sm:h-11 border-b border-[#004179] flex items-center overflow-hidden relative select-none">
         {/* Left 'HEADLINE' or 'NEWS' badge badge for authentic TV news look */}
         <div className="hidden sm:flex items-center gap-1.5 px-3.5 h-full bg-red-600 text-white font-bold text-xs shrink-0 z-10 uppercase tracking-wider shadow-md">
-          <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+          <span className="w-2 h-2 rounded-full bg-white animate-ping" style={{ borderRadius: '9999px' }}></span>
           <span>জরুরি আপডেট</span>
         </div>
 
@@ -38,7 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
           <div className="animate-news-ticker flex items-center gap-8 py-1">
             {/* Block 1 */}
             <div className="flex items-center gap-2 shrink-0">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" style={{ borderRadius: '9999px' }}></span>
               <span className="font-medium">📍 ঢাকা – জরুরি হোম সার্ভিস ও চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
             </div>
             <span className="text-red-400 font-black shrink-0">★</span>
@@ -49,6 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
             <a 
               href={getPhoneCallUrl()} 
               className="inline-flex items-center gap-1.5 bg-red-600/90 hover:bg-red-600 text-white font-extrabold px-3 py-1 rounded-full transition-colors shrink-0 shadow-xs"
+              style={{ borderRadius: '9999px' }}
             >
               <Phone className="w-3.5 h-3.5 fill-white" />
               <span>হটলাইন: {BUSINESS_CONFIG.phone}</span>
@@ -59,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
 
             {/* Block 2 (Duplicate for seamless loop) */}
             <div className="flex items-center gap-2 shrink-0">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" style={{ borderRadius: '9999px' }}></span>
               <span className="font-medium">📍 ঢাকা – জরুরি হোম সার্ভিস ও চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
             </div>
             <span className="text-red-400 font-black shrink-0">★</span>
@@ -70,6 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
             <a 
               href={getPhoneCallUrl()} 
               className="inline-flex items-center gap-1.5 bg-red-600/90 hover:bg-red-600 text-white font-extrabold px-3 py-1 rounded-full transition-colors shrink-0 shadow-xs"
+              style={{ borderRadius: '9999px' }}
             >
               <Phone className="w-3.5 h-3.5 fill-white" />
               <span>হটলাইন: {BUSINESS_CONFIG.phone}</span>
@@ -91,10 +93,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
               <button 
                 id="brand-logo-btn"
                 onClick={() => handleLinkClick('/')}
-                className="flex items-center gap-2.5 text-left group cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 rounded-lg p-1"
+                className="flex items-center gap-2.5 text-left group cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50 rounded-[0.4rem] p-1"
+                style={{ borderRadius: '0.4rem' }}
                 aria-label="ElectroFix BD Home"
               >
-                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-colors">
+                <div className="w-10 h-10 rounded-[0.4rem] bg-white/10 flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-colors" style={{ borderRadius: '0.4rem' }}>
                   <Wrench className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
@@ -117,11 +120,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
                     key={link.path}
                     id={`nav-link-${link.name.toLowerCase().replace(/\s+/g, '-')}`}
                     onClick={() => handleLinkClick(link.path)}
-                    className={`px-3.5 py-2 rounded-md text-sm font-semibold transition-all cursor-pointer ${
+                    className={`px-3.5 py-2 rounded-[0.4rem] text-sm font-semibold transition-all cursor-pointer ${
                       isActive
                         ? 'bg-white/20 text-white shadow-sm'
                         : 'text-white/90 hover:bg-white/10 hover:text-white'
                     }`}
+                    style={{ borderRadius: '0.4rem' }}
                   >
                     {link.name}
                   </button>
@@ -129,25 +133,27 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
               })}
             </div>
 
-            {/* Desktop Quick Actions */}
+            {/* Desktop Quick Actions - WhatsApp & Book a Service with matched height (h-10) and rounded-[0.4rem] */}
             <div className="hidden lg:flex items-center space-x-3">
               <a
                 id="nav-whatsapp-btn"
                 href={getWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors shadow-sm"
+                className="inline-flex items-center justify-center gap-2 px-4 h-10 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-[0.4rem] transition-colors shadow-sm"
+                style={{ borderRadius: '0.4rem' }}
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-4 h-4 shrink-0" />
                 <span>WhatsApp</span>
               </a>
 
               <button
                 id="nav-book-service-btn"
                 onClick={() => onOpenBooking()}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-[#004179] bg-white hover:bg-slate-100 rounded-md transition-all shadow-sm cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-4 h-10 text-xs sm:text-sm font-bold text-[#004179] bg-white hover:bg-slate-100 rounded-[0.4rem] transition-all shadow-sm cursor-pointer"
+                style={{ borderRadius: '0.4rem' }}
               >
-                <Calendar className="w-4 h-4 text-[#004179]" />
+                <Calendar className="w-4 h-4 text-[#004179] shrink-0" />
                 <span>Book a Service</span>
               </button>
             </div>
@@ -157,14 +163,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
               <button
                 id="mobile-book-btn"
                 onClick={() => onOpenBooking()}
-                className="px-2.5 py-1.5 text-xs font-bold text-[#004179] bg-white rounded-md cursor-pointer"
+                className="px-3 h-9 text-xs font-bold text-[#004179] bg-white rounded-[0.4rem] cursor-pointer inline-flex items-center justify-center"
+                style={{ borderRadius: '0.4rem' }}
               >
                 Book
               </button>
               <button
                 id="mobile-menu-toggle-btn"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-md text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white"
+                className="p-2 rounded-[0.4rem] text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white"
+                style={{ borderRadius: '0.4rem' }}
                 aria-label="Toggle menu"
                 aria-expanded={mobileMenuOpen}
               >

@@ -83,13 +83,40 @@ html {
 }
 
 /* ==========================================================================
-   Zero Rounded Corner (0% Border Radius Globally Across Entire Site)
-   Strictly enforces sharp 90-degree corners for all buttons, cards, modals,
-   inputs, badges, containers, and elements as requested.
+   0.4rem Border Radius for Buttons, Cards, Inputs & 4-Corner Containers
+   All buttons and 4-corner shapes have 0.4rem border-radius as requested.
    ========================================================================== */
-*,
-*::before,
-*::after {
-  border-radius: 0px !important;
+button:not(.rounded-full):not([class*="rounded-full"]),
+a.btn,
+.btn,
+input,
+select,
+textarea,
+.rounded-card,
+.rounded-xl,
+.rounded-lg,
+.rounded-md,
+.rounded-sm,
+.rounded-2xl,
+[class*="rounded"]:not(.rounded-full):not([class*="rounded-full"]) {
+  border-radius: 0.4rem !important;
+}
+
+#floating-whatsapp-widget,
+#floating-call-widget {
+  border-radius: 0.4rem !important;
+}
+
+/* ==========================================================================
+   STRICT OVERRIDE: Blink Indicators & Status Dots MUST be 100% Round
+   Ensures all pulsing/blinking status dots remain circular.
+   ========================================================================== */
+.rounded-full,
+[class*="rounded-full"],
+.animate-ping,
+span.animate-pulse,
+.blink-dot,
+.status-indicator {
+  border-radius: 9999px !important;
 }
 

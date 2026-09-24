@@ -17,8 +17,8 @@ export const EmergencyBanner: React.FC<EmergencyBannerProps> = ({ onOpenBooking 
         
         {/* Left Column: Heading, Badge, Description, Trust Highlights */}
         <div className="text-center lg:text-left space-y-3.5 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30 backdrop-blur-xs shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30 backdrop-blur-xs shadow-xs" style={{ borderRadius: '9999px' }}>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" style={{ borderRadius: '9999px' }} />
             <Clock className="w-3.5 h-3.5 text-emerald-300" />
             <span>সকাল ৮:০০ – রাত ১০:০০ • ঢাকা হোম সার্ভিস</span>
           </div>

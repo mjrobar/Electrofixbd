@@ -125,40 +125,52 @@ export default function App() {
               onNavigate={navigate}
             />
 
-            {/* Quick Feature Strip - Centered with Red Border on Every Badge (Height 2x Decreased) */}
+            {/* Quick Feature Strip - Centered with Matching 2x Red Borders and Identical Height on Badges and Track Button */}
             <div className="bg-white border-b border-[#DCE3E8] py-8 sm:py-9 px-4 sm:px-6 flex items-center justify-center">
               <div className="max-w-7xl mx-auto w-full flex flex-wrap items-center justify-center gap-3.5 sm:gap-4 md:gap-5 text-sm">
                 
-                {/* Badge 1: 10+ Years Experience - Red Border on all sides */}
-                <div className="flex items-center justify-center text-center gap-2.5 px-4 py-2.5 rounded-xl border border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200">
-                  <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+                {/* Badge 1: 10+ Years Experience - 2x Red Border & 0.4rem Rounded */}
+                <div 
+                  className="flex items-center justify-center text-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200"
+                  style={{ borderRadius: '0.4rem' }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200" style={{ borderRadius: '9999px' }}>
                     <ShieldCheck className="w-4 h-4 text-red-600" />
                   </div>
                   <span className="font-bold text-[#17202A] text-xs sm:text-sm">১০+ বছরের অভিজ্ঞ টেকনিশিয়ান</span>
                 </div>
 
-                {/* Badge 2: Chip Level Repair - Red Border on all sides */}
-                <div className="flex items-center justify-center text-center gap-2.5 px-4 py-2.5 rounded-xl border border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200">
-                  <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+                {/* Badge 2: Chip Level Repair - 2x Red Border & 0.4rem Rounded */}
+                <div 
+                  className="flex items-center justify-center text-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200"
+                  style={{ borderRadius: '0.4rem' }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200" style={{ borderRadius: '9999px' }}>
                     <Wrench className="w-4 h-4 text-red-600" />
                   </div>
                   <span className="font-bold text-[#17202A] text-xs sm:text-sm">চিপ লেভেল সার্কিট বোর্ড রিপেয়ার</span>
                 </div>
 
-                {/* Badge 3: Dhaka Home Service - Red Border on all sides */}
-                <div className="flex items-center justify-center text-center gap-2.5 px-4 py-2.5 rounded-xl border border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200">
-                  <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                {/* Badge 3: Dhaka Home Service - 2x Red Border & Circular Blink Indicator */}
+                <div 
+                  className="flex items-center justify-center text-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-white hover:bg-red-50/40 shadow-xs hover:shadow-sm transition-all duration-200"
+                  style={{ borderRadius: '0.4rem' }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200" style={{ borderRadius: '9999px' }}>
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" style={{ borderRadius: '9999px' }}></span>
                   </div>
                   <span className="font-bold text-[#17202A] text-xs sm:text-sm">ঢাকা শহর – দ্রুত হোম সার্ভিস</span>
                 </div>
 
-                {/* Badge 4: Track Booking Status - Red Border on all sides */}
+                {/* Badge 4: Track Booking Status - Red Border Height exactly matched to left badges & 0.4rem Rounded */}
                 <button
                   onClick={() => setShowLookupModal(true)}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-red-500 bg-red-50/60 hover:bg-red-600 text-red-700 hover:text-white transition-all duration-200 text-xs sm:text-sm font-bold shadow-xs hover:shadow-sm cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2.5 px-5 h-[60px] sm:h-[64px] rounded-[0.4rem] border-2 border-red-500 bg-red-50/60 hover:bg-red-600 text-red-700 hover:text-white transition-all duration-200 text-xs sm:text-sm font-bold shadow-xs hover:shadow-sm cursor-pointer group"
+                  style={{ borderRadius: '0.4rem' }}
                 >
-                  <Search className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 group-hover:bg-white group-hover:text-red-600 flex items-center justify-center shrink-0 border border-red-200 transition-colors" style={{ borderRadius: '9999px' }}>
+                    <Search className="w-4 h-4 text-red-600" />
+                  </div>
                   <span>ট্র্যাক করুন বুকিং স্ট্যাটাস</span>
                 </button>
 
@@ -294,29 +306,31 @@ export default function App() {
         onOpenBooking={handleOpenBooking}
       />
 
-      {/* Floating Instant Contact Buttons with Smooth Bobbing Animations */}
+      {/* Floating Instant Contact Buttons with Smooth Bobbing Animations & 0.4rem Rounded Corners */}
       <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3">
         <a
           id="floating-whatsapp-widget"
           href={getWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="relative w-12 h-12 rounded-none bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating group cursor-pointer border border-[#1EBE5D]"
+          className="relative w-12 h-12 rounded-[0.4rem] bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating group cursor-pointer border border-[#1EBE5D]"
+          style={{ borderRadius: '0.4rem' }}
           aria-label="Contact on WhatsApp"
           title="WhatsApp Support"
         >
-          <span className="absolute -inset-1 rounded-none bg-[#25D366]/40 animate-ping opacity-50 pointer-events-none" />
+          <span className="absolute -inset-1 rounded-[0.4rem] bg-[#25D366]/40 animate-ping opacity-50 pointer-events-none" style={{ borderRadius: '0.4rem' }} />
           <MessageCircle className="w-6 h-6 relative z-10" />
         </a>
 
         <a
           id="floating-call-widget"
           href={getPhoneCallUrl()}
-          className="relative w-12 h-12 rounded-none bg-[#004179] hover:bg-[#00325E] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating-alt group cursor-pointer border border-[#00325E]"
+          className="relative w-12 h-12 rounded-[0.4rem] bg-[#004179] hover:bg-[#00325E] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating-alt group cursor-pointer border border-[#00325E]"
+          style={{ borderRadius: '0.4rem' }}
           aria-label="Call ElectroFix BD"
           title="Call 01619-487788"
         >
-          <span className="absolute -inset-1 rounded-none bg-emerald-400/40 animate-pulse opacity-50 pointer-events-none" />
+          <span className="absolute -inset-1 rounded-[0.4rem] bg-emerald-400/40 animate-pulse opacity-50 pointer-events-none" style={{ borderRadius: '0.4rem' }} />
           <Phone className="w-5 h-5 text-emerald-300 relative z-10" />
         </a>
       </div>
