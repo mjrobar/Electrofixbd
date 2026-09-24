@@ -54,3 +54,30 @@ html {
 .animate-news-ticker:hover {
   animation-play-state: paused;
 }
+
+/* Floating bobbing animations for contact widgets */
+@keyframes floatBob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes floatBobAlt {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-floating {
+  animation: floatBob 3s ease-in-out infinite;
+}
+
+.animate-floating-alt {
+  animation: floatBobAlt 2.4s ease-in-out infinite;
+}

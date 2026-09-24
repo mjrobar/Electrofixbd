@@ -7,6 +7,7 @@ import { TestimonialsSection } from './components/home/TestimonialsSection';
 import { FAQSection } from './components/home/FAQSection';
 import { EmergencyBanner } from './components/home/EmergencyBanner';
 import { ServiceCard } from './components/services/ServiceCard';
+import { ServicesPageView } from './components/services/ServicesPageView';
 import { ServiceDetailView } from './components/services/ServiceDetailView';
 import { BookingModal } from './components/services/BookingModal';
 import { WorkGallery } from './components/works/WorkGallery';
@@ -218,39 +219,11 @@ export default function App() {
 
         {/* ==================== 2. ALL SERVICES PAGE ==================== */}
         {isServicesPage && (
-          <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
-            
-            {/* Header */}
-            <div className="text-center max-w-3xl mx-auto space-y-3">
-              <span className="text-xs font-bold text-[#004179] bg-[#EAF3F9] px-3 py-1 rounded-full uppercase tracking-wider">
-                Comprehensive Home Care
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#17202A] tracking-tight">
-                হোম অ্যাপ্লায়েন্স রিপেয়ার ও সার্ভিসিং
-              </h1>
-              <p className="text-sm sm:text-base text-[#5F6B76] leading-relaxed">
-                ইনভার্টার এসি, রেফ্রিজারেটর, ওয়াশিং মেশিন, মাইক্রোওভেন, ডিশওয়াশার ও সার্কিট বোর্ডের চিপ-লেভেল কাজের জন্য আমাদের সার্ভিস তালিকা থেকে আপনার কাঙ্ক্ষিত সেবাটি বেছে নিন।
-              </p>
-            </div>
-
-            {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              {SERVICES_DATA.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  onViewDetails={(slug) => navigate(`/services/${slug}`)}
-                  onBookService={(name, id) => handleOpenBooking(name, id)}
-                />
-              ))}
-            </div>
-
-            {/* Emergency Banner */}
-            <EmergencyBanner onOpenBooking={() => handleOpenBooking()} />
-
-            {/* FAQ Section */}
-            <FAQSection />
-          </div>
+          <ServicesPageView
+            services={SERVICES_DATA}
+            onViewDetails={(slug) => navigate(`/services/${slug}`)}
+            onBookService={(name, id) => handleOpenBooking(name, id)}
+          />
         )}
 
         {/* ==================== 3. DYNAMIC SERVICE DETAIL PAGE ==================== */}
@@ -321,28 +294,30 @@ export default function App() {
         onOpenBooking={handleOpenBooking}
       />
 
-      {/* Floating Instant Contact Buttons (Bottom Right for Speed & Conversion) */}
-      <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-2.5">
+      {/* Floating Instant Contact Buttons with Smooth Bobbing Animations */}
+      <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3">
         <a
           id="floating-whatsapp-widget"
           href={getWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none"
+          className="relative w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating group cursor-pointer"
           aria-label="Contact on WhatsApp"
           title="WhatsApp Support"
         >
-          <MessageCircle className="w-6 h-6" />
+          <span className="absolute -inset-1 rounded-full bg-[#25D366]/40 animate-ping opacity-50 pointer-events-none" />
+          <MessageCircle className="w-6 h-6 relative z-10" />
         </a>
 
         <a
           id="floating-call-widget"
           href={getPhoneCallUrl()}
-          className="w-12 h-12 rounded-full bg-[#004179] hover:bg-[#00325E] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none"
+          className="relative w-12 h-12 rounded-full bg-[#004179] hover:bg-[#00325E] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating-alt group cursor-pointer"
           aria-label="Call ElectroFix BD"
           title="Call 01619-487788"
         >
-          <Phone className="w-5 h-5 text-emerald-300" />
+          <span className="absolute -inset-1 rounded-full bg-emerald-400/40 animate-pulse opacity-50 pointer-events-none" />
+          <Phone className="w-5 h-5 text-emerald-300 relative z-10" />
         </a>
       </div>
 
