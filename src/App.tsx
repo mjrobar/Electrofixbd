@@ -301,22 +301,22 @@ export default function App() {
           href={getWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="relative w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating group cursor-pointer"
+          className="relative w-12 h-12 rounded-none bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating group cursor-pointer border border-[#1EBE5D]"
           aria-label="Contact on WhatsApp"
           title="WhatsApp Support"
         >
-          <span className="absolute -inset-1 rounded-full bg-[#25D366]/40 animate-ping opacity-50 pointer-events-none" />
+          <span className="absolute -inset-1 rounded-none bg-[#25D366]/40 animate-ping opacity-50 pointer-events-none" />
           <MessageCircle className="w-6 h-6 relative z-10" />
         </a>
 
         <a
           id="floating-call-widget"
           href={getPhoneCallUrl()}
-          className="relative w-12 h-12 rounded-full bg-[#004179] hover:bg-[#00325E] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating-alt group cursor-pointer"
+          className="relative w-12 h-12 rounded-none bg-[#004179] hover:bg-[#00325E] text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 focus:outline-none animate-floating-alt group cursor-pointer border border-[#00325E]"
           aria-label="Call ElectroFix BD"
           title="Call 01619-487788"
         >
-          <span className="absolute -inset-1 rounded-full bg-emerald-400/40 animate-pulse opacity-50 pointer-events-none" />
+          <span className="absolute -inset-1 rounded-none bg-emerald-400/40 animate-pulse opacity-50 pointer-events-none" />
           <Phone className="w-5 h-5 text-emerald-300 relative z-10" />
         </a>
       </div>

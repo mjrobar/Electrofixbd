@@ -39,10 +39,16 @@ export interface WorkItem {
 export interface Testimonial {
   id: string;
   customerName: string;
+  location?: string;
   review: string;
   serviceType: string;
   rating: number;
   avatarUrl?: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
+  date?: string;
+  time?: string;
+  createdAt?: string;
 }
 
 export interface BookingFormData {

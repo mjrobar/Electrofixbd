@@ -81,3 +81,15 @@ html {
 .animate-floating-alt {
   animation: floatBobAlt 2.4s ease-in-out infinite;
 }
+
+/* ==========================================================================
+   Zero Rounded Corner (0% Border Radius Globally Across Entire Site)
+   Strictly enforces sharp 90-degree corners for all buttons, cards, modals,
+   inputs, badges, containers, and elements as requested.
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  border-radius: 0px !important;
+}
+

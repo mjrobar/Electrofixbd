@@ -4,44 +4,80 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
   {
     id: 'test-1',
     customerName: 'Rahim Hossain',
+    location: 'Mirpur-10, Dhaka',
     serviceType: 'AC Repair & Servicing',
     review: 'The technician came to my home in Mirpur on time, inspected the AC cooling coil, and explained the gas pressure issue clearly. The repair was completed cleanly and the cooling is back to new.',
-    rating: 5
+    rating: 5,
+    date: '২৩ সেপ্টেম্বর ২০২৬',
+    time: 'বিকাল ৪:১৫',
+    mediaUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1200&q=80',
+    mediaType: 'image',
+    createdAt: '2026-09-23T16:15:00Z'
   },
   {
     id: 'test-2',
     customerName: 'Nusrat Jahan',
+    location: 'Dhanmondi, Dhaka',
     serviceType: 'Refrigerator Repair',
     review: 'My refrigerator was not cooling in the lower section, spoiling groceries. The technician diagnosed the defrost sensor issue and repaired it promptly right in our kitchen. Very polite and reliable.',
-    rating: 5
+    rating: 5,
+    date: '২২ সেপ্টেম্বর ২০২৬',
+    time: 'দুপুর ১২:৩০',
+    mediaUrl: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=1200&q=80',
+    mediaType: 'image',
+    createdAt: '2026-09-22T12:30:00Z'
   },
   {
     id: 'test-3',
     customerName: 'Tanvir Ahmed',
+    location: 'Sector 4, Uttara, Dhaka',
     serviceType: 'Washing Machine Repair',
     review: 'Our front-load washing machine had severe drum vibration and spinning noise. The technician replaced the worn bearings and belt at home in Uttara. Saved us huge transportation hassle!',
-    rating: 5
+    rating: 5,
+    date: '২০ সেপ্টেম্বর ২০২৬',
+    time: 'সন্ধ্যা ৭:৪৫',
+    mediaUrl: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=1200&q=80',
+    mediaType: 'image',
+    createdAt: '2026-09-20T19:45:00Z'
   },
   {
     id: 'test-4',
     customerName: 'Farzana Rahman',
+    location: 'Mohammadpur, Dhaka',
     serviceType: 'Microwave Oven Repair',
     review: 'The microwave was buzzing loudly and not heating lunch. They handled the high-voltage testing with proper equipment, changed the faulty diode, and tested it thoroughly. Highly recommended.',
-    rating: 5
+    rating: 5,
+    date: '১৮ সেপ্টেম্বর ২০২৬',
+    time: 'সকাল ১১:২০',
+    mediaUrl: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1200&q=80',
+    mediaType: 'image',
+    createdAt: '2026-09-18T11:20:00Z'
   },
   {
     id: 'test-5',
     customerName: 'Imran Kabir',
+    location: 'Banani, Dhaka',
     serviceType: 'Circuit Board / Chip-Level Repair',
     review: 'The official service center wanted 18,000 BDT to replace the entire inverter AC motherboard. ElectroFix BD identified the faulty capacitor and repaired the circuit board at chip-level for a fraction of the cost!',
-    rating: 5
+    rating: 5,
+    date: '১৫ সেপ্টেম্বর ২০২৬',
+    time: 'বিকাল ৫:১০',
+    mediaUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+    mediaType: 'image',
+    createdAt: '2026-09-15T17:10:00Z'
   },
   {
     id: 'test-6',
     customerName: 'Mahmudul Hasan',
-    serviceType: 'Inverter Refrigerator & Deep Freezer Repair',
+    location: 'Gulshan-2, Dhaka',
+    serviceType: 'Inverter Refrigerator Repair',
     review: 'Our double-door inverter refrigerator stopped cooling suddenly. The ElectroFix BD technician arrived at our Gulshan home promptly, diagnosed the inverter PCB & gas pressure with professional digital gauges, and fixed it the same day. Highly skilled and dependable!',
-    rating: 5
+    rating: 5,
+    date: '১৩ সেপ্টেম্বর ২০২৬',
+    time: 'দুপুর ৩:০০',
+    mediaUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80',
+    mediaType: 'image',
+    createdAt: '2026-09-13T15:00:00Z'
   }
 ];
 
