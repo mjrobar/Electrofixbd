@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShieldCheck, 
   Cpu, 
@@ -11,7 +11,9 @@ import {
   Award,
   Settings,
   HelpCircle,
-  FileCheck
+  FileCheck,
+  Zap,
+  Activity
 } from 'lucide-react';
 import { BUSINESS_CONFIG, getPhoneCallUrl, getWhatsAppUrl } from '../../data/siteConfig';
 
@@ -20,15 +22,88 @@ interface AboutSectionProps {
   imageUrl?: string;
 }
 
+// Helper to convert English digits to authentic Bengali numerals
+const toBengaliNumber = (num: number): string => {
+  const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return num.toLocaleString('en-US').replace(/\d/g, (d) => bnDigits[Number(d)]);
+};
+
 export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking, imageUrl }) => {
   const displayImage = imageUrl || (BUSINESS_CONFIG as any).aboutSectionImage || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80';
+
+  // Stats counting animation trigger on scroll
+  const statsRef = useRef<HTMLDivElement>(null);
+  const [hasTriggered, setHasTriggered] = useState(false);
+  const [counts, setCounts] = useState({
+    stat1: 0,
+    stat2: 0,
+    stat3: 0,
+    stat4: 0,
+  });
+
+  // Intersection Observer to trigger counter when scrolled into view from hero or reload
+  useEffect(() => {
+    const currentRef = statsRef.current;
+    if (!currentRef) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !hasTriggered) {
+          setHasTriggered(true);
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(currentRef);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasTriggered]);
+
+  // Counting animation logic
+  useEffect(() => {
+    if (!hasTriggered) return;
+
+    const duration = 1600; // 1.6s smooth duration
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutCubic curve for realistic deceleration
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+      setCounts({
+        stat1: Math.floor(easeProgress * 10),
+        stat2: Math.floor(easeProgress * 15000),
+        stat3: Math.floor(easeProgress * 100),
+        stat4: Math.floor(easeProgress * 30),
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setCounts({
+          stat1: 10,
+          stat2: 15000,
+          stat3: 100,
+          stat4: 30,
+        });
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [hasTriggered]);
 
   const engineeringPillars = [
     {
       icon: Cpu,
       title: 'চিপ-লেভেল ইলেকট্রনিক্স ল্যাব',
-      subtitle: 'মাদারবোর্ড ফেলে না দিয়ে মেরামত',
-      description: 'আধুনিক ইনভার্টার এসি ও স্মার্ট রেফ্রিজারেটরের মাদারবোর্ড নষ্ট হলে পুরো সার্কিট পরিবর্তন না করে উন্নত ল্যাবে মাইক্রো-কম্পোনেন্ট লেভেলে মেরামত করে ৭০% পর্যন্ত গ্রাহকের খরচ সাশ্রয় করি।'
+      subtitle: 'মাদারবোর্ড ফেলে না দিয়ে মাইক্রো-রিপেয়ার',
+      description: 'আধুনিক ইনভার্টার এসি ও স্মার্ট রেফ্রিজারেটরের মাদারবোর্ড নষ্ট হলে পুরো সার্কিট পরিবর্তন না করে আমাদের উন্নত ল্যাবে মাইক্রো-কম্পোনেন্ট লেভেলে মেরামত করে ৭০% পর্যন্ত গ্রাহকের খরচ সাশ্রয় করি।'
     },
     {
       icon: MapPin,
@@ -48,13 +123,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking, image
       subtitle: 'জেনুইন পার্টস ও দায়বদ্ধতা',
       description: 'প্রতিটি সফল মেরামতের পর লিখিত সার্ভিস রসিদ ও ৩০ দিনের কার্যকারিতা ওয়ারেন্টি প্রদান করা হয়। ওয়ারেন্টি চলাকালীন একই ত্রুটি দেখা দিলে সম্পূর্ণ বিনামূল্যে অন-কল সাপোর্ট দেওয়া হয়।'
     }
-  ];
-
-  const credentialsStats = [
-    { value: '১০+', label: 'বছরের টেকনিক্যাল অভিজ্ঞতা' },
-    { value: '১৫,০০০+', label: 'সফল অ্যাপ্লায়েন্স সার্ভিস' },
-    { value: '১০০%', label: 'জেনুইন স্পেয়ার পার্টস নিশ্চয়তা' },
-    { value: '৩০ দিন', label: 'লিখিত সার্ভিস ওয়ারেন্টি' }
   ];
 
   return (
@@ -88,64 +156,128 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking, image
           <div className="lg:col-span-7 py-10 sm:py-14 lg:py-16 px-5 sm:px-8 lg:px-12 xl:px-14 flex flex-col justify-center bg-white">
             <div className="max-w-3xl space-y-7">
               
-              {/* Header: Editorial Eyebrow & Bold Heading (No AI Pills) */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-[#004179]">
-                  <span className="w-6 h-[2px] bg-[#004179]"></span>
-                  <span>পরিচিতি ও প্রযুক্তিগত সক্ষমতা · ABOUT ELECTROFIX BD</span>
+              {/* Header: Professional Crafted Authority Badge & Bold Heading (Item 4 & Item 1) */}
+              <div className="space-y-3.5">
+                
+                {/* Crafted Engineering Credential Tag - Authentic & Premium (No AI Pills) */}
+                <div 
+                  className="inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-[#002647] text-white border-l-4 border-emerald-500 rounded-[0.4rem] shadow-xs"
+                  style={{ borderRadius: '0.4rem' }}
+                >
+                  <Wrench className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="text-xs sm:text-sm font-bold tracking-wide text-white">
+                    পরিচিতি ও প্রযুক্তিগত সক্ষমতা
+                  </span>
+                  <span className="text-white/40 text-xs font-light">|</span>
+                  <span className="text-[11px] sm:text-xs font-semibold tracking-wider text-emerald-300 uppercase">
+                    ABOUT ELECTROFIX BD
+                  </span>
                 </div>
 
                 <h2 className="text-2xl sm:text-3xl lg:text-[2.25rem] font-black text-[#17202A] tracking-tight leading-snug">
                   হোম অ্যাপ্লায়েন্স মেরামতে পেশাদারিত্ব, সততা ও আধুনিক কারিগরি দক্ষতা
                 </h2>
 
-                <p className="text-sm sm:text-base text-[#4A5568] leading-relaxed">
-                  ভারী এসি, রেফ্রিজারেটর বা ওয়াশিং মেশিন দোকানে বয়ে নেওয়ার দুর্ভোগ এবং অপ্রয়োজনীয় মাদারবোর্ড পরিবর্তনের অযৌক্তিক ব্যয়—উভয় সমস্যার সুনির্দিষ্ট ও স্থায়ী সমাধানে <strong>ElectroFix BD</strong> ঢাকার ঘরে ঘরে নির্ভরযোগ্য সেবা নিশ্চিত করছে। আমাদের অভিজ্ঞ কারিগরি দল সততা, সঠিক ডায়াগনসিস এবং আধুনিক টুলস ব্যবহারের মাধ্যমে আপনার মূলবান গৃহস্থালি যন্ত্রপাতির আয়ু বৃদ্ধি করতে অঙ্গীকারবদ্ধ।
+                {/* Sub-text with increased, comfortable, readable font size (Item 1) */}
+                <p className="text-base sm:text-lg text-[#334155] leading-relaxed font-normal">
+                  ভারী এসি, রেফ্রিজারেটর বা ওয়াশিং মেশিন দোকানে বয়ে নেওয়ার দুর্ভোগ এবং অপ্রয়োজনীয় মাদারবোর্ড পরিবর্তনের অযৌক্তিক ব্যয়—উভয় সমস্যার সুনির্দিষ্ট ও স্থায়ী সমাধানে <strong className="text-[#00325e] font-bold">ElectroFix BD</strong> ঢাকার ঘরে ঘরে নির্ভরযোগ্য সেবা নিশ্চিত করছে। আমাদের অভিজ্ঞ কারিগরি দল সততা, সঠিক ডায়াগনসিস এবং আধুনিক টুলস ব্যবহারের মাধ্যমে আপনার মূলবান গৃহস্থালি যন্ত্রপাতির আয়ু বৃদ্ধি করতে অঙ্গীকারবদ্ধ।
                 </p>
               </div>
 
-              {/* Trust Credentials Ledger (4 Stat Metrics) */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-[#DCE3E8] bg-[#F8FAFC] p-3 sm:p-4 rounded-[0.4rem]">
-                {credentialsStats.map((stat, idx) => (
-                  <div key={idx} className="text-center sm:text-left px-2 border-r last:border-r-0 border-[#DCE3E8]/80">
-                    <div className="text-xl sm:text-2xl font-black text-[#004179] tracking-tight">
-                      {stat.value}
-                    </div>
-                    <div className="text-[11px] sm:text-xs text-[#5F6B76] font-semibold mt-0.5 leading-tight">
-                      {stat.label}
-                    </div>
+              {/* =========================================================
+                  ITEM 3: Trust Credentials Stats with Background & Counting Animation
+                  Scroll-triggered counting animation in authentic Bengali numerals
+                  ========================================================= */}
+              <div 
+                ref={statsRef}
+                className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 px-3 sm:px-5 bg-gradient-to-r from-[#002244] via-[#002e5c] to-[#003a70] text-white rounded-[0.4rem] shadow-md border border-[#004d80]"
+                style={{ borderRadius: '0.4rem' }}
+              >
+                {/* Stat 1: 10+ Years */}
+                <div className="text-center sm:text-left px-2 sm:px-3 border-r border-white/15">
+                  <div className="flex items-center justify-center sm:justify-start gap-1 text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-300 tracking-tight font-bengali">
+                    <span>{toBengaliNumber(counts.stat1)}</span>
+                    <span className="text-emerald-400 font-extrabold">+</span>
                   </div>
-                ))}
+                  <div className="text-xs sm:text-sm text-slate-200 font-medium mt-1 leading-snug">
+                    বছরের টেকনিক্যাল অভিজ্ঞতা
+                  </div>
+                </div>
+
+                {/* Stat 2: 15,000+ Services */}
+                <div className="text-center sm:text-left px-2 sm:px-3 border-r sm:border-r border-white/15">
+                  <div className="flex items-center justify-center sm:justify-start gap-1 text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-300 tracking-tight font-bengali">
+                    <span>{toBengaliNumber(counts.stat2)}</span>
+                    <span className="text-emerald-400 font-extrabold">+</span>
+                  </div>
+                  <div className="text-xs sm:text-sm text-slate-200 font-medium mt-1 leading-snug">
+                    সফল অ্যাপ্লায়েন্স সার্ভিস
+                  </div>
+                </div>
+
+                {/* Stat 3: 100% Genuine Parts */}
+                <div className="text-center sm:text-left px-2 sm:px-3 border-r border-white/15">
+                  <div className="flex items-center justify-center sm:justify-start gap-0.5 text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-300 tracking-tight font-bengali">
+                    <span>{toBengaliNumber(counts.stat3)}</span>
+                    <span className="text-emerald-400 font-bold">%</span>
+                  </div>
+                  <div className="text-xs sm:text-sm text-slate-200 font-medium mt-1 leading-snug">
+                    জেনুইন স্পেয়ার পার্টস নিশ্চয়তা
+                  </div>
+                </div>
+
+                {/* Stat 4: 30 Days Warranty */}
+                <div className="text-center sm:text-left px-2 sm:px-3">
+                  <div className="flex items-center justify-center sm:justify-start gap-1.5 text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-300 tracking-tight font-bengali">
+                    <span>{toBengaliNumber(counts.stat4)}</span>
+                    <span className="text-base sm:text-xl font-bold text-white">দিন</span>
+                  </div>
+                  <div className="text-xs sm:text-sm text-slate-200 font-medium mt-1 leading-snug">
+                    লিখিত সার্ভিস ওয়ারেন্টি
+                  </div>
+                </div>
               </div>
 
-              {/* 4 Core Technical Pillars - Traditional Structured Grid */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#5F6B76]">
-                  আমাদের কর্মপদ্ধতি ও সেবা নিশ্চয়তা
-                </h3>
+              {/* =========================================================
+                  ITEM 2: 4 Core Technical Pillars with #00325e Background & Hover Shadow
+                  ITEM 1: Increased, legible, comfortable typography
+                  ========================================================= */}
+              <div className="space-y-3.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-[#00325e] rounded-full" style={{ borderRadius: '9999px' }}></span>
+                  <h3 className="text-sm sm:text-base font-bold uppercase tracking-wider text-[#1e293b]">
+                    আমাদের কর্মপদ্ধতি ও সেবা নিশ্চয়তা
+                  </h3>
+                </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {engineeringPillars.map((pillar, idx) => {
                     const Icon = pillar.icon;
                     return (
                       <div 
                         key={idx} 
-                        className="p-4 rounded-[0.4rem] bg-[#FFFFFF] border border-[#CBD5E1] hover:border-[#004179] hover:shadow-xs transition-all duration-200 group"
+                        className="p-5 rounded-[0.4rem] bg-[#00325e] text-white border border-[#004b87] hover:border-emerald-400/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#002647]/50 group cursor-default"
+                        style={{ borderRadius: '0.4rem' }}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="w-9 h-9 rounded-[0.4rem] bg-[#EAF3F9] text-[#004179] group-hover:bg-[#004179] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                            <Icon className="w-4 h-4" />
+                        <div className="flex items-start gap-3.5">
+                          <div 
+                            className="w-11 h-11 rounded-[0.4rem] bg-white/10 text-emerald-400 border border-white/15 group-hover:bg-emerald-500 group-hover:text-white flex items-center justify-center shrink-0 transition-colors shadow-xs"
+                            style={{ borderRadius: '0.4rem' }}
+                          >
+                            <Icon className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="text-sm font-bold text-[#17202A] leading-snug">
+                            <h4 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
                               {pillar.title}
                             </h4>
-                            <p className="text-[11px] font-semibold text-[#004179] mt-0.5">
+                            <p className="text-xs sm:text-sm font-semibold text-emerald-300 mt-0.5">
                               {pillar.subtitle}
                             </p>
                           </div>
                         </div>
-                        <p className="text-xs text-[#5F6B76] leading-relaxed mt-2.5 pt-2 border-t border-[#E2E8F0]">
+
+                        {/* Sub-text / Description with comfortable, legible font size (Item 1 & 2) */}
+                        <p className="text-sm sm:text-[15px] text-slate-100 leading-relaxed font-normal mt-3 pt-3 border-t border-white/15">
                           {pillar.description}
                         </p>
                       </div>
@@ -154,8 +286,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking, image
                 </div>
               </div>
 
-              {/* Quality & Safety Pledge Note */}
-              <div className="flex items-start gap-3 p-3.5 rounded-[0.4rem] bg-[#EAF3F9]/60 border border-[#B9D5EC] text-xs text-[#1E3A5F]">
+              {/* Quality & Safety Pledge Note with comfortable font size */}
+              <div 
+                className="flex items-start gap-3 p-4 rounded-[0.4rem] bg-[#EAF3F9] border border-[#B9D5EC] text-sm sm:text-[15px] text-[#1E3A5F] shadow-xs"
+                style={{ borderRadius: '0.4rem' }}
+              >
                 <FileCheck className="w-5 h-5 text-[#004179] shrink-0 mt-0.5" />
                 <div className="leading-relaxed">
                   <span className="font-bold text-[#004179]">দায়িত্বশীল হোম সার্ভিসের প্রতিশ্রুতি:</span> আমাদের প্রতিটি টেকনিশিয়ান ব্যাকগ্রাউন্ড-যাচাইকৃত এবং গৃহস্থালি পরিবেশের নিরাপত্তা ও শালীনতার প্রতি সর্বোচ্চ শ্রদ্ধাশীল। মেরামতের পূর্বে ও পরে সম্পূর্ণ কাজের রিপোর্ট ও ওয়ারেন্টি ইনভয়েস প্রদান করা হয়।
@@ -163,16 +298,19 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenBooking, image
               </div>
 
               {/* Direct Booking & Hotline Action Bar */}
-              <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-[#00325E] text-white p-4 sm:p-5 rounded-[0.4rem] shadow-sm">
+              <div 
+                className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-[#00325E] text-white p-4 sm:p-5 rounded-[0.4rem] shadow-sm border border-[#004b87]"
+                style={{ borderRadius: '0.4rem' }}
+              >
                 <div>
-                  <div className="text-[11px] uppercase font-bold text-emerald-300 tracking-wider flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" style={{ borderRadius: '9999px' }} />
+                  <div className="text-xs uppercase font-bold text-emerald-300 tracking-wider flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" style={{ borderRadius: '9999px' }} />
                     <span>জরুরি হোম সার্ভিসের হটলাইন</span>
                   </div>
-                  <div className="text-xl sm:text-2xl font-black text-white mt-0.5 tracking-tight">
+                  <div className="text-xl sm:text-2xl font-black text-white mt-0.5 tracking-tight font-bengali">
                     {BUSINESS_CONFIG.phone}
                   </div>
-                  <div className="text-[11px] text-white/70">
+                  <div className="text-xs text-white/80">
                     সকাল ৮:০০ – রাত ১০:০০ • ঢাকা শহরব্যাপী সক্রিয়
                   </div>
                 </div>
