@@ -28,10 +28,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate, onOpenB
     <header className="sticky top-0 z-40 w-full shadow-md">
       {/* Top Announcement Bar - 2x Height & Smooth Right-to-Left News Headline Marquee */}
       <div className="bg-[#00284d] text-white/95 text-xs sm:text-sm h-10 sm:h-11 border-b border-[#004179] flex items-center overflow-hidden relative select-none">
-        {/* Left 'HEADLINE' or 'NEWS' badge badge for authentic TV news look */}
-        <div className="hidden sm:flex items-center gap-1.5 px-3.5 h-full bg-red-600 text-white font-bold text-xs shrink-0 z-10 uppercase tracking-wider shadow-md">
-          <span className="w-2 h-2 rounded-full bg-white animate-ping" style={{ borderRadius: '9999px' }}></span>
-          <span>জরুরি আপডেট</span>
+        {/* Left 'HEADLINE' or 'NEWS' badge for authentic TV news look - Perfectly Centered & Standard Font Size */}
+        <div className="hidden sm:flex items-center justify-center gap-2 px-4 h-full bg-red-600 text-white font-extrabold text-xs sm:text-sm shrink-0 z-10 uppercase tracking-wider shadow-md text-center">
+          <span className="w-2 h-2 rounded-full bg-white animate-ping shrink-0" style={{ borderRadius: '9999px' }}></span>
+          <span className="text-xs sm:text-sm font-extrabold tracking-normal leading-none inline-flex items-center text-center">জরুরি আপডেট</span>
         </div>
 
         <div className="overflow-hidden w-full flex items-center">

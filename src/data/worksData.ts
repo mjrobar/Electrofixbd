@@ -72,5 +72,77 @@ export const WORKS_DATA: WorkItem[] = [
     mediaType: 'image',
     isFeatured: false,
     createdAt: 'Recent Job • Bashundhara R/A, Dhaka'
+  },
+  {
+    id: 'work-7',
+    title: 'Inverter Refrigerator Inverter Compressor Driver Repair',
+    slug: 'inverter-refrigerator-compressor-driver-repair',
+    serviceType: 'Refrigerator Repair',
+    category: 'refrigerator',
+    description: 'Compressor not starting despite internal lights functioning. Diagnosed inverter driver IPM module fault, replaced driver IC, and recharged R600a eco refrigerant in Baridhara DOHS.',
+    mediaUrl: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?auto=format&fit=crop&w=1000&q=80',
+    mediaType: 'image',
+    isFeatured: true,
+    createdAt: 'Recent Job • Baridhara DOHS, Dhaka'
+  },
+  {
+    id: 'work-8',
+    title: 'Top Load Washing Machine Drain Motor & Clutch Overhaul',
+    slug: 'top-load-washing-machine-drain-motor-repair',
+    serviceType: 'Washing Machine Repair',
+    category: 'washing-machine',
+    description: 'Water failing to drain and spin mode producing error codes. Installed genuine replacement drain motor, cleaned valve assembly, and tested 3 full wash cycles in Mohammadpur.',
+    mediaUrl: 'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?auto=format&fit=crop&w=1000&q=80',
+    mediaType: 'image',
+    isFeatured: false,
+    createdAt: 'Recent Job • Mohammadpur, Dhaka'
+  },
+  {
+    id: 'work-9',
+    title: '2-Ton Cassette AC Copper Pipe Leak Braze & Gas Charging',
+    slug: 'cassette-ac-pipe-leak-braze-gas-charge',
+    serviceType: 'AC Repair & Servicing',
+    category: 'ac',
+    description: 'Nitrogen pressure testing revealed micro puncture at outdoor flare connection. Silver-brazed joint, vacuumed system to 500 microns, and charged R410A refrigerant in Lalmatia.',
+    mediaUrl: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=1000&q=80',
+    mediaType: 'image',
+    isFeatured: true,
+    createdAt: 'Recent Job • Lalmatia, Dhaka'
+  },
+  {
+    id: 'work-10',
+    title: 'Micro-Inverter Microwave Touchpad & Capacitor Replacement',
+    slug: 'microwave-touchpad-capacitor-replacement',
+    serviceType: 'Microwave Oven Repair',
+    category: 'oven',
+    description: 'Touch membrane unresponsive and intermittent humming. Replaced tactile control membrane and high-voltage oil capacitor with factory spec components in Uttara Sector 7.',
+    mediaUrl: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1000&q=80',
+    mediaType: 'image',
+    isFeatured: false,
+    createdAt: 'Recent Job • Uttara, Dhaka'
+  },
+  {
+    id: 'work-11',
+    title: 'French Door Refrigerator Dual Evaporator Fan Motor Replacement',
+    slug: 'french-door-refrigerator-fan-motor-replacement',
+    serviceType: 'Refrigerator Repair',
+    category: 'refrigerator',
+    description: 'Evaporator fan bearing seized causing freezing failure in top fresh food zone. Replaced brushless DC fan motor and recalibrated damper door actuator in Bashundhara.',
+    mediaUrl: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=1000&q=80',
+    mediaType: 'image',
+    isFeatured: true,
+    createdAt: 'Recent Job • Bashundhara, Dhaka'
+  },
+  {
+    id: 'work-12',
+    title: 'Multi-Split Inverter AC Microcontroller Communication PCB Repair',
+    slug: 'multi-split-ac-communication-pcb-repair',
+    serviceType: 'Circuit Board Repair',
+    category: 'circuit-board',
+    description: 'Indoor-to-outdoor serial error E7. Traced burnt optocoupler isolation circuits and restored 5V logic line on communication module without outdoor unit dismantling in Gulshan 2.',
+    mediaUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1000&q=80',
+    mediaType: 'image',
+    isFeatured: true,
+    createdAt: 'Recent Job • Gulshan-2, Dhaka'
   }
 ];

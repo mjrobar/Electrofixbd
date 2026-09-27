@@ -10,7 +10,7 @@ import { ServiceCard } from './components/services/ServiceCard';
 import { ServicesPageView } from './components/services/ServicesPageView';
 import { ServiceDetailView } from './components/services/ServiceDetailView';
 import { BookingModal } from './components/services/BookingModal';
-import { WorkGallery } from './components/works/WorkGallery';
+import { OurWorksPageView } from './components/works/OurWorksPageView';
 import { ContactSection } from './components/contact/ContactSection';
 import { SERVICES_DATA, getServiceBySlug } from './data/servicesData';
 import { BUSINESS_CONFIG, getWhatsAppUrl, getPhoneCallUrl } from './data/siteConfig';
@@ -274,25 +274,7 @@ export default function App() {
 
         {/* ==================== 4. OUR WORKS PAGE ==================== */}
         {isOurWorksPage && (
-          <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
-            <div className="text-center max-w-2xl mx-auto space-y-2">
-              <span className="text-xs font-bold text-[#004179] bg-[#EAF3F9] px-3 py-1 rounded-full uppercase tracking-wider">
-                Work Portfolio
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#17202A] tracking-tight">
-                আমাদের পূর্ববর্তী কাজের বাস্তব গ্যালারি
-              </h1>
-              <p className="text-sm sm:text-base text-[#5F6B76]">
-                ঢাকার বিভিন্ন এলাকায় আমাদের ১০+ বছরের অভিজ্ঞ টেকনিশিয়ানের সম্পন্নকৃত বাস্তব কাজের নমুনা ও সমাধান বিবরণ।
-              </p>
-            </div>
-
-            {/* Interactive Filterable Gallery */}
-            <WorkGallery onOpenBooking={handleOpenBooking} />
-
-            {/* Emergency Action */}
-            <EmergencyBanner onOpenBooking={() => handleOpenBooking()} />
-          </div>
+          <OurWorksPageView onOpenBooking={handleOpenBooking} />
         )}
 
         {/* ==================== 5. CONTACT US PAGE ==================== */}
