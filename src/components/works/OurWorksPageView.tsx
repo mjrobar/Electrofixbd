@@ -39,7 +39,7 @@ export const OurWorksPageView: React.FC<OurWorksPageViewProps> = ({ onOpenBookin
                 style={{ borderRadius: '0.4rem' }}
               >
                 <Tag className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Page: Our Works</span>
+                <span>আমাদের কাজসমূহ</span>
               </div>
 
               <div 
@@ -47,7 +47,7 @@ export const OurWorksPageView: React.FC<OurWorksPageViewProps> = ({ onOpenBookin
                 style={{ borderRadius: '0.4rem' }}
               >
                 <Camera className="w-3.5 h-3.5 text-amber-300" />
-                <span>Work Portfolio</span>
+                <span>বাস্তব কাজের পোর্টফোলিও</span>
               </div>
             </div>
 

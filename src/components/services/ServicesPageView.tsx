@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Tag, Search, Sparkles, ChevronLeft, ChevronRight, Layers, ShieldCheck, Wrench, Clock, CheckCircle2 } from 'lucide-react';
+import { Tag, Search, Sparkles, ChevronLeft, ChevronRight, CheckCircle2, ShieldCheck, Wrench } from 'lucide-react';
 import { Service } from '../../types';
 import { ServiceCard } from './ServiceCard';
 import { EmergencyBanner } from '../home/EmergencyBanner';
@@ -17,23 +17,30 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
   onBookService,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'cooling' | 'appliances' | 'electronics'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3; // 3 per page delivers a clear 2-page pagination experience for the catalog
+  const itemsPerPage = 3; // 3 items per page for clean desktop grid and pagination
+
+  // Service categories matching the exact service list from the Booking Form dropdown
+  const categoryFilters = [
+    { id: 'all', label: 'সব সার্ভিস' },
+    { id: 'ac-repair', label: 'এসি মেরামত ও সার্ভিসিং' },
+    { id: 'refrigerator-repair', label: 'রেফ্রিজারেটর ও ফ্রিজ মেরামত' },
+    { id: 'washing-machine-repair', label: 'ওয়াশিং মেশিন মেরামত ও সার্ভিসিং' },
+    { id: 'oven-repair', label: 'মাইক্রোওয়েভ ওভেন মেরামত' },
+    { id: 'dishwasher-repair', label: 'ডিশওয়াশার মেরামত ও সার্ভিসিং' },
+    { id: 'circuit-board-repair', label: 'সার্কিট বোর্ড ও চিপ-লেভেল মেরামত' }
+  ];
 
   // Filter logic
   const filteredServices = useMemo(() => {
     return services.filter((service) => {
-      // Category filter
-      if (selectedCategory === 'cooling') {
-        if (!service.slug.includes('ac') && !service.slug.includes('refrigerator')) return false;
-      } else if (selectedCategory === 'appliances') {
-        if (!service.slug.includes('washing') && !service.slug.includes('oven') && !service.slug.includes('dishwasher')) return false;
-      } else if (selectedCategory === 'electronics') {
-        if (!service.slug.includes('circuit')) return false;
+      // Category filter matching service slug
+      if (selectedCategory !== 'all') {
+        if (service.slug !== selectedCategory) return false;
       }
 
-      // Search query
+      // Search query filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesName = service.name.toLowerCase().includes(query);
@@ -61,8 +68,8 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
     }
   };
 
-  const handleCategoryChange = (cat: 'all' | 'cooling' | 'appliances' | 'electronics') => {
-    setSelectedCategory(cat);
+  const handleCategoryChange = (catId: string) => {
+    setSelectedCategory(catId);
     setCurrentPage(1);
   };
 
@@ -92,17 +99,26 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
             
             {/* Left Side: Current Page Tag / Badge Indicators */}
             <div className="flex flex-wrap items-center gap-2.5">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-extrabold uppercase tracking-wider backdrop-blur-xs shadow-xs">
+              <div 
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[0.4rem] bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-extrabold uppercase tracking-wider backdrop-blur-xs shadow-xs"
+                style={{ borderRadius: '0.4rem' }}
+              >
                 <Tag className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Page: Services</span>
+                <span>সার্ভিসসমূহ</span>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs font-semibold backdrop-blur-xs">
+              <div 
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[0.4rem] bg-white/10 border border-white/20 text-white/90 text-xs font-semibold backdrop-blur-xs"
+                style={{ borderRadius: '0.4rem' }}
+              >
                 <Sparkles className="w-3 h-3 text-amber-300" />
-                <span>Comprehensive Home Care</span>
+                <span>হোম কেয়ার ও রিপেয়ার সল্যুশন</span>
               </div>
 
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#00386b]/80 border border-white/15 text-white/80 text-xs font-medium">
+              <div 
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[0.4rem] bg-[#00386b]/80 border border-white/15 text-white/80 text-xs font-medium"
+                style={{ borderRadius: '0.4rem' }}
+              >
                 <span>📍 সমগ্র ঢাকা সিটি হোম সার্ভিস</span>
               </div>
             </div>
@@ -147,55 +163,37 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
       {/* ========================================================================= */}
       <div id="services-list-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 scroll-mt-24">
         
-        {/* Controls Bar: Filter Tabs & Search Bar */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#DCE3E8] shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        {/* Controls Bar: Filter Tabs & Search Bar (Clean, Professional & Free of AI-cliché icons) */}
+        <div 
+          className="bg-white p-4 sm:p-5 rounded-[0.4rem] border border-[#DCE3E8] shadow-xs flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4"
+          style={{ borderRadius: '0.4rem' }}
+        >
           
-          {/* Category Tabs */}
+          {/* Category Tabs: Exact Servicing Categories from Booking Form, Text Only, High Typographic Standard */}
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => handleCategoryChange('all')}
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-                selectedCategory === 'all'
-                  ? 'bg-[#004179] text-white shadow-sm'
-                  : 'bg-slate-100 hover:bg-slate-200 text-[#17202A]'
-              }`}
-            >
-              সব সার্ভিস ({services.length})
-            </button>
-            <button
-              onClick={() => handleCategoryChange('cooling')}
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-                selectedCategory === 'cooling'
-                  ? 'bg-[#004179] text-white shadow-sm'
-                  : 'bg-slate-100 hover:bg-slate-200 text-[#17202A]'
-              }`}
-            >
-              ❄️ এসি ও ফ্রিজ
-            </button>
-            <button
-              onClick={() => handleCategoryChange('appliances')}
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-                selectedCategory === 'appliances'
-                  ? 'bg-[#004179] text-white shadow-sm'
-                  : 'bg-slate-100 hover:bg-slate-200 text-[#17202A]'
-              }`}
-            >
-              🧺 ওয়াশিং মেশিন ও ওভেন
-            </button>
-            <button
-              onClick={() => handleCategoryChange('electronics')}
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-                selectedCategory === 'electronics'
-                  ? 'bg-[#004179] text-white shadow-sm'
-                  : 'bg-slate-100 hover:bg-slate-200 text-[#17202A]'
-              }`}
-            >
-              🛠️ সার্কিট বোর্ড
-            </button>
+            {categoryFilters.map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  id={`service-cat-${cat.id}`}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`px-3.5 py-2 rounded-[0.4rem] text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs ${
+                    isSelected
+                      ? 'bg-[#004179] text-white border border-[#004179]'
+                      : 'bg-[#F5F7F9] hover:bg-slate-200 text-[#17202A] border border-[#DCE3E8]'
+                  }`}
+                  style={{ borderRadius: '0.4rem' }}
+                >
+                  {cat.label}
+                  {cat.id === 'all' ? ` (${services.length})` : ''}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Search Input */}
-          <div className="relative min-w-[240px] sm:min-w-[280px]">
+          {/* Search Input: Clean, Standard Border Radius */}
+          <div className="relative min-w-[240px] sm:min-w-[280px] shrink-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -205,12 +203,14 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
                 setCurrentPage(1);
               }}
               placeholder="সার্ভিস বা সমস্যা খুঁজুন..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-[#DCE3E8] rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#004179] focus:bg-white"
+              className="w-full pl-9 pr-8 py-2 sm:py-2.5 bg-slate-50 border border-[#DCE3E8] rounded-[0.4rem] text-xs sm:text-sm text-[#17202A] font-medium focus:outline-none focus:ring-2 focus:ring-[#004179] focus:bg-white shadow-xs"
+              style={{ borderRadius: '0.4rem' }}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+                aria-label="Clear search"
               >
                 ✕
               </button>
@@ -223,7 +223,7 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
         <div className="flex items-center justify-between text-xs sm:text-sm text-[#5F6B76] px-1">
           <div className="flex items-center gap-2">
             <span className="font-bold text-[#17202A]">
-              মোট {filteredServices.length}টি সার্ভিসের মধ্যে {Math.min(filteredServices.length, startIndex + 1)} - {Math.min(filteredServices.length, startIndex + itemsPerPage)} দেখানো হচ্ছে
+              মোট {filteredServices.length}টি সার্ভিসের মধ্যে {filteredServices.length > 0 ? startIndex + 1 : 0} - {Math.min(filteredServices.length, startIndex + itemsPerPage)} দেখানো হচ্ছে
             </span>
           </div>
           <span className="font-semibold text-[#004179]">
@@ -244,15 +244,19 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-[#DCE3E8] p-8 space-y-3">
+          <div 
+            className="text-center py-16 bg-white rounded-[0.4rem] border border-dashed border-[#DCE3E8] p-8 space-y-3"
+            style={{ borderRadius: '0.4rem' }}
+          >
             <p className="text-base font-bold text-[#17202A]">কোনো সার্ভিস পাওয়া যায়নি</p>
-            <p className="text-xs text-[#5F6B76]">অন্য কোনো নাম বা ফিল্টার দিয়ে চেষ্টা করুন।</p>
+            <p className="text-xs sm:text-sm text-[#5F6B76]">অন্য কোনো নাম বা ফিল্টার দিয়ে চেষ্টা করুন।</p>
             <button
               onClick={() => {
                 setSearchQuery('');
                 setSelectedCategory('all');
               }}
-              className="px-4 py-2 bg-[#004179] text-white text-xs font-bold rounded-lg cursor-pointer"
+              className="px-4 py-2 bg-[#004179] text-white text-xs sm:text-sm font-bold rounded-[0.4rem] cursor-pointer shadow-xs"
+              style={{ borderRadius: '0.4rem' }}
             >
               ফিল্টার রিসেট করুন
             </button>
@@ -273,7 +277,8 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
               <button
                 onClick={() => handlePageChange(safeCurrentPage - 1)}
                 disabled={safeCurrentPage === 1}
-                className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-[#DCE3E8] bg-white text-[#17202A] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+                className="px-3.5 py-2 rounded-[0.4rem] text-xs sm:text-sm font-bold border border-[#DCE3E8] bg-white text-[#17202A] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                style={{ borderRadius: '0.4rem' }}
                 aria-label="Previous Page"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -288,11 +293,12 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
                   <button
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
-                    className={`min-w-[38px] h-[38px] rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center justify-center ${
+                    className={`min-w-[38px] h-[38px] rounded-[0.4rem] text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center justify-center ${
                       isCurrent
                         ? 'bg-[#004179] text-white shadow-md scale-105'
                         : 'bg-white hover:bg-slate-50 text-[#17202A] border border-[#DCE3E8]'
                     }`}
+                    style={{ borderRadius: '0.4rem' }}
                     aria-current={isCurrent ? 'page' : undefined}
                   >
                     {pageNum}
@@ -304,7 +310,8 @@ export const ServicesPageView: React.FC<ServicesPageViewProps> = ({
               <button
                 onClick={() => handlePageChange(safeCurrentPage + 1)}
                 disabled={safeCurrentPage === totalPages}
-                className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-[#DCE3E8] bg-white text-[#17202A] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+                className="px-3.5 py-2 rounded-[0.4rem] text-xs sm:text-sm font-bold border border-[#DCE3E8] bg-white text-[#17202A] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                style={{ borderRadius: '0.4rem' }}
                 aria-label="Next Page"
               >
                 <span className="hidden sm:inline">পরবর্তী</span>

@@ -4,25 +4,25 @@ export const SERVICES_DATA: Service[] = [
   {
     id: 'srv-ac-repair',
     slug: 'ac-repair',
-    name: 'AC Repair & Servicing',
-    shortDescription: 'Professional AC repair and servicing for common cooling, electrical, gas leakage and performance problems.',
-    fullDescription: 'AC performance can decrease for different reasons, including cooling problems, dirty coils, gas leakage, electrical faults, or capacitor breakdown. ElectroFix BD provides comprehensive AC inspection, master jet pressure pump cleaning, gas charging, and electronic circuit board repair directly at your home in Dhaka.',
+    name: 'এসি মেরামত ও সার্ভিসিং',
+    shortDescription: 'ইনভার্টার ও নন-ইনভার্টার এসির কুলিং সমস্যা, গ্যাস লিকেজ, বৈদ্যুতিক ত্রুটি এবং মাস্টার জেট ওয়াশ সার্ভিস।',
+    fullDescription: 'এসির কর্মক্ষমতা কমে যাওয়া, কুলিং না হওয়া, কয়েল অতিরিক্ত নোংরা হওয়া, গ্যাস কমে যাওয়া কিংবা ক্যাপাসিটর ও মাদারবোর্ড নষ্ট হওয়ার মতো যেকোনো জটিল সমস্যার নির্ভরযোগ্য সমাধান দেয় ElectroFix BD। আমাদের দক্ষ টেকনিশিয়ান সরাসরি আপনার বাসায় পৌঁছে হাই-প্রেশার জেট পাম্প ওয়াশ, নাইট্রোজেন প্রেশার টেস্টিং, গ্যাস চার্জিং এবং ইনভার্টার সার্কিট বোর্ড মেরামত সম্পন্ন করেন।',
     commonProblems: [
-      'AC not cooling properly or blowing warm air',
-      'Weak airflow from indoor blower',
-      'Water leaking from indoor AC unit',
-      'Unusual noise or heavy vibration during operation',
-      'AC not turning on or tripping the electrical breaker',
-      'Compressor turns off frequently after few minutes',
-      'Remote sensor or control display error codes'
+      'এসি পর্যাপ্ত ঠান্ডা হচ্ছে না বা শুধু গরম বাতাস বের হচ্ছে',
+      'ইনডোর ব্লোয়ার থেকে কম বাতাস বের হওয়া বা ফ্যান বন্ধ থাকা',
+      'ইনডোর ইউনিট থেকে ঘরের ভেতর ফোঁটা ফোঁটা পানি পড়া',
+      'চলন্ত অবস্থায় এসিতে অস্বাভাবিক বিকট শব্দ বা অতিরিক্ত কম্পন',
+      'এসি অন হচ্ছে না অথবা চালু করলেই মেইন ব্রেকার ট্রিপ করছে',
+      'কয়েক মিনিট চলার পর স্বয়ংক্রিয়ভাবে কম্প্রেসার বন্ধ হয়ে যাওয়া',
+      'রিমোট কন্ট্রোলার রেসপন্স না করা বা ডিসপ্লেতে এরর কোড দেখানো'
     ],
     serviceProcess: [
-      'Customer Request & Initial Symptom Discussion',
-      'Prompt Technician Home Visit Across Dhaka',
-      'Comprehensive Inspection & Diagnostic Pressure Testing',
-      'Clear Explanation of Issues & Transparent Cost Estimate',
-      'Precision Repair, Coil Cleaning or Gas Charging',
-      'Temperature Drop & Airflow Verification Testing'
+      'অনলাইন বা সরাসরি ফোন কলের মাধ্যমে বুকিং ও প্রাথমিক লক্ষণ পর্যালোচনা',
+      'ঢাকা শহরের যেকোনো প্রান্তে নির্ধারিত সময়ে টেকনিশিয়ানের উপস্থিতি',
+      'অ্যাম্পিয়ার, গ্যাস প্রেশার ও বৈদ্যুতিক লাইনের পূর্ণাঙ্গ ডায়াগনসিস',
+      'সমস্যার কারণ ও পার্টসের সঠিক খরচ গ্রাহককে সরাসরি অবগতকরণ',
+      'দক্ষতার সাথে মেরামত, জেট পাম্প ওয়াশ অথবা প্রেশারাইজড গ্যাস রিফিল',
+      'টেম্পারেচার ড্রপ টেস্ট ও কুলিং পারফরম্যান্স যাচাই করে হস্তান্তর'
     ],
     coverImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1200&q=80',
     isActive: true
@@ -30,25 +30,25 @@ export const SERVICES_DATA: Service[] = [
   {
     id: 'srv-refrigerator-repair',
     slug: 'refrigerator-repair',
-    name: 'Refrigerator / Fridge Repair',
-    shortDescription: 'Refrigerator repair and servicing for cooling issues, electrical faults, unusual noise, defrosting and compressor failure.',
-    fullDescription: 'A malfunctioning refrigerator can spoil food and cause immense inconvenience. ElectroFix BD diagnoses and fixes inverter and non-inverter refrigerators, deep freezers, and side-by-side models. From thermostat and defrost timer replacements to compressor relay and gas recharge, our 10+ years experienced technicians get your fridge running properly.',
+    name: 'রেফ্রিজারেটর ও ফ্রিজ মেরামত',
+    shortDescription: 'নরমাল ও ডিপ ফ্রিজের কুলিং না হওয়া, বরফ অতিরিক্ত জমা, গ্যাস রিচার্জ ও কম্প্রেসার ত্রুটির সমাধান।',
+    fullDescription: 'ফ্রিজ হঠাৎ নষ্ট হয়ে গেলে খাবার নষ্ট হওয়ার পাশাপাশি বড় ধরনের বিড়ম্বনা তৈরি হয়। ElectroFix BD ইনভার্টার ও নন-ইনভার্টার সাধারণ ফ্রিজ, ডিপ ফ্রিজার এবং সাইড-বাই-সাইড রেফ্রিজারেটরের নিখুঁত অন-সাইট সার্ভিস প্রদান করে। থার্মোস্ট্যাট, ডিফ্রস্ট সেন্সর ও টাইমার পরিবর্তন থেকে শুরু করে কম্প্রেসার রিলে ও গ্যাস চার্জিং—সবকিছুই অভিজ্ঞ হাতে সম্পন্ন করা হয়।',
     commonProblems: [
-      'Refrigerator not cooling at all or lower chamber warm',
-      'Freezer not freezing properly or uneven cooling',
-      'Excessive ice formation or frost buildup blocking air vents',
-      'Unusual humming, clicking, or rattling noise from compressor',
-      'Water pooling inside vegetable box or leaking on the floor',
-      'Appliance not turning on or electrical current on the body',
-      'Rubber gasket loose causing cold air loss'
+      'ফ্রিজ একদম ঠান্ডা হচ্ছে না অথবা নিচের নরমাল চেম্বার গরম হয়ে যাওয়া',
+      'ডিপ অংশে পর্যাপ্ত বরফ না জমা বা বরফ গলতে থাকা',
+      'অতিরিক্ত বরফ জমে এয়ার ভেন্ট বা বাতাস চলাচলের পথ বন্ধ হওয়া',
+      'কম্প্রেসার থেকে অস্বাভাবিক হামিং, ক্লিকিং বা ঝাঁকুনি শব্দ হওয়া',
+      'ভেজিটেবল বক্সের নিচে পানি জমা বা মেঝেতে পানি গড়িয়ে পড়া',
+      'ফ্রিজ চালু না হওয়া কিংবা ফ্রিজের বডিতে বৈদ্যুতিক শক বা কারেন্ট অনুভূত হওয়া',
+      'দরজার রাবার গ্যাসকেট আলগা হয়ে ঠান্ডা বাতাস বাইরে বের হওয়া'
     ],
     serviceProcess: [
-      'Booking Received via Website or Direct Phone Call',
-      'Technician Arrives at Your Home with Testing Tools',
-      'Thorough Electrical, Compressor & Gas Cycle Diagnostics',
-      'Upfront Estimate with Component Options',
-      'Careful Sensor/Relay Replacement or Leak Repair',
-      'Cooling Stabilization Check & Operational Advice'
+      'ওয়েবসাইট বা সরাসরি ফোন কলের মাধ্যমে সার্ভিস রিকোয়েস্ট গ্রহণ',
+      'প্রয়োজনীয় টেস্টিং টুলস ও স্পেয়ার পার্টস সহ বাসায় টেকনিশিয়ান পৌঁছানো',
+      'কম্প্রেসার কারেন্ট ড্র, গ্যাস সাইকেল ও কুলিং কয়েলের বিস্তারিত পরীক্ষা',
+      'স্বচ্ছ বাজেট ও অনুমোদনের ভিত্তিতে জেনুইন পার্টস স্থাপন',
+      'লিকেজ সল্ডারিং, ভ্যাকুয়াম এবং নির্ধারিত গ্রেডের গ্যাস চার্জিং',
+      'কুলিং স্ট্যাবিলাইজেশন নিশ্চিতকরণ ও দীর্ঘস্থায়ী ব্যবহারের পরামর্শ'
     ],
     coverImage: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=1200&q=80',
     isActive: true
@@ -56,25 +56,25 @@ export const SERVICES_DATA: Service[] = [
   {
     id: 'srv-washing-machine-repair',
     slug: 'washing-machine-repair',
-    name: 'Washing Machine Repair',
-    shortDescription: 'Expert repair and servicing for front-load, top-load and semi-automatic washing machine drainage, spinning and motor problems.',
-    fullDescription: 'Washing machine breakdowns can disrupt your household routine. We repair front-load and top-load automatic machines from major brands (LG, Samsung, Whirlpool, Haier, Singer, Walton, etc.). We solve drum spinning failures, water inlet issues, noisy bearing problems, and digital motherboard faults.',
+    name: 'ওয়াশিং মেশিন মেরামত ও সার্ভিসিং',
+    shortDescription: 'ফ্রন্ট-লোড, টপ-লোড ও অটোমেটিক ওয়াশিং মেশিনের ড্রেন সমস্যা, স্পিন না হওয়া এবং মোটরের বিশ্বস্ত মেরামত।',
+    fullDescription: 'দৈনন্দিন ব্যস্ত জীবনে ওয়াশিং মেশিন বিকল হলে চরম ভোগান্তি পোহাতে হয়। আমরা এলজি, স্যামসাং, ওয়ার্লপুল, হায়ার, সিঙ্গার, ওয়ালটন সহ সকল জনপ্রিয় ব্র্যান্ডের ফ্রন্ট-লোড ও টপ-লোড অটোমেটিক মেশিনের মেরামত করি। ড্রাম না ঘোরা, পানি ড্রেন না হওয়া, অতিরিক্ত শব্দ ও কম্পন কিংবা মাদারবোর্ড এরর সমস্যার দ্রুত সমাধান করা হয় সরাসরি আপনার বাসায়।',
     commonProblems: [
-      'Washing machine not starting or power light dead',
-      'Water not entering the machine or slow fill',
-      'Water not draining out (E20 / OE error codes)',
-      'Drum not spinning or stopping mid-cycle (UE / DE errors)',
-      'Excessive vibration and banging noise during spin cycle',
-      'Door lock jammed or door latch switch broken',
-      'Water leaking from bottom of machine during wash'
+      'ওয়াশিং মেশিন পাওয়ার অন হচ্ছে না বা ডিসপ্লে লাইট নিভে থাকা',
+      'মেশিনে পানি প্রবেশ না করা বা অত্যন্ত ধীরগতিতে পানি আসা',
+      'ওয়াশ শেষে ড্রেন দিয়ে পানি বের না হওয়া (E20 / OE এরর কোড)',
+      'ড্রাম স্পিন না করা বা মাঝপথে ওয়াশ সাইকেল আটকে যাওয়া (UE / DE এরর)',
+      'স্পিন বা ড্রায়ার চলার সময় বিকট আওয়াজ ও মেশিন প্রচণ্ড কাঁপা',
+      'দরজার সেফটি লক আটকে যাওয়া বা ল্যাচ সুইচ নষ্ট হওয়া',
+      'ওয়াশ চলার সময় মেশিনের নিচ দিয়ে পানি লিকেজ হওয়া'
     ],
     serviceProcess: [
-      'Service Booking with Brand & Error Code Details',
-      'Technician Phone Consultation & Home Arrival',
-      'Mechanical & Electronic Diagnostic Testing',
-      'Belt, Pump, Bearing, or Valve Replacement',
-      'Full Wash & High-Speed Spin Cycle Test',
-      'Maintenance Tips to Prevent Scale & Odor'
+      'ব্র্যান্ড, মডেল ও এরর কোডের বিবরণ সহ বুকিং গ্রহণ',
+      'টেকনিশিয়ান কর্তৃক ফোনে পরামর্শ ও দ্রুত বাসায় আগমন',
+      'মোটর, ড্রেন পাম্প, ইনলেট ভালভ ও ইলেকট্রনিক্স ডায়াগনসিস',
+      'প্রয়োজনে ড্রাইভ বেল্ট, ওয়াটার পাম্প বা অরিজিনাল বিয়ারিং পরিবর্তন',
+      'সম্পূর্ণ ওয়াশ ও ১২০০ RPM হাই-স্পিড স্পিন সাইকেল লাইভ টেস্ট',
+      'স্কেল ও দুর্গন্ধ প্রতিরোধে ড্রাম রক্ষণাবেক্ষণ নির্দেশিকা প্রদান'
     ],
     coverImage: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=1200&q=80',
     isActive: true
@@ -82,25 +82,25 @@ export const SERVICES_DATA: Service[] = [
   {
     id: 'srv-oven-repair',
     slug: 'oven-repair',
-    name: 'Oven / Microwave Oven Repair',
-    shortDescription: 'Safe, certified repair for heating failures, spark issues, turntable plate, touch panel and electrical faults in ovens.',
-    fullDescription: 'Microwave and convection ovens operate under high voltage and dangerous capacitance. It is essential not to open them without specialized tools and training. ElectroFix BD safely discharges and tests magnetrons, high-voltage diodes, capacitors, thermal cutoffs, and digital touch controls to bring your oven back to life.',
+    name: 'মাইক্রোওয়েভ ওভেন মেরামত',
+    shortDescription: 'খাবার গরম না হওয়া, ভেতরে স্পার্কিং, টার্নটেবল না ঘোরা এবং টাচ প্যানেল ত্রুটির নিরাপদ বিশেষজ্ঞ সমাধান।',
+    fullDescription: 'মাইক্রোওয়েভ এবং কনভেকশন ওভেন অত্যন্ত উচ্চ ভোল্টেজ ও বিপজ্জনক ক্যাপাসিট্যান্স ধারণ করে, তাই বিশেষ প্রশিক্ষণ ছাড়া এটি খোলা ঝুঁকিপূর্ণ। ElectroFix BD সুরক্ষিতভাবে ওভেনের হাই-ভোল্টেজ ডিসচার্জ করে ম্যাগনেট্রন, এইচভি ডায়োড, ফিউজ, থার্মাল কাট-অফ এবং ডিজিটাল টাচ কন্ট্রোল বোর্ড নিখুঁতভাবে মেরামত ও প্রতিস্থাপন করে।',
     commonProblems: [
-      'Oven turning on and rotating but food remains completely cold',
-      'Sparks, smoke or burning smell inside the heating cavity',
-      'Turntable glass plate not rotating',
-      'Touch panel unresponsive or buttons not registering',
-      'Display screen blank or flickering error code',
-      'Door switch failure (oven stops when door is touched)',
-      'Circuit breaker trips immediately when start button is pressed'
+      'ওভেন অন হচ্ছে এবং প্লেট ঘুরছে কিন্তু খাবার মোটেও গরম হচ্ছে না',
+      'ওভেনের ভেতর আগুনের ফুলকি (স্পার্ক), ধোঁয়া বা পোড়া গন্ধ বের হওয়া',
+      'ভেতরের কাঁচের টার্নটেবল ঘুরছে না বা আটকে আটকে চলা',
+      'টাচ প্যানেলের বাটন কাজ না করা বা প্রেস করলে রেসপন্স না পাওয়া',
+      'ডিসপ্লে স্ক্রিন ব্ল্যাঙ্ক হওয়া বা বিভিন্ন এরর কোড ব্লিংক করা',
+      'ডোর সুইচের সমস্যা (দরজা বন্ধ করলেও ওভেন স্বয়ংক্রিয়ভাবে বন্ধ হওয়া)',
+      'স্টার্ট বাটন চাপামাত্রই বাসার মেইন সার্কিট ব্রেকার পড়ে যাওয়া'
     ],
     serviceProcess: [
-      'Booking Submission with Symptom Description',
-      'Qualified Technician Home Visit',
-      'Safety Discharge of High-Voltage Capacitors',
-      'Magnetron, Diode, Fuse & Board Continuity Testing',
-      'Defective Component Replacement & Seal Inspection',
-      'Heat Test & Radiation Leakage Safety Check'
+      'লক্ষণ ও সমস্যার বিবরণ সহ অনলাইন বুকিং সাবমিশন',
+      'নিরাপত্তা সরঞ্জাম সহ বিশেষজ্ঞ টেকনিশিয়ানের বাসা ভিজিট',
+      'হাই-ভোল্টেজ ক্যাপাসিটরের নিরাপদ ডিসচার্জ ও রেজিস্ট্যান্স পরিমাপ',
+      'ম্যাগনেট্রন, ডায়োড ও ইন্টারলক ডোর সুইচের পুঙ্খানুপুঙ্খ টেস্ট',
+      'ত্রুটিপূর্ণ পার্টস অরিজিনাল কম্পোনেন্ট দিয়ে পরিবর্তন ও সিল টেস্টিং',
+      'হিটিং কার্যকারিতা যাচাই ও রেডিয়েশন লিকেজ সুরক্ষা নিশ্চিতকরণ'
     ],
     coverImage: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1200&q=80',
     isActive: true
@@ -108,25 +108,25 @@ export const SERVICES_DATA: Service[] = [
   {
     id: 'srv-dishwasher-repair',
     slug: 'dishwasher-repair',
-    name: 'Dishwasher Repair',
-    shortDescription: 'Professional home servicing for drainage, water supply, heating element, spray arm and electronic cycle errors.',
-    fullDescription: 'Modern dishwashers rely on intricate water flow sensors, heating elements, spray arm pressure, and electronic cycle programming. When dishes come out cloudy or water fails to drain, our experienced technicians diagnose the issue and restore flawless cleaning performance right in your kitchen.',
+    name: 'ডিশওয়াশার মেরামত ও সার্ভিসিং',
+    shortDescription: 'ড্রেনেজ ব্লকেজ, পানি গরম না হওয়া, স্প্রে আর্ম ক্লিনিং এবং ওয়াশ সাইকেল এররের নিখুঁত হোম সমাধান।',
+    fullDescription: 'আধুনিক ডিশওয়াশার নিখুঁত ওয়াটার ফ্লো সেন্সর, হিটিং এলিমেন্ট, স্প্রে আর্ম প্রেশার এবং ইলেকট্রনিক সাইকেলের উপর নির্ভর করে। থালা-বাসন পরিষ্কার না হওয়া কিংবা ড্রেন পাম্প আটকে যাওয়ার মতো সমস্যায় আমাদের অভিজ্ঞ টেকনিশিয়ান সরাসরি আপনার কিচেনে এসে দ্রুত ডায়াগনসিস ও দীর্ঘমেয়াদী সমাধান প্রদান করেন।',
     commonProblems: [
-      'Dishwasher not starting or stopping mid-cycle',
-      'Water standing at the bottom / drain pump blocked',
-      'Dishes coming out dirty, greasy, or with white residue',
-      'Water leaking from door seal onto kitchen floor',
-      'Unusual grinding or loud buzzing noise during wash cycle',
-      'Water not heating up for high-temperature sanitize cycle',
-      'Error code blinking on front control panel'
+      'ডিশওয়াশার চালু না হওয়া অথবা ওয়াশ সাইকেলের মাঝপথে বন্ধ হয়ে যাওয়া',
+      'মেশিনের নিচে নোংরা পানি জমে থাকা বা ড্রেন পাম্প ব্লক হওয়া (E24 এরর)',
+      'ওয়াশ করার পরও বাসনপত্রে তেল চিটচিটে বা সাদা দাগ রয়ে যাওয়া',
+      'দরজার সিল আলগা হয়ে কিচেনের মেঝেতে পানি গড়িয়ে পড়া',
+      'ওয়াশ সাইকেল চলার সময় কর্কশ ঘর্ষণ বা একটানা গুঞ্জন শব্দ হওয়া',
+      'পানি পর্যাপ্ত গরম না হওয়া ও হাই-টেম্পারেচার স্যানিটাইজ ব্যর্থ হওয়া',
+      'ফ্রন্ট কন্ট্রোল প্যানেলে ওয়াটার সেন্সর এরর কোড ব্লিংক করা'
     ],
     serviceProcess: [
-      'Customer Booking via Website or WhatsApp',
-      'Technician Arrival at Specified Time in Dhaka',
-      'Filter, Spray Arm & Drain Impeller Inspection',
-      'Solenoid Valve, Heating Element & Sensor Testing',
-      'Precision Repair or Replacement of Damaged Parts',
-      'Full Operational Wash Cycle Verification'
+      'ওয়েবসাইট বা হোয়াটসঅ্যাপে ডিশওয়াশার সার্ভিসের অনুরোধ গ্রহণ',
+      'গ্রাহকের পছন্দসই সময়ে অভিজ্ঞ টেকনিশিয়ান কিচেন ভিজিট',
+      'ফিল্টার, স্প্রে আর্ম ও ড্রেন ইম্পেলার চেম্বার পরিষ্কার ও পরীক্ষা',
+      'সোলেনয়েড ভালভ, হিটিং কয়েল ও থার্মিস্টর সেন্সর মাল্টিমিটার টেস্টিং',
+      'ক্ষতিগ্রস্ত ওয়াটার পাম্প বা সেন্সর অরিজিনাল পার্টস দ্বারা প্রতিস্থাপন',
+      'সম্পূর্ণ স্যানিটারি ওয়াশ সাইকেল চালিয়ে কার্যকারিতা নিশ্চিতকরণ'
     ],
     coverImage: 'https://images.unsplash.com/photo-1585837575652-267c041d77d4?auto=format&fit=crop&w=1200&q=80',
     isActive: true
@@ -134,25 +134,25 @@ export const SERVICES_DATA: Service[] = [
   {
     id: 'srv-circuit-board-repair',
     slug: 'circuit-board-repair',
-    name: 'Circuit Board / Chip-Level Repair',
-    shortDescription: 'Micro-soldering, PCB diagnostic and chip-level repair for inverter AC, fridge and washing machine motherboards.',
-    fullDescription: 'Service centers often advise replacing entire motherboards at high cost when a single semiconductor, transistor, capacitor, or microchip fails. With 10+ years of dedicated chip-level electronics repair experience, ElectroFix BD performs microscopic PCB inspection, component tracing, and micro-soldering, restoring original boards at a fraction of the cost.',
+    name: 'সার্কিট বোর্ড ও চিপ-লেভেল মেরামত',
+    shortDescription: 'ইনভার্টার এসি, রেফ্রিজারেটর ও ওয়াশিং মেশিনের পিসিবি মাদারবোর্ডের মাইক্রো-সোল্ডারিং ও চিপ-লেভেল রিপেয়ার।',
+    fullDescription: 'সার্ভিস সেন্টারগুলো সাধারণত সামান্য একটি ট্রানজিস্টর, আইসি বা ক্যাপাসিটর নষ্ট হলেই সম্পূর্ণ মাদারবোর্ড উচ্চমূল্যে পরিবর্তনের পরামর্শ দেয়। ElectroFix BD-এর ১০+ বছরের চিপ-লেভেল ল্যাব অভিজ্ঞতা রয়েছে। আমরা মাইক্রোস্কোপিক পিসিবি ট্র্যাকিং ও আধুনিক মাইক্রো-সোল্ডারিংয়ের মাধ্যমে সাশ্রয়ী মূল্যে আপনার মূল মাদারবোর্ডটিকে সম্পূর্ণ সচল করে তুলি।',
     commonProblems: [
-      'Appliance completely dead with no power or display response',
-      'Inverter error codes (blinking LED sequence on motherboard)',
-      'Voltage surge or lightning strike damage',
-      'Intermittent shutoffs or erratic program behavior',
-      'Relay clicking continuously without starting the compressor',
-      'Burned traces or short-circuited IC on control board',
-      'Microcontroller communication error between indoor and outdoor units'
+      'অ্যাপ্লায়েন্সে সম্পূর্ণ বিদ্যুৎ সরবরাহ বন্ধ এবং কোনো ডিসপ্লে আলো না থাকা',
+      'ইনভার্টার এরর কোড (মাদারবোর্ডের লাল/সবুজ এলইডি লাইট অনবরত ব্লিংক করা)',
+      'ভোল্টেজ আপ-ডাউন বা বজ্রপাতের কারণে সার্কিট বোর্ড পুড়ে যাওয়া',
+      'মেশিন কিছুক্ষণ চলার পর হঠাৎ বন্ধ হয়ে যাওয়া বা প্রোগ্রাম এলোমেলো হওয়া',
+      'বোর্ডের রিলে অনবরত টিক-টিক শব্দ করা কিন্তু কম্প্রেসার স্টার্ট না হওয়া',
+      'কন্ট্রোল বোর্ডের প্রিন্টেড ট্র্যাক পুড়ে যাওয়া বা মাইক্রো আইসি শর্ট হওয়া',
+      'ইনডোর ও আউটডোর ইউনিটের মধ্যে সিরিয়াল কমিউনিকেশন এরর (E7/F1)'
     ],
     serviceProcess: [
-      'Appliance Inspection & Motherboard Extraction',
-      'Microscopic PCB Trace & Multi-Meter Diagnostics',
-      'Faulty Transistor, IC, Diode or Capacitor Identification',
-      'Precision Chip-Level Micro-Soldering & Component Replacement',
-      'Bench Power Supply & Simulated Load Testing',
-      'Re-installation in Appliance & Full Live Verification'
+      'অ্যাপ্লায়েন্স প্রাথমিক ডায়াগনসিস ও সতর্কতার সাথে মাদারবোর্ড খোলা',
+      'মাইক্রোস্কোপিক পিসিবি ট্র্যাক ও মাল্টিমিটার কম্পোনেন্ট টেস্টিং',
+      'ত্রুটিপূর্ণ আইজিবিটি (IGBT), মাইক্রোকন্ট্রোলার ও ক্যাপাসিটর শনাক্তকরণ',
+      'আধুনিক হট এয়ার গান ও মাইক্রো-সোল্ডারিং স্টেশনে চিপ প্রতিস্থাপন',
+      'বেঞ্চ পাওয়ার সাপ্লাই ও সিমুলেটেড লোড টেস্টিংয়ে ভোল্টেজ ট্র্যাকিং',
+      'মেশিনে পুনরায় ইন্সটল করে লাইভ ফুল-লোড টেস্টিং ও ওয়ারেন্টি প্রদান'
     ],
     coverImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
     isActive: true
