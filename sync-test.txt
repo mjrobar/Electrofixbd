@@ -1,0 +1,4 @@
+ElectrofixBD GitHub synchronization test
+Created on test/ai-studio-sync-check branch.
+If Google AI Studio imports this file without modifying other project files, step 1 of sync verification passes.
+Do not merge this branch into main.
