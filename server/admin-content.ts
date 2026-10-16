@@ -56,7 +56,7 @@ export function createAdminContentRouter(pool: pg.Pool) {
     if (!parsed.success) return res.status(400).json({ error: "Please check the required fields.", issues: parsed.error.issues.map(x=>({field:x.path.join("."),message:x.message})) });
     const values = cols[kind].map(c => (parsed.data as Record<string,unknown>)[c] ?? null);
     if (kind === "services") {
-      const serviceId = "srv-" + parsed.data.slug;
+      const serviceId = "srv-" + (parsed.data as {slug:string}).slug;
       try {
         const names = ["id",...cols[kind]].join(",");
         const placeholders = Array.from({length:values.length + 1},(_,i)=>"$"+(i+1)).join(",");
