@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AdminApp from './admin/AdminApp';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { HeroSlider } from './components/home/HeroSlider';
@@ -17,7 +18,7 @@ import { BUSINESS_CONFIG, getWhatsAppUrl, getPhoneCallUrl } from './data/siteCon
 import { getLocalBooking } from './lib/bookingClient';
 import { Phone, MessageCircle, ArrowRight, ShieldCheck, Wrench, Search, CheckCircle2 } from 'lucide-react';
 
-export default function App() {
+function PublicApp() {
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname || '/');
   
   // Booking Modal State
@@ -407,4 +408,9 @@ export default function App() {
 
     </div>
   );
+}
+
+// Isolated admin entry: public pages and design remain unchanged.
+export default function App() {
+  return /^\/admin(?:\/|$)/.test(window.location.pathname) ? <AdminApp /> : <PublicApp />;
 }
