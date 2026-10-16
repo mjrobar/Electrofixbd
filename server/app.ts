@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import express, { type RequestHandler } from "express";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
-import { bookingSchema, contactSchema } from "../shared/api";
+import {
+  bookingSchema,
+  contactSchema,
+  paginationSchema,
+  worksQuerySchema,
+} from "../shared/api";
 import type { Config } from "./config";
 import { ApiError, errorHandler } from "./errors";
 import type { Store } from "./store";
@@ -104,8 +109,13 @@ export function createApp({ config, store }: { config: Config; store: Store }) {
         ? ["POST", "GET"]
         : route === "/contact"
           ? ["POST"]
-          : ["/health", "/status"].includes(route) ||
-              /^\/bookings\/[^/]+$/.test(route)
+          : [
+                "/health",
+                "/status",
+                "/services",
+                "/works",
+                "/testimonials",
+              ].includes(route) || /^\/bookings\/[^/]+$/.test(route)
             ? ["GET"]
             : null;
     if (!methods)
@@ -208,6 +218,39 @@ export function createApp({ config, store }: { config: Config; store: Store }) {
         message: ready
           ? "Database is ready."
           : "Please try again later. Database is unavailable.",
+      });
+    }),
+  );
+  api.get(
+    "/services",
+    asyncRoute(async (req, res) => {
+      const page = paginationSchema.parse(req.query);
+      res.json({
+        success: true,
+        services: await store.listServices(page),
+        pagination: page,
+      });
+    }),
+  );
+  api.get(
+    "/works",
+    asyncRoute(async (req, res) => {
+      const query = worksQuerySchema.parse(req.query);
+      res.json({
+        success: true,
+        works: await store.listWorks(query),
+        pagination: { limit: query.limit, offset: query.offset },
+      });
+    }),
+  );
+  api.get(
+    "/testimonials",
+    asyncRoute(async (req, res) => {
+      const page = paginationSchema.parse(req.query);
+      res.json({
+        success: true,
+        testimonials: await store.listTestimonials(page),
+        pagination: page,
       });
     }),
   );

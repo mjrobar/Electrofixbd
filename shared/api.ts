@@ -50,3 +50,54 @@ export interface ApiErrorBody {
   code: string;
   request_id: string;
 }
+
+export const paginationSchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    offset: z.coerce.number().int().min(0).max(100000).default(0),
+  })
+  .strict();
+export const worksQuerySchema = paginationSchema.extend({
+  category: z.string().trim().min(1).max(80).optional(),
+  featured: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
+});
+export type PageQuery = z.infer<typeof paginationSchema>;
+export type WorksQuery = z.infer<typeof worksQuerySchema>;
+export interface ServiceRecord {
+  id: string;
+  slug: string;
+  name: string;
+  short_description: string;
+  full_description: string;
+  common_problems: string[] | null;
+  service_process: string[] | null;
+  cover_image: string | null;
+}
+export interface WorkRecord {
+  id: string;
+  title: string;
+  slug: string;
+  service_type: string;
+  category: string;
+  description: string;
+  media_url: string;
+  media_type: "image" | "video" | null;
+  is_featured: boolean | null;
+  is_published: boolean;
+  created_at: string;
+}
+export interface TestimonialRecord {
+  id: string;
+  customer_name: string;
+  review: string;
+  service_type: string;
+  rating: number | null;
+  avatar_url: string | null;
+  media_url: string | null;
+  media_type: "image" | "video" | null;
+  is_published: boolean;
+  created_at: string;
+}
