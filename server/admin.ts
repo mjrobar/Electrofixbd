@@ -6,7 +6,7 @@ import type { Config } from "./config";
 
 const cookieName = "efb_admin_session";
 const maxAge = 8 * 60 * 60;
-const allowedStatuses = new Set(["pending", "confirmed", "in_progress", "completed", "cancelled"]);
+const allowedStatuses = new Set(["pending", "contacted", "confirmed", "completed", "cancelled"]);
 
 function constantEqual(left: string, right: string) {
   const a = Buffer.from(left);
@@ -97,7 +97,7 @@ export function createAdminRouter(config: Config) {
       const result = await pool!.query("UPDATE public.bookings SET status=$1,updated_at=now() WHERE booking_number=$2 RETURNING booking_number,status", [req.body.status, req.params.number]);
       if (!result.rowCount) return res.status(404).json({ error: "Booking not found." });
       res.json({ item: result.rows[0] });
-    } catch { res.status(503).json({ error: "Could not update booking." }); }
+    } catch (err) { console.error("Admin booking status update failed:", err instanceof Error ? err.message : "unknown error"); res.status(503).json({ error: "Booking status was not saved. Please retry." }); }
   });
   router.get("/contacts", async (req,res) => {
     const offset = Number(req.query.offset || 0);
