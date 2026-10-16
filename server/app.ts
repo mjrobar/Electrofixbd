@@ -11,6 +11,7 @@ import {
 import type { Config } from "./config";
 import { ApiError, errorHandler } from "./errors";
 import type { Store } from "./store";
+import { createAdminRouter } from "./admin";
 
 const asyncRoute =
   (handler: RequestHandler): RequestHandler =>
@@ -309,6 +310,7 @@ export function createApp({ config, store }: { config: Config; store: Store }) {
   api.use((_req, _res, next) =>
     next(new ApiError(404, "API_NOT_FOUND", "API endpoint not found.")),
   );
+  app.use("/api/admin", createAdminRouter(config));
   app.use("/api", api);
   app.use(errorHandler);
   return app;
