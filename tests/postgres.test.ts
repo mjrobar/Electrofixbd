@@ -146,7 +146,7 @@ test(
       await operator.query(`CREATE ROLE ${role} LOGIN`);
       await operator.query(`GRANT USAGE ON SCHEMA public TO ${role}`);
       await operator.query(
-        `GRANT SELECT ON public.services, public.bookings, public.contact_messages TO ${role}`,
+        `GRANT SELECT ON public.services, public.bookings, public.contact_messages, public.works, public.testimonials TO ${role}`,
       );
       target.username = role;
       target.password = "";

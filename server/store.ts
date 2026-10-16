@@ -8,8 +8,9 @@ import type {
 } from "../shared/api";
 import type { Config } from "./config";
 import { ApiError } from "./errors";
+import { createContentRepository, type ContentRepository } from "./content";
 
-export interface Store {
+export interface Store extends ContentRepository {
   createBooking(input: BookingInput): Promise<BookingRecord>;
   getBooking(number: string): Promise<PublicBooking | null>;
   createContact(input: ContactInput): Promise<void>;
@@ -35,6 +36,15 @@ export function createStore(config: Config): Store {
       createContact: async () => {
         throw unavailable();
       },
+      listServices: async () => {
+        throw unavailable();
+      },
+      listWorks: async () => {
+        throw unavailable();
+      },
+      listTestimonials: async () => {
+        throw unavailable();
+      },
       ready: async () => false,
       close: async () => {},
     };
@@ -48,6 +58,7 @@ export function createStore(config: Config): Store {
   });
   pool.on("error", () => console.error("PostgreSQL idle connection failed."));
   return {
+    ...createContentRepository(pool),
     async createBooking(input) {
       try {
         const service = await pool.query<{ name: string }>(
@@ -134,11 +145,19 @@ export function createStore(config: Config): Store {
         await pool.query(
           "SELECT id, name, is_active FROM public.services LIMIT 0",
         );
+        await pool.query(
+          "SELECT id,title,slug,service_type,category,description,media_url,media_type,is_featured,is_published,created_at FROM public.works LIMIT 0",
+        );
+        await pool.query(
+          "SELECT id,customer_name,review,service_type,rating,avatar_url,media_url,media_type,is_published,created_at FROM public.testimonials LIMIT 0",
+        );
         const privileges = await pool.query<{ ready: boolean }>(`SELECT
           has_table_privilege(current_user, 'public.bookings', 'INSERT') AND
           has_table_privilege(current_user, 'public.bookings', 'SELECT') AND
           has_table_privilege(current_user, 'public.contact_messages', 'INSERT') AND
-          has_table_privilege(current_user, 'public.services', 'SELECT') AS ready`);
+          has_table_privilege(current_user, 'public.services', 'SELECT') AND
+          has_table_privilege(current_user, 'public.works', 'SELECT') AND
+          has_table_privilege(current_user, 'public.testimonials', 'SELECT') AS ready`);
         return privileges.rows[0]?.ready === true;
       } catch {
         return false;
