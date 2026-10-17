@@ -14,13 +14,14 @@ import { BookingModal } from './components/services/BookingModal';
 import { OurWorksPageView } from './components/works/OurWorksPageView';
 import { ContactSection } from './components/contact/ContactSection';
 import type { Service } from './types';
+import { SERVICES_DATA, getServiceBySlug } from './data/servicesData';
 import { BUSINESS_CONFIG, getWhatsAppUrl, getPhoneCallUrl } from './data/siteConfig';
 import { getLocalBooking } from './lib/bookingClient';
 import { Phone, MessageCircle, ArrowRight, ShieldCheck, Wrench, Search, CheckCircle2 } from 'lucide-react';
 
 function PublicApp() {
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname || '/');
-  const [services, setServices] = useState<Service[]>([]);
+  const [services, setServices] = useState<Service[]>(SERVICES_DATA);
   useEffect(() => {
     const controller = new AbortController();
     async function loadServices() {
@@ -38,7 +39,7 @@ function PublicApp() {
           coverImage: service.cover_image || '',
           isActive: true,
         }));
-        if (!controller.signal.aborted) setServices(mapped);
+        if (!controller.signal.aborted && mapped.length > 0) setServices(mapped);
       } catch (error) {
         if (!controller.signal.aborted) console.error('Public services could not be loaded:', error);
       }
@@ -127,7 +128,7 @@ function PublicApp() {
   const isOurWorksPage = currentPath === '/our-works';
   const isContactPage = currentPath === '/contact';
   const serviceDetailMatch = currentPath.startsWith('/services/') ? currentPath.replace('/services/', '') : null;
-  const currentService = serviceDetailMatch ? services.find((service) => service.slug === serviceDetailMatch) : null;
+  const currentService = serviceDetailMatch ? (services.find((service) => service.slug === serviceDetailMatch) || getServiceBySlug(serviceDetailMatch)) : null;
   const isHomePage = currentPath === '/' || (!isServicesPage && !isOurWorksPage && !isContactPage && !serviceDetailMatch);
 
   return (
