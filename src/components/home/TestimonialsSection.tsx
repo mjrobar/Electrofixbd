@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { TESTIMONIALS_DATA } from '../../data/testimonialsData';
 import { Testimonial } from '../../types';
-import { TESTIMONIALS_DATA } from '../../data/testimonialsData';
 
 export const TestimonialsSection: React.FC = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(() => {
