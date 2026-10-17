@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { createHash, createHmac, randomUUID, scryptSync } from "node:crypto";
+import { createHmac, randomUUID, scryptSync } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { once } from "node:events";
 import { test } from "node:test";
 import express from "express";
 import pg from "pg";
+import { assertSourceProvenance } from "./helpers/catalog-provenance";
 import catalog from "../server/existing-content-catalog.json";
 import { applyContentImport, buildImportPreview, canonical, digest, importApproval, ImportConflict, readImportPreview, type ContentRow } from "../server/content-import";
 import { createAdminRouter } from "../server/admin";
@@ -18,7 +19,7 @@ function placeholders(): ContentRow[] {
 test("catalog has verifiable source provenance and explicitly partial mappings", async () => {
  for(const source of catalog.sources){
   const text=await readFile(new URL("../"+source.path,import.meta.url),"utf8");
-  assert.equal(createHash("sha256").update(text).digest("hex"),source.sha256,source.path+" changed: review snapshot before importing");
+  assertSourceProvenance(source,text,catalog.source_ref);
  }
  assert.equal(catalog.data.hero_slides.length,3);assert.equal(catalog.data.faqs.length,8);assert.equal(catalog.data.page_sections.length,6);
  for(const hero of catalog.data.hero_slides){assert.ok(!("button_url" in hero));assert.ok(hero.subtitle);}
@@ -27,6 +28,26 @@ test("catalog has verifiable source provenance and explicitly partial mappings",
  for(const module of buildImportPreview(placeholders()).modules)assert.equal(module.action,"import-draft");
  assert.equal((buildImportPreview(placeholders()).modules.find(m=>m.key==="business_settings")!.data as Record<string,unknown>)["email"],"");
  assert.equal(validate("faqs",[{id:"same",question:"Test?",answer:"Yes"},{id:"same",question:"Test?",answer:"Yes"}]).success,false);
+});
+test("source provenance accepts checkout line endings without accepting source or catalogue edits", async () => {
+ for(const source of catalog.sources){
+  const lf=(await readFile(new URL("../"+source.path,import.meta.url),"utf8")).replace(/\r\n/g,"\n");
+  const crlf=lf.replace(/\n/g,"\r\n");
+  let newline=0;
+  const mixed=lf.replace(/\n/g,()=>newline++%2?"\r\n":"\n");
+  for(const text of [lf,crlf,mixed])assertSourceProvenance(source,text,catalog.source_ref);
+  assert.throws(()=>assertSourceProvenance({...source,sha256:"0".repeat(64)},crlf,catalog.source_ref),/Review source mappings and imported values/);
+  for(const changed of [lf+" ","\uFEFF"+lf,lf.replace(/\n/,"\r")]) {
+   assert.throws(()=>assertSourceProvenance(source,changed,catalog.source_ref),/after CRLF-to-LF normalization/);
+  }
+ }
+ const hero=catalog.sources.find(source=>source.path.endsWith("/HeroSlider.tsx"))!;
+ const original=await readFile(new URL("../"+hero.path,import.meta.url),"utf8");
+ const title=catalog.data.hero_slides[0].title;
+ assert.ok(original.includes(title));
+ const changed=original.replace(title,"Changed headline requiring source review");
+ assert.throws(()=>assertSourceProvenance(hero,changed,catalog.source_ref),/Raw SHA-256:.*LF SHA-256:.*recorded SHA-256:/);
+ assert.throws(()=>assertSourceProvenance(hero,changed.replace(/\r?\n/g,"\r\n"),catalog.source_ref),/Review source mappings and imported values/);
 });
 test("preview is deterministic, additive and preserves authored or intentionally empty records", () => {
  const rows=placeholders();rows[0].draft=[{id:"existing"}];rows[1].published=[{id:"published"}];rows[2].revision=1;

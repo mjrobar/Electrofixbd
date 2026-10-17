@@ -10,8 +10,10 @@ Migration 003 already provides every required column; no new migration is needed
 `server/existing-content-catalog.json` is a reviewed, static source snapshot. It
 contains the source commit, SHA-256 of each inspected file, field mappings,
 unsupported fields, and proposed draft data. Runtime does not execute or import
-public React components. Tests fail when a catalogued source file changes, so the
-snapshot must be reviewed against future source changes before importing again.
+public React components. Provenance tests normalize checkout CRLF line endings
+to LF before comparing the recorded source hashes. All other source changes fail
+the check, so mappings and imported values must be reviewed before updating the
+snapshot. No trimming, BOM removal or Unicode normalization is performed.
 
 | Module | Existing source | Imported fields | Baseline preview |
 | --- | --- | --- | --- |
@@ -149,8 +151,8 @@ content wiring is implemented here.
 Verified with Node `v24.19.0` and disposable PostgreSQL `18.4`:
 
 - `npm run lint`: passed.
-- `npm test` with the explicit local `TEST_DATABASE_URL`: 28 passed, 0 failed,
-  0 skipped, including the new four-test import/admin suite.
+- `npm test` with the explicit local `TEST_DATABASE_URL`: 29 passed, 0 failed,
+  0 skipped, including the five-test import/admin suite.
 - `npm run build`: passed for the Vite client and portable Node server bundle.
   Existing Vite warning: `__dirname` in `vite.config.ts` will need attention for a
   future native config loader. Build configuration was left unchanged.
@@ -167,3 +169,46 @@ The base repository's npm peer resolution required `--legacy-peer-deps` for the
 existing Vite 8 / esbuild 0.25 peer mismatch in this environment. This did not
 require a dependency or build configuration change. AI Studio review and any
 real-environment import approval remain separate from these local checks.
+
+
+### PR #8 source-hash investigation
+
+The reported local failure named `src/components/home/HeroSlider.tsx`. At review,
+PR head `06f03171c6bba83a0e8d238fbd4c176e48018e26`, its recorded base
+`4409920ce5e23c24c5b09e44549b20d1a29c14dd`, and fetched `main`
+`2cc6a55` contained identical bytes for all nine catalogued source files. The
+working checkout also matched those bytes. No frontend content change was found
+in these repository versions.
+
+A fresh static TypeScript/JSX syntax-tree extraction of all source initializers
+and mapped heading/paragraph slots was compared to the entire recorded catalogue,
+including field mappings, omissions, IDs and draft data. It matched exactly:
+3 hero slides, 8 FAQs, 7 sourced business settings, and 6 page sections. In
+particular, hero title/titleBn/description/image/primaryCta still map to the saved
+fields, while booking callbacks, badges and secondary actions remain explicitly
+unmapped. No catalogue values, expected hashes or source reference were changed.
+
+The existing test hashed raw working-tree text. Converting only HeroSlider's 243
+LF newlines to CRLF reproduces a mismatch without any content edits:
+
+- Recorded LF SHA-256: `a2ca820248e4d67fd0eae439a6ec2d7288b0351553f4f55907e4258849f3558d`.
+- CRLF-only SHA-256: `d6a6d1a719bf96b6fe0e5705b00878d409b0fa095e66dd3b4502b51041bc98d1`.
+
+This establishes a reproducible checkout-portability defect, but the original
+local checkout's actual hash was not supplied with the report; it does not prove
+that checkout has no additional local edits. The corrected assertion reports raw,
+LF-normalized and recorded hashes plus the source commit if a mismatch remains.
+Any remaining failure requires reviewing the local diff and mapped values rather
+than refreshing the catalogue hash.
+
+Regression coverage checks LF, CRLF and mixed newline inputs for all nine sources
+without writing to frontend files. Wrong catalogue hashes, added whitespace,
+BOMs, lone CR newlines and actual hero headline changes (with LF or CRLF) still
+fail. This patch changes only tests and backend documentation; import behavior,
+admin design and the production database are unchanged.
+
+
+Follow-up validation on Node `v24.19.0`: lint passed; all 29 tests passed with no
+skips using disposable local PostgreSQL; production build passed with the same
+existing Vite native-loader warning. No frontend file, import catalogue, expected
+source hash, admin component or database migration was changed by this fix.
