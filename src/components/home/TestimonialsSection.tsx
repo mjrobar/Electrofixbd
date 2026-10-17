@@ -19,8 +19,8 @@ export const TestimonialsSection: React.FC = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('electrofix_user_feedbacks') || '[]');
-      return sortNewestFirst([...(Array.isArray(saved) ? saved : []), ...TESTIMONIALS_DATA]);
-    } catch { return sortNewestFirst(TESTIMONIALS_DATA); }
+      return [...(Array.isArray(saved) ? saved : []), ...TESTIMONIALS_DATA];
+    } catch { return TESTIMONIALS_DATA; }
   });
   const [selectedFeedback, setSelectedFeedback] = useState<Testimonial | null>(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
