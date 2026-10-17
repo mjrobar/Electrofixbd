@@ -169,3 +169,8 @@ Owner's single coordinated hands-on acceptance, after automated checks:
 - Compare login, dashboard, bookings, messages, content and settings at 375/768/1440.
 - Approve the final release and merge/deployment separately. This PR never auto-merges
   or deploys and does not authorize running destructive tests on any real database.
+
+The inherited Vercel Git policy is supplemented with an exact disabled rule for
+`feat/issue-11-production-admin` before pushing this Draft PR. This deployment-only
+configuration change is flagged for AGENTS.md special review. No build command,
+output, rewrite or main-branch deployment rule changes. No deployment command ran.

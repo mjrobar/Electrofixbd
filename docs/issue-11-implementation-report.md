@@ -8,8 +8,10 @@ Implementation branch: `feat/issue-11-production-admin`. This is a Draft PR for
 AI Studio review and the owner's coordinated acceptance, not deployment approval.
 
 No public React component, data file, shared public contract, public API client,
-stylesheet, asset, route, package manifest, lockfile or Vite/build configuration was
-modified. Existing publications and IDs are preserved by additive migration 004.
+stylesheet, asset, route, package manifest, lockfile or application build setting was
+modified. The only shared configuration change is an exact feature-branch deployment
+disable rule in `vercel.json`, flagged for special review under AGENTS.md; build
+commands, output, rewrites and the existing main deployment rule are unchanged. Existing publications and IDs are preserved by additive migration 004.
 No shared/production database was read, migrated, tested destructively or deployed.
 
 ## Implemented functionality
@@ -75,7 +77,7 @@ Executed on Node `v24.19.0`, disposable local PostgreSQL `18.4`:
 | `TEST_DATABASE_URL=<disposable local test DB> npm run test:startup` | 2 passed; both development and production startup/routing/restart persistence/shutdown using a new disposable database and restricted runtime role                                                                                 |
 | `tests/admin-ui.check.mjs` with an installed Playwright/Chromium    | Passed: compiled client, new disposable database/server, create/save/preview/publish, multiline content, historical draft restore, archive recovery, failed-load recovery, booking status/notes, message reply, session revocation |
 | Responsive browser review                                           | Login, dashboard, bookings, messages, content and settings at 375/768/1440; no runtime errors or horizontal overflow; mobile search width checked; screenshots inspected                                                           |
-| Public ownership / file-scope review                                | No public frontend, shared-contract, dependency or build-config diffs from integration base                                                                                                                                        |
+| Public ownership / file-scope review                                | No public frontend, shared-contract, dependency or application-build diffs; exact branch-only Vercel deployment guard reviewed separately                                                                                          |
 | Source catalogue provenance and import safety                       | Existing LF/CRLF/source-change detection, non-destructive idempotency, backup approval, concurrency and rollback tests remain green                                                                                                |
 
 New lifecycle/security and browser suites create/drop their own random test DBs.
