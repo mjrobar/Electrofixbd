@@ -1,0 +1,24 @@
+[Unit]
+Description=ElectrofixBD Node API and website
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=electrofix
+Group=electrofix
+WorkingDirectory=/srv/electrofix/current
+EnvironmentFile=/etc/electrofix/app.env
+ExecStart=/usr/bin/node dist/server.mjs
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/srv/electrofix
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
