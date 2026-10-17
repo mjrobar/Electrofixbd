@@ -4,6 +4,7 @@ import { rateLimit } from "express-rate-limit";
 import pg from "pg";
 import type { Config } from "./config";
 import { createAdminContentRouter } from "./admin-content";
+import { createAdminSiteControlsRouter } from "./site-controls";
 
 const cookieName = "efb_admin_session";
 const maxAge = 8 * 60 * 60;
@@ -66,7 +67,10 @@ export function createAdminRouter(config: Config) {
     if (!isAuthenticated(parseCookie(req.headers.cookie || ""))) return res.status(401).json({ error: "Authentication required." });
     next();
   });
-  if (pool) router.use(createAdminContentRouter(pool));
+  if (pool) {
+    router.use(createAdminContentRouter(pool));
+    router.use(createAdminSiteControlsRouter(pool));
+  }
   router.get("/me", (_req,res) => res.json({ user: { name: "Administrator" } }));
   router.post("/logout", (_req,res) => {
     res.clearCookie(cookieName, { httpOnly: true, secure: config.NODE_ENV === "production", sameSite: "strict", path: "/api/admin" });

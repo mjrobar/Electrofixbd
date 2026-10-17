@@ -12,6 +12,8 @@ import type { Config } from "./config";
 import { ApiError, errorHandler } from "./errors";
 import type { Store } from "./store";
 import { createAdminRouter } from "./admin";
+import pg from "pg";
+import { createPublicSiteControlsRouter } from "./site-controls";
 
 const asyncRoute =
   (handler: RequestHandler): RequestHandler =>
@@ -311,6 +313,11 @@ export function createApp({ config, store }: { config: Config; store: Store }) {
     next(new ApiError(404, "API_NOT_FOUND", "API endpoint not found.")),
   );
   app.use("/api/admin", createAdminRouter(config));
+  if (config.DATABASE_URL) {
+    const contentPool = new pg.Pool({ connectionString: config.DATABASE_URL, max: 2, connectionTimeoutMillis: config.DB_TIMEOUT_MS, idleTimeoutMillis: 30000 });
+    contentPool.on("error", () => console.error("Site content idle database connection failed."));
+    app.use("/api/site-content", createPublicSiteControlsRouter(contentPool));
+  }
   app.use("/api", api);
   app.use(errorHandler);
   return app;
