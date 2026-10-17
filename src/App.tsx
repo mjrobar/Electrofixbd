@@ -13,13 +13,39 @@ import { ServiceDetailView } from './components/services/ServiceDetailView';
 import { BookingModal } from './components/services/BookingModal';
 import { OurWorksPageView } from './components/works/OurWorksPageView';
 import { ContactSection } from './components/contact/ContactSection';
-import { SERVICES_DATA, getServiceBySlug } from './data/servicesData';
+import type { Service } from './types';
 import { BUSINESS_CONFIG, getWhatsAppUrl, getPhoneCallUrl } from './data/siteConfig';
 import { getLocalBooking } from './lib/bookingClient';
 import { Phone, MessageCircle, ArrowRight, ShieldCheck, Wrench, Search, CheckCircle2 } from 'lucide-react';
 
 function PublicApp() {
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname || '/');
+  const [services, setServices] = useState<Service[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadServices() {
+      try {
+        const response = await fetch('/api/services?limit=100', { signal: controller.signal, cache: 'no-store' });
+        if (!response.ok) throw new Error('Services API unavailable');
+        const payload = await response.json();
+        if (!Array.isArray(payload.services)) throw new Error('Unexpected services response');
+        const mapped: Service[] = payload.services.map((service: any) => ({
+          id: service.id, slug: service.slug, name: service.name,
+          shortDescription: service.short_description,
+          fullDescription: service.full_description,
+          commonProblems: Array.isArray(service.common_problems) ? service.common_problems : [],
+          serviceProcess: Array.isArray(service.service_process) ? service.service_process : [],
+          coverImage: service.cover_image || '',
+          isActive: true,
+        }));
+        if (!controller.signal.aborted) setServices(mapped);
+      } catch (error) {
+        if (!controller.signal.aborted) console.error('Public services could not be loaded:', error);
+      }
+    }
+    void loadServices();
+    return () => controller.abort();
+  }, []);
   
   // Booking Modal State
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -101,7 +127,7 @@ function PublicApp() {
   const isOurWorksPage = currentPath === '/our-works';
   const isContactPage = currentPath === '/contact';
   const serviceDetailMatch = currentPath.startsWith('/services/') ? currentPath.replace('/services/', '') : null;
-  const currentService = serviceDetailMatch ? getServiceBySlug(serviceDetailMatch) : null;
+  const currentService = serviceDetailMatch ? services.find((service) => service.slug === serviceDetailMatch) : null;
   const isHomePage = currentPath === '/' || (!isServicesPage && !isOurWorksPage && !isContactPage && !serviceDetailMatch);
 
   return (
@@ -194,7 +220,7 @@ function PublicApp() {
 
               {/* 3-Column Responsive Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                {SERVICES_DATA.map((service) => (
+                {services.map((service) => (
                   <ServiceCard
                     key={service.id}
                     service={service}
@@ -233,7 +259,7 @@ function PublicApp() {
         {/* ==================== 2. ALL SERVICES PAGE ==================== */}
         {isServicesPage && (
           <ServicesPageView
-            services={SERVICES_DATA}
+            services={services}
             onViewDetails={(slug) => navigate(`/services/${slug}`)}
             onBookService={(name, id) => handleOpenBooking(name, id)}
           />

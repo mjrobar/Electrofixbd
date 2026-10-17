@@ -41,19 +41,32 @@ export const TestimonialsSection: React.FC = () => {
     });
   };
 
-  // Load testimonials on mount (Initial data + User saved feedbacks from localStorage, sorted newest first)
+  // Server-backed published feedback: admin changes are visible to every visitor.
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('electrofix_user_feedbacks');
-      if (saved) {
-        const parsed: Testimonial[] = JSON.parse(saved);
-        setTestimonials(sortNewestFirst([...parsed, ...TESTIMONIALS_DATA]));
-      } else {
-        setTestimonials(sortNewestFirst(TESTIMONIALS_DATA));
+    const controller = new AbortController();
+    async function loadPublished() {
+      try {
+        const response = await fetch('/api/testimonials?limit=100', { signal: controller.signal, cache: 'no-store' });
+        if (!response.ok) throw new Error('Testimonials API unavailable');
+        const payload = await response.json();
+        if (!Array.isArray(payload.testimonials)) throw new Error('Invalid testimonials API response');
+        const records: Testimonial[] = payload.testimonials.map((record: any) => ({
+          id: String(record.id), customerName: String(record.customer_name),
+          review: String(record.review), serviceType: String(record.service_type),
+          rating: Number(record.rating) || 5,
+          avatarUrl: record.avatar_url || undefined, mediaUrl: record.media_url || undefined,
+          mediaType: record.media_type === 'video' ? 'video' : record.media_type === 'image' ? 'image' : undefined,
+          createdAt: record.created_at,
+          date: new Date(record.created_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }),
+          time: new Date(record.created_at).toLocaleTimeString('bn-BD', { hour: 'numeric', minute: '2-digit' })
+        }));
+        if (!controller.signal.aborted) { setTestimonials(sortNewestFirst(records)); setCurrentPage(1); }
+      } catch (error) {
+        if (!controller.signal.aborted) console.error('Unable to load published testimonials:', error);
       }
-    } catch (e) {
-      setTestimonials(sortNewestFirst(TESTIMONIALS_DATA));
     }
+    void loadPublished();
+    return () => controller.abort();
   }, []);
 
   // Pagination calculation

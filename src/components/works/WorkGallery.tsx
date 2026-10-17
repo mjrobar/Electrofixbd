@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wrench, MapPin, Calendar, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { WORKS_DATA } from '../../data/worksData';
+
 import { WorkItem } from '../../types';
 
 interface WorkGalleryProps {
@@ -9,13 +9,35 @@ interface WorkGalleryProps {
 
 export const WorkGallery: React.FC<WorkGalleryProps> = ({ onOpenBooking }) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [works, setWorks] = useState<WorkItem[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadWorks() {
+      try {
+        const response = await fetch('/api/works?limit=100', { signal: controller.signal, cache: 'no-store' });
+        if (!response.ok) throw new Error('Works API unavailable');
+        const body = await response.json();
+        if (!Array.isArray(body.works)) throw new Error('Unexpected works response');
+        const mapped: WorkItem[] = body.works.map((work: any) => ({
+          id: work.id, title: work.title, slug: work.slug,
+          serviceType: work.service_type, category: work.category,
+          description: work.description, mediaUrl: work.media_url,
+          mediaType: work.media_type === 'video' ? 'video' : 'image',
+          isFeatured: work.is_featured, createdAt: work.created_at,
+        }));
+        if (!controller.signal.aborted) { setWorks(mapped); setCurrentPage(1); }
+      } catch (error) { if (!controller.signal.aborted) console.error('Public works unavailable:', error); }
+    }
+    void loadWorks();
+    return () => controller.abort();
+  }, []);
   const itemsPerPage = 6; // 6 per page as requested by user
 
-  const totalWorks = WORKS_DATA.length;
+  const totalWorks = works.length;
   const totalPages = Math.ceil(totalWorks / itemsPerPage) || 1;
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * itemsPerPage;
-  const paginatedWorks = WORKS_DATA.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedWorks = works.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
