@@ -1,3 +1,4 @@
+import { configureProxy } from "./proxy";
 import { randomUUID } from "node:crypto";
 import express, { type RequestHandler } from "express";
 import helmet from "helmet";
@@ -51,10 +52,7 @@ export function createApp({ config, store }: { config: Config; store: Store }) {
   const app = express();
   app.disable("x-powered-by");
   app.set("case sensitive routing", true);
-  app.set(
-    "trust proxy",
-    config.TRUST_PROXY === "loopback" ? "loopback" : false,
-  );
+  configureProxy(app, config.TRUST_PROXY);
   app.use((_req, res, next) => {
     res.locals.requestId = randomUUID();
     res.setHeader("X-Request-ID", res.locals.requestId);
@@ -73,13 +71,8 @@ export function createApp({ config, store }: { config: Config; store: Store }) {
                   "https://fonts.googleapis.com",
                 ],
                 fontSrc: ["'self'", "https://fonts.gstatic.com"],
-                imgSrc: [
-                  "'self'",
-                  "data:",
-                  "blob:",
-                  "https://images.unsplash.com",
-                ],
-                mediaSrc: ["'self'", "data:", "blob:"],
+                imgSrc: ["'self'", "data:", "blob:", "https:"],
+                mediaSrc: ["'self'", "https:", "blob:"],
                 connectSrc: ["'self'"],
               },
             }
@@ -312,13 +305,27 @@ export function createApp({ config, store }: { config: Config; store: Store }) {
   api.use((_req, _res, next) =>
     next(new ApiError(404, "API_NOT_FOUND", "API endpoint not found.")),
   );
-  app.use("/api/admin", createAdminRouter(config));
+  const adminRouter = createAdminRouter(config);
+  app.use("/api/admin", adminRouter);
+  const cleanup: Array<() => Promise<unknown>> = [() => adminRouter.close()];
   if (config.DATABASE_URL) {
-    const contentPool = new pg.Pool({ connectionString: config.DATABASE_URL, max: 2, connectionTimeoutMillis: config.DB_TIMEOUT_MS, idleTimeoutMillis: 30000 });
-    contentPool.on("error", () => console.error("Site content idle database connection failed."));
+    const contentPool = new pg.Pool({
+      connectionString: config.DATABASE_URL,
+      max: 2,
+      connectionTimeoutMillis: config.DB_TIMEOUT_MS,
+      statement_timeout: config.DB_TIMEOUT_MS,
+      idleTimeoutMillis: 30000,
+    });
+    cleanup.push(() => contentPool.end());
+    contentPool.on("error", () =>
+      console.error("Site content idle database connection failed."),
+    );
     app.use("/api/site-content", createPublicSiteControlsRouter(contentPool));
   }
   app.use("/api", api);
   app.use(errorHandler);
+  Object.assign(app.locals, {
+    close: () => Promise.all(cleanup.map((close) => close())),
+  });
   return app;
 }
