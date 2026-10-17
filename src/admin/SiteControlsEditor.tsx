@@ -1,4 +1,5 @@
 import React,{useEffect,useState} from "react";
+import ContentImportPanel from "./ContentImportPanel";
 type Key="hero_slides"|"faqs"|"business_settings"|"page_sections";
 type Row=Record<string,unknown>;
 const fields:Record<Key,{key:string;label:string;multiline?:boolean}[]>={
@@ -15,31 +16,48 @@ const defaults:Record<Key,Row>={
 };
 export default function SiteControlsEditor(){
  const [key,setKey]=useState<Key>("hero_slides");
+ const [importBusy,setImportBusy]=useState(false);
+ const [generation,setGeneration]=useState(0);
+ const [dirty,setDirty]=useState(false);
+ const [busy,setBusy]=useState(false);
+ function switchModule(next:Key){if(busy||importBusy||next===key)return;if(dirty&&!window.confirm("Discard unsaved edits and switch modules?"))return;setDirty(false);setKey(next)}
+ return <><ContentImportPanel onBusy={setImportBusy} blocked={dirty||busy} onImported={()=>{setDirty(false);setGeneration(value=>value+1)}}/>
+ <div className="mt-6 flex flex-wrap gap-2">{(["hero_slides","faqs","business_settings","page_sections"] as const).map(k=><button disabled={busy||importBusy} type="button" key={k} onClick={()=>switchModule(k)} className={"rounded-md border px-3 py-2 text-sm font-semibold disabled:opacity-50 "+(key===k?"border-[#004179] bg-[#004179] text-white":"border-slate-200 bg-white text-slate-700")}>{k.replaceAll("_"," ")}</button>)}</div>
+ <ModuleEditor key={key+generation} moduleKey={key} disabled={importBusy} onDirty={setDirty} onBusy={setBusy}/></>;
+}
+function ModuleEditor({moduleKey:key,onDirty,onBusy,disabled}:{moduleKey:Key;disabled:boolean;onDirty:(value:boolean)=>void;onBusy:(value:boolean)=>void}){
  const [data,setData]=useState<Row|Row[]>([]);
  const [revision,setRevision]=useState(0);
  const [editing,setEditing]=useState<number|null>(null);
  const [error,setError]=useState("");
  const [notice,setNotice]=useState("");
  const [loading,setLoading]=useState(false);
+ const [loaded,setLoaded]=useState(false);
+ const [dirty,setDirty]=useState(false);
+ useEffect(()=>{onDirty(dirty)},[dirty,onDirty]);
+ useEffect(()=>{onBusy(loading);return ()=>onBusy(false)},[loading,onBusy]);
  async function request(path:string,method="GET",body?:unknown){
   const response=await fetch("/api/admin/site-content/"+path,{method,credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json",...(method!=="GET"?{"X-Admin-Request":"1"}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});
   const value=await response.json().catch(()=>({}));
-  if(!response.ok)throw Error(value.error||"Unable to complete request.");
+  if(!response.ok)throw Error(value.issues?.length?value.issues.map((issue:{field:string;message:string})=>`${issue.field}: ${issue.message}`).join("; "):value.error||"Unable to complete request.");
   return value.item;
  }
- async function reload(){setLoading(true);setError("");try{const item=await request(key);setData(item.draft);setRevision(item.revision);setEditing(null);}catch(e){setError(e instanceof Error?e.message:"Loading failed");}finally{setLoading(false)}}
+ async function reload(){setLoading(true);setLoaded(false);setError("");setNotice("");try{const item=await request(key);setData(key==="business_settings"?{...defaults.business_settings,...item.draft}:item.draft);setRevision(item.revision);setEditing(null);setLoaded(true);setDirty(false);}catch(e){setError(e instanceof Error?e.message:"Loading failed");}finally{setLoading(false)}}
  useEffect(()=>{setData(key==="business_settings"?{...defaults.business_settings}:[]);setNotice("");void reload()},[key]);
- function change(index:number,field:string,value:unknown){if(key==="business_settings"){setData(prev=>({...prev as Row,[field]:value}));return;}setData(prev=>(prev as Row[]).map((row,i)=>i===index?{...row,[field]:value}:row));}
- function add(){if(key==="business_settings")return;setData(prev=>[...(prev as Row[]),{...defaults[key]}]);setEditing((data as Row[]).length)}
- async function save(){setLoading(true);setError("");setNotice("");try{const item=await request(key+"/draft","PUT",{data,revision});setRevision(item.revision);setData(item.draft);setNotice("Draft saved. Public website has not been changed.");setEditing(null)}catch(e){setError(e instanceof Error?e.message:"Save failed")}finally{setLoading(false)}}
- async function publish(){if(!window.confirm("Publish the saved draft? This makes the module available to the public website API."))return;setLoading(true);setError("");try{const item=await request(key+"/publish","POST",{revision});setRevision(item.revision);setNotice("Published successfully. Google AI Studio must connect the frontend to this API.")}catch(e){setError(e instanceof Error?e.message:"Publish failed")}finally{setLoading(false)}}
+ function change(index:number,field:string,value:unknown){setDirty(true);if(key==="business_settings"){setData(prev=>({...prev as Row,[field]:value}));return;}setData(prev=>(prev as Row[]).map((row,i)=>i===index?{...row,[field]:value}:row));}
+ function add(){setDirty(true);if(key==="business_settings")return;setData(prev=>[...(prev as Row[]),{...defaults[key]}]);setEditing((data as Row[]).length)}
+ async function save(){setLoading(true);setError("");setNotice("");try{const item=await request(key+"/draft","PUT",{data,revision});setRevision(item.revision);setData(item.draft);setDirty(false);setNotice("Draft saved. Public website has not been changed.");setEditing(null)}catch(e){setError(e instanceof Error?e.message:"Save failed")}finally{setLoading(false)}}
+ async function publish(){if(dirty)return;if(!window.confirm("Publish the saved draft? This makes the module available to the public website API."))return;setLoading(true);setError("");try{const item=await request(key+"/publish","POST",{revision});setRevision(item.revision);setNotice("Published successfully. Google AI Studio must connect the frontend to this API.")}catch(e){setError(e instanceof Error?e.message:"Publish failed")}finally{setLoading(false)}}
  const items=key==="business_settings"?[data as Row]:Array.isArray(data)?data:[];
  return <section className="mt-6 space-y-4 rounded-lg border border-[#DCE3E8] bg-white p-5 sm:p-6">
  <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-bold">Website Controls</h2><p className="mt-1 text-sm text-slate-500">Create drafts, review and publish when ready.</p></div><span className="text-xs text-slate-500">Revision {revision}</span></div>
- <div className="flex flex-wrap gap-2">{(["hero_slides","faqs","business_settings","page_sections"] as const).map(k=><button type="button" key={k} onClick={()=>setKey(k)} className={"rounded-md border px-3 py-2 text-sm font-semibold "+(key===k?"border-[#004179] bg-[#004179] text-white":"border-slate-200 bg-white text-slate-700")}>{k.replaceAll("_"," ")}</button>)}</div>
  {error&&<p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}{notice&&<p role="status" className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
- <div className="space-y-3">{items.map((item,i)=><div key={i} className="rounded-md border border-slate-200 p-4"><div className="flex items-center justify-between gap-3"><strong className="text-sm">{String(item.title||item.question||item.heading||item.business_name||"New item")}</strong><button type="button" className="text-sm font-semibold text-[#004179]" onClick={()=>setEditing(editing===i?null:i)}>{editing===i?"Close":"Edit"}</button></div>{editing===i||key==="business_settings"?<div className="mt-4 grid gap-3 sm:grid-cols-2">{fields[key].map(f=><label key={f.key} className={"text-xs font-semibold text-slate-700 "+(f.multiline?"sm:col-span-2":"")}>{f.label}{f.multiline?<textarea rows={4} value={String(item[f.key]??"")} onChange={e=>change(i,f.key,e.target.value)} className="mt-1 block w-full border border-slate-200 p-3 text-sm"/>:<input value={String(item[f.key]??"")} onChange={e=>change(i,f.key,e.target.value)} className="mt-1 block w-full border border-slate-200 p-3 text-sm"/>}</label>)}{key!=="business_settings"&&<label className="col-span-full flex gap-2 text-xs"><input type="checkbox" checked={item.is_active!==false} onChange={e=>change(i,"is_active",e.target.checked)}/>Active</label>}{key!=="business_settings"&&<button type="button" onClick={()=>{setData(prev=>(prev as Row[]).filter((_,j)=>j!==i));setEditing(null)}} className="rounded-md border border-red-200 p-2 text-xs text-red-700">Remove from draft</button>}</div>:null}</div>)}</div>
- <div className="flex flex-wrap gap-2">{key!=="business_settings"&&<button onClick={add} type="button" className="rounded-md border border-[#004179] px-4 py-2.5 text-sm font-bold text-[#004179]">Add item</button>}<button onClick={()=>void save()} disabled={loading} type="button" className="rounded-md bg-[#004179] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">Save draft</button><button onClick={()=>void publish()} disabled={loading} type="button" className="rounded-md border border-emerald-600 px-4 py-2.5 text-sm font-bold text-emerald-700 disabled:opacity-50">Publish saved draft</button></div>
+ {loading&&<p role="status" className="text-sm text-slate-500">Loading…</p>}
+ <button disabled={loading||disabled} type="button" onClick={()=>{if(!dirty||window.confirm("Discard unsaved edits and reload?"))void reload()}} className="text-sm font-semibold text-[#004179] disabled:opacity-50">Reload saved content</button>
+ {loaded&&items.length===0&&<p className="text-sm text-slate-500">No draft items yet. Preview the existing content import above or add an item.</p>}
+ <fieldset disabled={loading||disabled||!loaded} className="space-y-3">{items.map((item,i)=><div key={i} className="rounded-md border border-slate-200 p-4"><div className="flex items-center justify-between gap-3"><strong className="text-sm">{String(item.title||item.question||item.heading||item.business_name||(key==="business_settings"?"Business settings":"New item"))}</strong><button type="button" className="text-sm font-semibold text-[#004179]" onClick={()=>setEditing(editing===i?null:i)}>{editing===i?"Close":"Edit"}</button></div>{editing===i||key==="business_settings"?<div className="mt-4 grid gap-3 sm:grid-cols-2">{fields[key].map(f=><label key={f.key} className={"text-xs font-semibold text-slate-700 "+(f.multiline?"sm:col-span-2":"")}>{f.label}{f.multiline?<textarea rows={4} value={String(item[f.key]??"")} onChange={e=>change(i,f.key,e.target.value)} className="mt-1 block w-full border border-slate-200 p-3 text-sm"/>:<input value={String(item[f.key]??"")} onChange={e=>change(i,f.key,e.target.value)} className="mt-1 block w-full border border-slate-200 p-3 text-sm"/>}</label>)}{key!=="business_settings"&&<label className="col-span-full flex gap-2 text-xs"><input type="checkbox" checked={item.is_active!==false} onChange={e=>change(i,"is_active",e.target.checked)}/>Active</label>}{key!=="business_settings"&&<button type="button" onClick={()=>{setDirty(true);setData(prev=>(prev as Row[]).filter((_,j)=>j!==i));setEditing(null)}} className="rounded-md border border-red-200 p-2 text-xs text-red-700">Remove from draft</button>}</div>:null}</div>)}</fieldset>
+ <div className="flex flex-wrap gap-2">{key!=="business_settings"&&<button disabled={loading||disabled||!loaded} onClick={add} type="button" className="rounded-md border border-[#004179] px-4 py-2.5 text-sm font-bold text-[#004179]">Add item</button>}<button onClick={()=>void save()} disabled={loading||disabled||!loaded||!dirty} type="button" className="rounded-md bg-[#004179] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">Save draft</button><button onClick={()=>void publish()} disabled={loading||disabled||!loaded||dirty||revision===0} type="button" className="rounded-md border border-emerald-600 px-4 py-2.5 text-sm font-bold text-emerald-700 disabled:opacity-50">Publish saved draft</button></div>
+ {dirty&&<p role="status" className="text-sm text-slate-500">Unsaved edits. Save the draft before publishing.</p>}
  <p className="text-xs leading-5 text-slate-500">Publishing exposes JSON through /api/site-content/{key}. The public website remains unchanged until Google AI Studio integrates these endpoints.</p>
  </section>;
 }

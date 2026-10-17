@@ -40,15 +40,18 @@ const page = z.object({
   image_url: link.default(""),
   is_active: z.boolean().default(true)
 }).strict();
-const schemas = {
-  hero_slides: z.array(entry).max(30),
-  faqs: z.array(faq).max(150),
+function uniqueIds<T extends { id: string }>(schema: z.ZodType<T[]>) {
+  return schema.refine(rows => new Set(rows.map(row => row.id)).size === rows.length, "Each item must have a unique ID.");
+}
+export const schemas = {
+  hero_slides: uniqueIds(z.array(entry).max(30)),
+  faqs: uniqueIds(z.array(faq).max(150)),
   business_settings: businessSettings,
-  page_sections: z.array(page).max(120)
+  page_sections: uniqueIds(z.array(page).max(120))
 } as const;
-type Key = keyof typeof schemas;
+export type Key = keyof typeof schemas;
 function isKey(value: string): value is Key { return Object.hasOwn(schemas, value); }
-function validate(key: Key, body: unknown) {
+export function validate(key: Key, body: unknown) {
   switch(key) {
     case "hero_slides": return schemas.hero_slides.safeParse(body);
     case "faqs": return schemas.faqs.safeParse(body);
@@ -81,14 +84,23 @@ export function createAdminSiteControlsRouter(db: pg.Pool) {
     const key = req.params.key;
     if (!isKey(key)) return res.status(404).json({ error: "Unknown module." });
     if (!Number.isSafeInteger(req.body?.revision) || req.body.revision < 0) return res.status(400).json({error:"Valid revision required."});
+    const client = await db.connect().catch(() => null);
+    if (!client) return res.status(503).json({error:"Unable to publish content."});
     try {
-      const current = await db.query("SELECT draft,revision FROM public.site_content WHERE key=$1",[key]);
-      if(!current.rows.length) return res.status(503).json({error:"Run site content migration first."});
+      await client.query("BEGIN");
+      await client.query("SET LOCAL lock_timeout = '5s'");
+      await client.query("SET LOCAL statement_timeout = '15s'");
+      const current = await client.query("SELECT draft,revision FROM public.site_content WHERE key=$1 FOR UPDATE",[key]);
+      if(!current.rows.length) { await client.query("ROLLBACK"); return res.status(503).json({error:"Run site content migration first."}); }
+      if(current.rows[0].revision !== req.body.revision) { await client.query("ROLLBACK"); return res.status(409).json({error:"Content changed in another session. Reload before publishing."}); }
+      if(current.rows[0].revision === 0) { await client.query("ROLLBACK"); return res.status(409).json({error:"Import existing content or save a draft before publishing."}); }
       const parsed = validate(key,current.rows[0].draft);
-      if(!parsed.success) return res.status(409).json({error:"Draft failed content validation."});
-      const result = await db.query("UPDATE public.site_content SET published=draft,revision=revision+1,updated_at=now() WHERE key=$1 AND revision=$2 RETURNING key,published,revision,updated_at",[key,req.body.revision]);
-      return result.rowCount ? res.json({item:result.rows[0]}) : res.status(409).json({error:"Content changed in another session. Refresh before publishing."});
-    } catch { return res.status(503).json({error:"Unable to publish content."}); }
+      if(!parsed.success) { await client.query("ROLLBACK"); return res.status(409).json({error:"Draft failed content validation."}); }
+      const result = await client.query("UPDATE public.site_content SET published=draft,revision=revision+1,updated_at=now() WHERE key=$1 AND revision=$2 RETURNING key,draft,published,revision,updated_at",[key,req.body.revision]);
+      await client.query("COMMIT");
+      return res.json({item:result.rows[0]});
+    } catch { await client.query("ROLLBACK").catch(()=>{}); return res.status(503).json({error:"Unable to publish content."}); }
+    finally { client.release(); }
   });
   return router;
 }
