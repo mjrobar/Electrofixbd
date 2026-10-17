@@ -13,9 +13,15 @@ import {
 } from 'lucide-react';
 import { TESTIMONIALS_DATA } from '../../data/testimonialsData';
 import { Testimonial } from '../../types';
+import { TESTIMONIALS_DATA } from '../../data/testimonialsData';
 
 export const TestimonialsSection: React.FC = () => {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('electrofix_user_feedbacks') || '[]');
+      return [...(Array.isArray(saved) ? saved : []), ...TESTIMONIALS_DATA];
+    } catch { return TESTIMONIALS_DATA; }
+  });
   const [selectedFeedback, setSelectedFeedback] = useState<Testimonial | null>(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -60,7 +66,7 @@ export const TestimonialsSection: React.FC = () => {
           date: new Date(record.created_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }),
           time: new Date(record.created_at).toLocaleTimeString('bn-BD', { hour: 'numeric', minute: '2-digit' })
         }));
-        if (!controller.signal.aborted) { setTestimonials(sortNewestFirst(records)); setCurrentPage(1); }
+        if (!controller.signal.aborted && records.length > 0) { setTestimonials(sortNewestFirst(records)); setCurrentPage(1); }
       } catch (error) {
         if (!controller.signal.aborted) console.error('Unable to load published testimonials:', error);
       }
