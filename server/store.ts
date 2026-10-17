@@ -1,3 +1,5 @@
+import { transaction } from "./db/transaction";
+import { databaseSecurityReady } from "./security";
 import { randomInt, randomUUID } from "node:crypto";
 import pg from "pg";
 import type {
@@ -61,48 +63,50 @@ export function createStore(config: Config): Store {
     ...createContentRepository(pool),
     async createBooking(input) {
       try {
-        const service = await pool.query<{ name: string }>(
-          "SELECT name FROM public.services WHERE id = $1 AND is_active = true",
-          [input.service_id],
-        );
-        if (!service.rows[0])
-          throw new ApiError(
-            400,
-            "INVALID_SERVICE",
-            "Please select a valid service.",
+        return await transaction(pool, async (db) => {
+          const service = await db.query<{ name: string }>(
+            "SELECT name FROM public.services WHERE id = $1 AND is_active = true FOR SHARE",
+            [input.service_id],
           );
-        for (let attempt = 0; attempt < 5; attempt++) {
-          const date = new Intl.DateTimeFormat("en-CA", {
-            timeZone: "Asia/Dhaka",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          })
-            .format(new Date())
-            .replaceAll("-", "");
-          const number = `EFB-${date}-${randomInt(10000, 100000)}`;
-          const result = await pool.query<BookingRecord>(
-            `INSERT INTO public.bookings (id, booking_number, service_id, service_name, customer_name, phone, address, notes, status)
+          if (!service.rows[0])
+            throw new ApiError(
+              400,
+              "INVALID_SERVICE",
+              "Please select a valid service.",
+            );
+          for (let attempt = 0; attempt < 5; attempt++) {
+            const date = new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Dhaka",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })
+              .format(new Date())
+              .replaceAll("-", "");
+            const number = `EFB-${date}-${randomInt(10000, 100000)}`;
+            const result = await db.query<BookingRecord>(
+              `INSERT INTO public.bookings (id, booking_number, service_id, service_name, customer_name, phone, address, notes, status)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending') ON CONFLICT (booking_number) DO NOTHING
              RETURNING booking_number, service_name, customer_name, phone, address, status, created_at`,
-            [
-              randomUUID(),
-              number,
-              input.service_id,
-              service.rows[0].name,
-              input.customer_name,
-              input.phone,
-              input.address,
-              input.notes,
-            ],
-          );
-          if (result.rows[0])
-            return {
-              ...result.rows[0],
-              created_at: new Date(result.rows[0].created_at).toISOString(),
-            };
-        }
-        throw unavailable();
+              [
+                randomUUID(),
+                number,
+                input.service_id,
+                service.rows[0].name,
+                input.customer_name,
+                input.phone,
+                input.address,
+                input.notes,
+              ],
+            );
+            if (result.rows[0])
+              return {
+                ...result.rows[0],
+                created_at: new Date(result.rows[0].created_at).toISOString(),
+              };
+          }
+          throw unavailable();
+        });
       } catch (err) {
         if (err instanceof ApiError) throw err;
         throw unavailable();
@@ -151,11 +155,17 @@ export function createStore(config: Config): Store {
         await pool.query(
           "SELECT id,customer_name,review,service_type,rating,avatar_url,media_url,media_type,is_published,created_at FROM public.testimonials LIMIT 0",
         );
+        if (
+          config.NODE_ENV === "production" &&
+          !(await databaseSecurityReady(pool))
+        )
+          return false;
         const privileges = await pool.query<{ ready: boolean }>(`SELECT
           has_table_privilege(current_user, 'public.bookings', 'INSERT') AND
           has_table_privilege(current_user, 'public.bookings', 'SELECT') AND
           has_table_privilege(current_user, 'public.contact_messages', 'INSERT') AND
           has_table_privilege(current_user, 'public.services', 'SELECT') AND
+          has_any_column_privilege(current_user, 'public.services', 'UPDATE') AND
           has_table_privilege(current_user, 'public.works', 'SELECT') AND
           has_table_privilege(current_user, 'public.testimonials', 'SELECT') AS ready`);
         return privileges.rows[0]?.ready === true;

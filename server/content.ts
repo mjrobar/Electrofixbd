@@ -34,7 +34,7 @@ export function createContentRepository(
     listServices: (page) =>
       read<ServiceRecord>(
         `SELECT id,slug,name,short_description,full_description,
-      common_problems,service_process,cover_image FROM public.services WHERE is_active IS TRUE
+      common_problems,service_process,cover_image FROM public.services WHERE is_active IS TRUE AND archived_at IS NULL
       ORDER BY id LIMIT $1 OFFSET $2`,
         [page.limit, page.offset],
       ),
@@ -42,7 +42,7 @@ export function createContentRepository(
       (
         await read<WorkRecord>(
           `SELECT id,title,slug,service_type,category,description,media_url,
-      media_type,is_featured,is_published,created_at FROM public.works WHERE is_published IS TRUE
+      media_type,is_featured,is_published,created_at FROM public.works WHERE is_published IS TRUE AND archived_at IS NULL
       AND ($1::text IS NULL OR category=$1) AND ($2::boolean IS NULL OR is_featured=$2)
       ORDER BY created_at DESC,id DESC LIMIT $3 OFFSET $4`,
           [
@@ -61,7 +61,7 @@ export function createContentRepository(
         await read<TestimonialRecord>(
           `SELECT id,customer_name,review,service_type,rating,
       avatar_url,media_url,media_type,is_published,created_at FROM public.testimonials
-      WHERE is_published IS TRUE ORDER BY created_at DESC,id DESC LIMIT $1 OFFSET $2`,
+      WHERE is_published IS TRUE AND archived_at IS NULL ORDER BY created_at DESC,id DESC LIMIT $1 OFFSET $2`,
           [page.limit, page.offset],
         )
       ).map((row) => ({

@@ -1,3 +1,4 @@
+import { validProxy } from "./proxy";
 import { z } from "zod";
 
 const schema = z.object({
@@ -13,7 +14,13 @@ const schema = z.object({
   ADMIN_SESSION_SECRET: z.string().optional(),
   DB_POOL_MAX: z.coerce.number().int().min(1).max(20).default(5),
   DB_TIMEOUT_MS: z.coerce.number().int().min(100).max(30000).default(5000),
-  TRUST_PROXY: z.enum(["false", "loopback"]).default("false"),
+  TRUST_PROXY: z
+    .string()
+    .refine(
+      validProxy,
+      "Use false, loopback or explicit IP/CIDR addresses; never trust all proxies.",
+    )
+    .default("false"),
   API_RATE_LIMIT: z.coerce.number().int().min(1).max(10000).default(100),
 });
 export type Config = ReturnType<typeof loadConfig>;

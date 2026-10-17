@@ -1,19 +1,52 @@
 /* ElectroFix BD Admin Design System — scoped, do not affect public pages. */
 .efb-admin {
-  --admin-navy:#11243A;
-  --admin-primary:#004179;
-  --admin-bg:#F6F8FA;
-  --admin-border:#DCE3E8;
+  --admin-navy: #11243a;
+  --admin-primary: #004179;
+  --admin-bg: #f6f8fa;
+  --admin-border: #dce3e8;
   font-family: Inter, "Noto Sans Bengali", "Segoe UI", Arial, sans-serif;
-  font-optical-sizing:auto;
-  color:#17202A;
+  font-optical-sizing: auto;
+  color: #17202a;
   font-variant-numeric: tabular-nums;
 }
-.efb-admin h1,.efb-admin h2,.efb-admin h3,.efb-admin strong,.efb-admin button,.efb-admin input,.efb-admin select,.efb-admin textarea {
-  font-family:inherit;
+.efb-admin h1,
+.efb-admin h2,
+.efb-admin h3,
+.efb-admin strong,
+.efb-admin button,
+.efb-admin input,
+.efb-admin select,
+.efb-admin textarea {
+  font-family: inherit;
 }
-.efb-admin h1,.efb-admin h2,.efb-admin h3 { letter-spacing:-.015em; }
-.efb-admin .rounded-2xl,.efb-admin .rounded-\[30px\] { border-radius:8px !important; }
-.efb-admin .rounded-xl,.efb-admin .rounded-lg { border-radius:6px !important; }
-.efb-admin :is(button,input,select,textarea):focus-visible { outline:2px solid #004179; outline-offset:2px; }
-@media(max-width:1023px) { .efb-admin main { padding-bottom:100px; } }
+.efb-admin h1,
+.efb-admin h2,
+.efb-admin h3 {
+  letter-spacing: -0.015em;
+}
+.efb-admin .rounded-2xl,
+.efb-admin .rounded-\[30px\] {
+  border-radius: 8px !important;
+}
+.efb-admin .rounded-xl,
+.efb-admin .rounded-lg {
+  border-radius: 6px !important;
+}
+.efb-admin :is(button, input, select, textarea):focus-visible {
+  outline: 2px solid #004179;
+  outline-offset: 2px;
+}
+@media (max-width: 1023px) {
+  .efb-admin main {
+    padding-bottom: 100px;
+  }
+}
+/* Match the locked interaction geometry for old and new admin controls. */
+.efb-admin button {
+  min-height: 40px;
+}
+@media (max-width: 1023px) {
+  .efb-admin button {
+    min-height: 44px;
+  }
+}

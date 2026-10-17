@@ -51,6 +51,7 @@ export async function startServer(env: NodeJS.ProcessEnv = process.env) {
   } catch (err) {
     await vite?.close();
     await store.close();
+    await app.locals.close();
     throw err;
   }
   server.requestTimeout = 15000;
@@ -69,6 +70,7 @@ export async function startServer(env: NodeJS.ProcessEnv = process.env) {
       clearTimeout(forceClose);
       await vite?.close();
       await store.close();
+      await app.locals.close();
     })());
   }
   for (const signal of ["SIGINT", "SIGTERM"] as const)

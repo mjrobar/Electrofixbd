@@ -79,7 +79,7 @@ async function snapshot(client: pg.Client) {
     // Newly-added optional fields are compared separately; every original
     // column and row remains in this JSON snapshot, including nulls and IDs.
     const rows = await client.query(
-      `SELECT to_jsonb(t) - 'media_url' - 'media_type' - 'is_published' AS row FROM public.${table} t ORDER BY id`,
+      `SELECT to_jsonb(t) - 'media_url' - 'media_type' - 'is_published' - 'revision' - 'admin_draft' - 'archived_at' - 'admin_notes' AS row FROM public.${table} t ORDER BY id`,
     );
     result[table] = rows.rows;
   }
@@ -97,7 +97,7 @@ test(
           (await db.query("SELECT count(*) FROM schema_migrations")).rows[0]
             .count,
         ),
-        3,
+        4,
       );
       for (const table of [
         "services",
@@ -188,10 +188,12 @@ test(
         "CREATE POLICY legacy_read ON bookings FOR SELECT USING (true)",
       );
       const before = await snapshot(db);
-      const originalWorks = (await db.query("SELECT * FROM works")).rows;
+      const originalWorks = (
+        await db.query("SELECT to_jsonb(t) AS row FROM works t")
+      ).rows.map((r) => r.row);
       const originalTestimonials = (
-        await db.query("SELECT * FROM testimonials")
-      ).rows;
+        await db.query("SELECT to_jsonb(t) AS row FROM testimonials t")
+      ).rows.map((r) => r.row);
       const defaults = (
         await db.query(
           "SELECT table_name,column_name,column_default,is_nullable FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,column_name",
@@ -218,16 +220,24 @@ test(
       );
       assert.deepEqual(await snapshot(db), before);
       assert.deepEqual(
-        (await db.query("SELECT * FROM works")).rows,
-        originalWorks,
+        (
+          await db.query(
+            "SELECT to_jsonb(t) - 'revision' - 'admin_draft' - 'archived_at' AS row FROM works t",
+          )
+        ).rows.map((r) => r.row),
+        JSON.parse(JSON.stringify(originalWorks)),
       );
       assert.deepEqual(
-        (await db.query("SELECT * FROM testimonials")).rows,
-        originalTestimonials,
+        (
+          await db.query(
+            "SELECT to_jsonb(t) - 'revision' - 'admin_draft' - 'archived_at' AS row FROM testimonials t",
+          )
+        ).rows.map((r) => r.row),
+        JSON.parse(JSON.stringify(originalTestimonials)),
       );
       const afterDefaults = (
         await db.query(
-          "SELECT table_name,column_name,column_default,is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name NOT IN ('schema_migrations','site_content') ORDER BY table_name,column_name",
+          "SELECT table_name,column_name,column_default,is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('services','bookings','contact_messages','works','testimonials') AND column_name NOT IN ('revision','admin_draft','archived_at','admin_notes') ORDER BY table_name,column_name",
         )
       ).rows;
       assert.deepEqual(afterDefaults, defaults);
@@ -370,7 +380,7 @@ test(
           (await db.query("SELECT count(*) FROM schema_migrations")).rows[0]
             .count,
         ),
-        3,
+        4,
       );
       assert.equal(
         Number(

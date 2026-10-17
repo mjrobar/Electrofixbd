@@ -157,6 +157,10 @@ test(
       await operator.query(
         `GRANT INSERT ON public.bookings, public.contact_messages TO ${role}`,
       );
+      assert.equal(await store.ready(), false); // Incomplete service-lock permission is not ready.
+      // SELECT FOR SHARE needs UPDATE privilege on at least one service column.
+      // No schema ownership or broad service write grant is needed by this role.
+      await operator.query(`GRANT UPDATE(id) ON public.services TO ${role}`);
       assert.equal(await store.ready(), true);
       await store.createBooking({
         customer_name: "Restricted Runtime Test",

@@ -2,11 +2,40 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import path from "node:path";
-import { test } from "node:test";
+import { randomUUID } from "node:crypto";
+import { createDisposable } from "./helpers/disposable-postgres";
+import { applyBrowserLockdown } from "../scripts/secure-database";
+import { before, after, test } from "node:test";
 import { once } from "node:events";
 import { setTimeout as delay } from "node:timers/promises";
 
 const root = path.resolve(import.meta.dirname, "..");
+let runtimeUrl: string | undefined;
+let cleanup: (() => Promise<void>) | undefined;
+before(async () => {
+  if (!process.env.TEST_DATABASE_URL) return;
+  const db = await createDisposable();
+  const role = "efb_startup_" + randomUUID().replaceAll("-", "");
+  try {
+    await db.pool.query(`CREATE ROLE ${role} LOGIN`);
+    await applyBrowserLockdown(db.url, role, "REVOKE BROWSER DATABASE ACCESS");
+    const target = new URL(db.url);
+    target.username = role;
+    target.password = "";
+    runtimeUrl = target.toString();
+    cleanup = async () => {
+      await db.pool.query(`DROP OWNED BY ${role}`);
+      await db.pool.query(`DROP ROLE ${role}`);
+      await db.close();
+    };
+  } catch (error) {
+    await db.close();
+    throw error;
+  }
+});
+after(async () => {
+  await cleanup?.();
+});
 let previousProcessBooking: string | undefined;
 for (const mode of ["development", "production"]) {
   test(`${mode}: Node startup, frontend/API routing and graceful shutdown`, async (t) => {
@@ -16,9 +45,7 @@ for (const mode of ["development", "production"]) {
     );
     const port = (reservation.address() as { port: number }).port;
     await new Promise<void>((resolve) => reservation.close(() => resolve()));
-    const url =
-      process.env.TEST_DATABASE_URL ||
-      "postgresql://127.0.0.1:1/electrofix_test";
+    const url = runtimeUrl || "postgresql://127.0.0.1:1/electrofix_test";
     if (process.env.TEST_DATABASE_URL) {
       const target = new URL(url);
       assert.ok(["127.0.0.1", "localhost", "[::1]"].includes(target.hostname));
@@ -38,6 +65,10 @@ for (const mode of ["development", "production"]) {
         DATABASE_URL: url,
         PUBLIC_ORIGIN: "https://electrofix.test",
         DB_TIMEOUT_MS: "500",
+        ADMIN_USERNAME: "",
+        ADMIN_PASSWORD_HASH: "",
+        ADMIN_SESSION_SECRET: "",
+        TRUST_PROXY: "false",
       },
     });
     let output = "";
@@ -91,7 +122,9 @@ for (const mode of ["development", "production"]) {
       const csp = (await fetch(base + "/")).headers.get(
         "content-security-policy",
       );
-      assert.match(csp!, /https:\/\/images.unsplash.com/);
+      assert.match(csp!, /img-src [^;]*https:/);
+      assert.match(csp!, /media-src [^;]*https:/);
+      assert.match(csp!, /script-src 'self';/);
       assert.match(csp!, /https:\/\/fonts.gstatic.com/);
     }
     const status = await fetch(base + "/api/status");
