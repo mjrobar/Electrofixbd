@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Wrench, MapPin, Calendar, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { WorkItem } from '../../types';
+import { WORKS_DATA } from '../../data/worksData';
 
 interface WorkGalleryProps {
   onOpenBooking: (serviceName?: string) => void;
@@ -9,7 +10,7 @@ interface WorkGalleryProps {
 
 export const WorkGallery: React.FC<WorkGalleryProps> = ({ onOpenBooking }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [works, setWorks] = useState<WorkItem[]>([]);
+  const [works, setWorks] = useState<WorkItem[]>(WORKS_DATA);
   useEffect(() => {
     const controller = new AbortController();
     async function loadWorks() {
@@ -25,7 +26,7 @@ export const WorkGallery: React.FC<WorkGalleryProps> = ({ onOpenBooking }) => {
           mediaType: work.media_type === 'video' ? 'video' : 'image',
           isFeatured: work.is_featured, createdAt: work.created_at,
         }));
-        if (!controller.signal.aborted) { setWorks(mapped); setCurrentPage(1); }
+        if (!controller.signal.aborted && mapped.length > 0) { setWorks(mapped); setCurrentPage(1); }
       } catch (error) { if (!controller.signal.aborted) console.error('Public works unavailable:', error); }
     }
     void loadWorks();
