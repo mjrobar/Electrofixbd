@@ -1,0 +1,45 @@
+import React,{useEffect,useState} from "react";
+type Key="hero_slides"|"faqs"|"business_settings"|"page_sections";
+type Row=Record<string,unknown>;
+const fields:Record<Key,{key:string;label:string;multiline?:boolean}[]>={
+ hero_slides:[{key:"id",label:"Unique ID"},{key:"title",label:"Headline"},{key:"subtitle",label:"Subtitle"},{key:"description",label:"Description",multiline:true},{key:"image_url",label:"Image HTTPS URL"},{key:"button_label",label:"Button text"},{key:"button_url",label:"Button link"}],
+ faqs:[{key:"id",label:"Unique ID"},{key:"question",label:"Question"},{key:"answer",label:"Answer",multiline:true},{key:"category",label:"Category"}],
+ business_settings:[{key:"business_name",label:"Business name"},{key:"phone",label:"Phone"},{key:"whatsapp",label:"WhatsApp number"},{key:"email",label:"Email"},{key:"address",label:"Address"},{key:"hours",label:"Business hours"},{key:"facebook_url",label:"Facebook URL"},{key:"youtube_url",label:"YouTube URL"},{key:"logo_url",label:"Logo URL"}],
+ page_sections:[{key:"id",label:"Unique ID"},{key:"page",label:"Page (home/services/works/contact/about)"},{key:"section",label:"Section key"},{key:"heading",label:"Heading"},{key:"body",label:"Body",multiline:true},{key:"image_url",label:"Image URL"}]
+};
+const defaults:Record<Key,Row>={
+ hero_slides:{id:"",title:"",subtitle:"",description:"",image_url:"",button_label:"",button_url:"",is_active:true},
+ faqs:{id:"",question:"",answer:"",category:"General",is_active:true},
+ business_settings:{business_name:"",phone:"",whatsapp:"",email:"",address:"",hours:"",facebook_url:"",youtube_url:"",logo_url:""},
+ page_sections:{id:"",page:"home",section:"",heading:"",body:"",image_url:"",is_active:true}
+};
+export default function SiteControlsEditor(){
+ const [key,setKey]=useState<Key>("hero_slides");
+ const [data,setData]=useState<Row|Row[]>([]);
+ const [revision,setRevision]=useState(0);
+ const [editing,setEditing]=useState<number|null>(null);
+ const [error,setError]=useState("");
+ const [notice,setNotice]=useState("");
+ const [loading,setLoading]=useState(false);
+ async function request(path:string,method="GET",body?:unknown){
+  const response=await fetch("/api/admin/site-content/"+path,{method,credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json",...(method!=="GET"?{"X-Admin-Request":"1"}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});
+  const value=await response.json().catch(()=>({}));
+  if(!response.ok)throw Error(value.error||"Unable to complete request.");
+  return value.item;
+ }
+ async function reload(){setLoading(true);setError("");try{const item=await request(key);setData(item.draft);setRevision(item.revision);setEditing(null);}catch(e){setError(e instanceof Error?e.message:"Loading failed");}finally{setLoading(false)}}
+ useEffect(()=>{setData(key==="business_settings"?{...defaults.business_settings}:[]);setNotice("");void reload()},[key]);
+ function change(index:number,field:string,value:unknown){if(key==="business_settings"){setData(prev=>({...prev as Row,[field]:value}));return;}setData(prev=>(prev as Row[]).map((row,i)=>i===index?{...row,[field]:value}:row));}
+ function add(){if(key==="business_settings")return;setData(prev=>[...(prev as Row[]),{...defaults[key]}]);setEditing((data as Row[]).length)}
+ async function save(){setLoading(true);setError("");setNotice("");try{const item=await request(key+"/draft","PUT",{data,revision});setRevision(item.revision);setData(item.draft);setNotice("Draft saved. Public website has not been changed.");setEditing(null)}catch(e){setError(e instanceof Error?e.message:"Save failed")}finally{setLoading(false)}}
+ async function publish(){if(!window.confirm("Publish the saved draft? This makes the module available to the public website API."))return;setLoading(true);setError("");try{const item=await request(key+"/publish","POST",{revision});setRevision(item.revision);setNotice("Published successfully. Google AI Studio must connect the frontend to this API.")}catch(e){setError(e instanceof Error?e.message:"Publish failed")}finally{setLoading(false)}}
+ const items=key==="business_settings"?[data as Row]:Array.isArray(data)?data:[];
+ return <section className="mt-6 space-y-4 rounded-lg border border-[#DCE3E8] bg-white p-5 sm:p-6">
+ <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-bold">Website Controls</h2><p className="mt-1 text-sm text-slate-500">Create drafts, review and publish when ready.</p></div><span className="text-xs text-slate-500">Revision {revision}</span></div>
+ <div className="flex flex-wrap gap-2">{(["hero_slides","faqs","business_settings","page_sections"] as const).map(k=><button type="button" key={k} onClick={()=>setKey(k)} className={"rounded-md border px-3 py-2 text-sm font-semibold "+(key===k?"border-[#004179] bg-[#004179] text-white":"border-slate-200 bg-white text-slate-700")}>{k.replaceAll("_"," ")}</button>)}</div>
+ {error&&<p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}{notice&&<p role="status" className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
+ <div className="space-y-3">{items.map((item,i)=><div key={i} className="rounded-md border border-slate-200 p-4"><div className="flex items-center justify-between gap-3"><strong className="text-sm">{String(item.title||item.question||item.heading||item.business_name||"New item")}</strong><button type="button" className="text-sm font-semibold text-[#004179]" onClick={()=>setEditing(editing===i?null:i)}>{editing===i?"Close":"Edit"}</button></div>{editing===i||key==="business_settings"?<div className="mt-4 grid gap-3 sm:grid-cols-2">{fields[key].map(f=><label key={f.key} className={"text-xs font-semibold text-slate-700 "+(f.multiline?"sm:col-span-2":"")}>{f.label}{f.multiline?<textarea rows={4} value={String(item[f.key]??"")} onChange={e=>change(i,f.key,e.target.value)} className="mt-1 block w-full border border-slate-200 p-3 text-sm"/>:<input value={String(item[f.key]??"")} onChange={e=>change(i,f.key,e.target.value)} className="mt-1 block w-full border border-slate-200 p-3 text-sm"/>}</label>)}{key!=="business_settings"&&<label className="col-span-full flex gap-2 text-xs"><input type="checkbox" checked={item.is_active!==false} onChange={e=>change(i,"is_active",e.target.checked)}/>Active</label>}{key!=="business_settings"&&<button type="button" onClick={()=>{setData(prev=>(prev as Row[]).filter((_,j)=>j!==i));setEditing(null)}} className="rounded-md border border-red-200 p-2 text-xs text-red-700">Remove from draft</button>}</div>:null}</div>)}</div>
+ <div className="flex flex-wrap gap-2">{key!=="business_settings"&&<button onClick={add} type="button" className="rounded-md border border-[#004179] px-4 py-2.5 text-sm font-bold text-[#004179]">Add item</button>}<button onClick={()=>void save()} disabled={loading} type="button" className="rounded-md bg-[#004179] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">Save draft</button><button onClick={()=>void publish()} disabled={loading} type="button" className="rounded-md border border-emerald-600 px-4 py-2.5 text-sm font-bold text-emerald-700 disabled:opacity-50">Publish saved draft</button></div>
+ <p className="text-xs leading-5 text-slate-500">Publishing exposes JSON through /api/site-content/{key}. The public website remains unchanged until Google AI Studio integrates these endpoints.</p>
+ </section>;
+}
