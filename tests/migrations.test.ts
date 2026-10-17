@@ -97,7 +97,7 @@ test(
           (await db.query("SELECT count(*) FROM schema_migrations")).rows[0]
             .count,
         ),
-        2,
+        3,
       );
       for (const table of [
         "services",
@@ -227,7 +227,7 @@ test(
       );
       const afterDefaults = (
         await db.query(
-          "SELECT table_name,column_name,column_default,is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name <> 'schema_migrations' ORDER BY table_name,column_name",
+          "SELECT table_name,column_name,column_default,is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name NOT IN ('schema_migrations','site_content') ORDER BY table_name,column_name",
         )
       ).rows;
       assert.deepEqual(afterDefaults, defaults);
@@ -370,7 +370,7 @@ test(
           (await db.query("SELECT count(*) FROM schema_migrations")).rows[0]
             .count,
         ),
-        2,
+        3,
       );
       assert.equal(
         Number(

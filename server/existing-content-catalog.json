@@ -1,0 +1,308 @@
+{
+  "version": 1,
+  "source_ref": "4409920ce5e23c24c5b09e44549b20d1a29c14dd",
+  "sources": [
+    {
+      "path": "src/components/home/HeroSlider.tsx",
+      "sha256": "a2ca820248e4d67fd0eae439a6ec2d7288b0351553f4f55907e4258849f3558d"
+    },
+    {
+      "path": "src/data/testimonialsData.ts",
+      "sha256": "feefea431769c74c5ba28505cdfb10788592f65deb154cfc55534ffed16a65d1"
+    },
+    {
+      "path": "src/data/siteConfig.ts",
+      "sha256": "d4afcfbe626cbe1a164b47c030b553dfae13edc4d3924723134117ab5add7462"
+    },
+    {
+      "path": "src/components/home/AboutSection.tsx",
+      "sha256": "7dc8bc597fbf008308e1f42cd59f3e3d777a6cdb6ba0f8e95d8c955ee1c47623"
+    },
+    {
+      "path": "src/components/home/EmergencyBanner.tsx",
+      "sha256": "4272c4e976085b01751b2dac8d5f175a8a3ee65a24969333542caa78db9e929b"
+    },
+    {
+      "path": "src/components/home/FAQSection.tsx",
+      "sha256": "7da4434ce1f521223665232f81d9259ce0fd1a06be0dc0bb75b732ff0e6a29c7"
+    },
+    {
+      "path": "src/components/contact/ContactSection.tsx",
+      "sha256": "8ea10b038286bbb2dc12f1eb6131170ffd3dc2e6c0afe78bbaebecda6a4f2b74"
+    },
+    {
+      "path": "src/components/services/ServicesPageView.tsx",
+      "sha256": "f6e893717d6c99e87a8ff340d9fe16ffca92ce6b47df83d2b5f62f14a27597a0"
+    },
+    {
+      "path": "src/components/works/OurWorksPageView.tsx",
+      "sha256": "3578f61cc9d878c96c66c6cd6121f7f45a2fb7371d2ca4f3c8050ad8b9b8c324"
+    }
+  ],
+  "mappings": [
+    {
+      "module": "hero_slides",
+      "source": "src/components/home/HeroSlider.tsx",
+      "fields": {
+        "id": "slides[].id (prefixed legacy-hero-)",
+        "title": "slides[].title",
+        "subtitle": "slides[].titleBn",
+        "description": "slides[].description",
+        "image_url": "slides[].image",
+        "button_label": "slides[].primaryCta"
+      },
+      "unmapped": [
+        "badge",
+        "secondaryCta",
+        "serviceHint",
+        "isPhoneCall",
+        "isWhatsApp",
+        "isNavigateServices"
+      ],
+      "missing": [
+        "button_url: booking callback has no URL; left blank"
+      ]
+    },
+    {
+      "module": "faqs",
+      "source": "src/data/testimonialsData.ts",
+      "fields": {
+        "id": "FAQ_DATA array position (prefixed legacy-faq-)",
+        "question": "FAQ_DATA[].question",
+        "answer": "FAQ_DATA[].answer"
+      },
+      "missing": [
+        "category: absent in source; schema default General"
+      ]
+    },
+    {
+      "module": "business_settings",
+      "source": "src/data/siteConfig.ts",
+      "fields": {
+        "business_name": "BUSINESS_CONFIG.name",
+        "phone": "BUSINESS_CONFIG.phone",
+        "whatsapp": "BUSINESS_CONFIG.whatsappNumber",
+        "address": "BUSINESS_CONFIG.location (city only)",
+        "hours": "BUSINESS_CONFIG.businessHours",
+        "facebook_url": "BUSINESS_CONFIG.facebookUrl",
+        "youtube_url": "BUSINESS_CONFIG.youtubeUrl"
+      },
+      "missing": [
+        "email",
+        "logo_url"
+      ],
+      "unmapped": [
+        "shortName",
+        "tagline",
+        "phoneClean",
+        "phoneInternational",
+        "serviceCoverage",
+        "experience",
+        "circuitBoardSpecialty"
+      ]
+    },
+    {
+      "module": "page_sections",
+      "id": "legacy-home-about",
+      "source": "src/components/home/AboutSection.tsx",
+      "fields": {
+        "heading": "first h2",
+        "body": "first paragraph after heading"
+      },
+      "image_source": "src/data/siteConfig.ts: BUSINESS_CONFIG.aboutSectionImage"
+    },
+    {
+      "module": "page_sections",
+      "id": "legacy-home-emergency",
+      "source": "src/components/home/EmergencyBanner.tsx",
+      "fields": {
+        "heading": "first h3",
+        "body": "first paragraph after heading"
+      }
+    },
+    {
+      "module": "page_sections",
+      "id": "legacy-home-faq",
+      "source": "src/components/home/FAQSection.tsx",
+      "fields": {
+        "heading": "first h2",
+        "body": "first paragraph after heading"
+      }
+    },
+    {
+      "module": "page_sections",
+      "id": "legacy-contact-intro",
+      "source": "src/components/contact/ContactSection.tsx",
+      "fields": {
+        "heading": "first h1",
+        "body": "first paragraph after heading"
+      }
+    },
+    {
+      "module": "page_sections",
+      "id": "legacy-services-intro",
+      "source": "src/components/services/ServicesPageView.tsx",
+      "fields": {
+        "heading": "first h1",
+        "body": "first paragraph after heading"
+      }
+    },
+    {
+      "module": "page_sections",
+      "id": "legacy-works-intro",
+      "source": "src/components/works/OurWorksPageView.tsx",
+      "fields": {
+        "heading": "first h1",
+        "body": "first paragraph after heading"
+      }
+    }
+  ],
+  "notes": [
+    "Snapshot of existing source text; no public files executed or changed.",
+    "IDs and is_active=true are import metadata, not authored editorial content.",
+    "Partial mapping: no invented URLs, email, logo or street address.",
+    "Only primary hero text/CTA label supported by current schema. Booking callbacks, badges, secondary CTAs and behavior remain owned by AI Studio.",
+    "Page sections cover primary introductions, about, emergency and FAQ text only. Other nested cards, stats, navigation and footer text are outside the current schema."
+  ],
+  "data": {
+    "hero_slides": [
+      {
+        "id": "legacy-hero-1",
+        "title": "Professional Home Appliance Repair at Your Doorstep",
+        "subtitle": "আপনার বাসায় এসে দক্ষ টেকনিশিয়ান দ্বারা অ্যাপ্লায়েন্স সার্ভিসিং",
+        "description": "Reliable repair and servicing for AC, Refrigerator, Washing Machine, Microwave Oven & Dishwasher across all areas of Dhaka.",
+        "image_url": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1600&q=80",
+        "button_label": "Book a Service",
+        "is_active": true
+      },
+      {
+        "id": "legacy-hero-2",
+        "title": "Expert Inverter AC & Refrigerator Servicing",
+        "subtitle": "ঠান্ডা না হওয়া, গ্যাস লিকেজ ও সেন্সর সমস্যার নিখুঁত সমাধান",
+        "description": "Accurate fault diagnosis, master jet servicing, gas charging, and genuine parts replacement with 10+ years of practical field experience.",
+        "image_url": "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=1600&q=80",
+        "button_label": "Request a Service",
+        "is_active": true
+      },
+      {
+        "id": "legacy-hero-3",
+        "title": "10+ Years Experienced Technician • Chip-Level Repair",
+        "subtitle": "মাদারবোর্ড ফেলে না দিয়ে চিপ-লেভেলে রিপেয়ার করে খরচ বাঁচান",
+        "description": "Electronic control board troubleshooting, micro-soldering, and inverter module recovery for compatible air conditioners and refrigerators.",
+        "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80",
+        "button_label": "Book Chip-Level Repair",
+        "is_active": true
+      }
+    ],
+    "faqs": [
+      {
+        "id": "legacy-faq-1",
+        "question": "কোন কোন appliance repair ও servicing করেন?",
+        "answer": "ElectroFix BD ঢাকা শহরে AC (ইনভার্টার ও নন-ইনভার্টার), Refrigerator/Fridge ও Deep Freezer, Washing Machine (Front Load & Top Load), Oven ও Microwave Oven, Dishwasher এবং আধুনিক ইনভার্টার অ্যাপ্লায়েন্সের Circuit Board বা Chip-Level PCB Repair সার্ভিস প্রদান করে।",
+        "is_active": true
+      },
+      {
+        "id": "legacy-faq-2",
+        "question": "আপনারা কি বাসায় গিয়ে হোম সার্ভিস দেন?",
+        "answer": "হ্যাঁ! ElectroFix BD সম্পূর্ণ ঢাকা শহরে হোম সার্ভিস প্রদান করে। আপনার বাসায় সরাসরি অভিজ্ঞ টেকনিশিয়ান গিয়ে ডায়াগনসিস ও রিপেয়ার কাজ সম্পন্ন করবেন।",
+        "is_active": true
+      },
+      {
+        "id": "legacy-faq-3",
+        "question": "সার্ভিস বুকিং কীভাবে করব?",
+        "answer": "ওয়েবসাইটের \"Book a Service\" বাটনে ক্লিক করে নাম, মোবাইল নম্বর এবং ঠিকানা দিয়ে সরাসরি বুকিং করতে পারেন। অথবা সরাসরি কল করতে পারেন: 01619-487788 বা WhatsApp-এ নক করতে পারেন।",
+        "is_active": true
+      },
+      {
+        "id": "legacy-faq-4",
+        "question": "বুকিং করার পর কতক্ষণে টেকনিশিয়ান যোগাযোগ করবেন?",
+        "answer": "বুকিং রিকোয়েস্ট সাবমিট হওয়ার সাথে সাথেই আমাদের টিম আপনার দেওয়া নম্বরে কল করে সমস্যার বিস্তারিত জেনে সুবিধাজনক সময় নিশ্চিত করে থাকেন।",
+        "is_active": true
+      },
+      {
+        "id": "legacy-faq-5",
+        "question": "সার্ভিসিংয়ের জন্য কি কোনো ওয়ারেন্টি পাওয়া যাবে?",
+        "answer": "জি, প্রতিটি রিপেয়ার ও পার্টস পরিবর্তনের সাথে ৩০ দিনের লিখিত সার্ভিস ওয়ারেন্টি প্রদান করা হয়। ওয়ারেন্টি চলাকালীন একই ত্রুটিতে সম্পূর্ণ ফ্রি সাপোর্ট দেওয়া হয়।",
+        "is_active": true
+      },
+      {
+        "id": "legacy-faq-6",
+        "question": "কী কী পেমেন্ট মেথড গ্রহণ করা হয়?",
+        "answer": "ক্যাশ অন ডেলিভারি (Cash on Service), বিকাশ (bKash), নগদ (Nagad), রকেট (Rocket) এবং যেকোনো ব্যাংক ট্রান্সফার।",
+        "is_active": true
+      },
+      {
+        "id": "legacy-faq-7",
+        "question": "টেকনিশিয়ান কি জেনুইন স্পেয়ার পার্টস সাথে নিয়ে আসেন?",
+        "answer": "হ্যাঁ, আমাদের টেকনিশিয়ানরা প্রয়োজনীয় কমন পার্টস ও প্রফেশনাল টেস্ট কিট সাথে রাখেন। নির্দিষ্ট ব্র্যান্ডের কোনো স্পেসিফিক পার্টসের প্রয়োজন হলে অনুমোদিত ডিস্ট্রিবিউটর থেকে জেনুইন পার্টস সংগ্রহ করে ইন্সটল করা হয়।",
+        "is_active": true
+      },
+      {
+        "id": "legacy-faq-8",
+        "question": "জরুরি প্রয়োজনে কত দ্রুত সার্ভিস পাওয়া যায়?",
+        "answer": "জরুরি ক্ষেত্রে ঢাকা শহরের মধ্যে কল করার ১ থেকে ২ ঘণ্টার মধ্যে টেকনিশিয়ান উপস্থিত হতে পারেন (ট্রাফিক ও এরিয়া সাপেক্ষে)।",
+        "is_active": true
+      }
+    ],
+    "business_settings": {
+      "business_name": "ElectroFix BD",
+      "phone": "01619-487788",
+      "whatsapp": "8801619487788",
+      "address": "Dhaka, Bangladesh",
+      "hours": "Open Everyday: 8:00 AM – 10:00 PM",
+      "facebook_url": "https://www.facebook.com/jafransarder",
+      "youtube_url": "https://www.youtube.com/@ElectroFixBD-d9m"
+    },
+    "page_sections": [
+      {
+        "id": "legacy-home-about",
+        "page": "home",
+        "section": "about",
+        "heading": "হোম অ্যাপ্লায়েন্স মেরামতে পেশাদারিত্ব, সততা ও আধুনিক কারিগরি দক্ষতা",
+        "body": "ভারী এসি, রেফ্রিজারেটর বা ওয়াশিং মেশিন দোকানে বয়ে নেওয়ার দুর্ভোগ এবং অপ্রয়োজনীয় মাদারবোর্ড পরিবর্তনের অযৌক্তিক ব্যয়—উভয় সমস্যার সুনির্দিষ্ট ও স্থায়ী সমাধানে ElectroFix BD ঢাকার ঘরে ঘরে নির্ভরযোগ্য সেবা নিশ্চিত করছে। আমাদের অভিজ্ঞ কারিগরি দল সততা, সঠিক ডায়াগনসিস এবং আধুনিক টুলস ব্যবহারের মাধ্যমে আপনার মূলবান গৃহস্থালি যন্ত্রপাতির আয়ু বৃদ্ধি করতে অঙ্গীকারবদ্ধ।",
+        "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80",
+        "is_active": true
+      },
+      {
+        "id": "legacy-home-emergency",
+        "page": "home",
+        "section": "emergency",
+        "heading": "জরুরি এসি, ফ্রিজ বা ওয়াশিং মেশিন মেরামতের প্রয়োজন?",
+        "body": "ভারি অ্যাপ্লায়েন্স নিয়ে দোকানে যাওয়ার দরকার নেই। আমাদের অভিজ্ঞ টেকনিশিয়ান সরাসরি আপনার বাসায় পৌঁছে যাবেন।",
+        "is_active": true
+      },
+      {
+        "id": "legacy-home-faq",
+        "page": "home",
+        "section": "faq",
+        "heading": "সাধারণ জিজ্ঞাসা ও উত্তর (FAQ)",
+        "body": "সার্ভিস বুকিং, টেকনিশিয়ান ভিজিট এবং অ্যাপ্লায়েন্স সম্পর্কিত সাধারণ প্রশ্নসমূহ।",
+        "is_active": true
+      },
+      {
+        "id": "legacy-contact-intro",
+        "page": "contact",
+        "section": "intro",
+        "heading": "যোগাযোগ ও অনুসন্ধান (Contact Us)",
+        "body": "সরাসরি হটলাইন • দ্রুত হোয়াটসঅ্যাপ রিপ্লাই • অন-সাইট টেকনিশিয়ান সহায়তা",
+        "is_active": true
+      },
+      {
+        "id": "legacy-services-intro",
+        "page": "services",
+        "section": "intro",
+        "heading": "হোম অ্যাপ্লায়েন্স রিপেয়ার ও সার্ভিসিং",
+        "body": "দক্ষ টেকনিশিয়ান • চিপ-লেভেল সার্কিট বোর্ড মেরামত • জেনুইন স্পেয়ার পার্টস",
+        "is_active": true
+      },
+      {
+        "id": "legacy-works-intro",
+        "page": "works",
+        "section": "intro",
+        "heading": "আমাদের পূর্ববর্তী কাজের বাস্তব গ্যালারি",
+        "body": "১০+ বছরের টেকনিক্যাল অভিজ্ঞতা • চিপ-লেভেল মেরামত • সফল বাস্তব কাজ",
+        "is_active": true
+      }
+    ]
+  }
+}

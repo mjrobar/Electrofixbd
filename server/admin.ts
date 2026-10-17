@@ -3,6 +3,7 @@ import { Router, json } from "express";
 import { rateLimit } from "express-rate-limit";
 import pg from "pg";
 import type { Config } from "./config";
+import { createContentImportRouter } from "./content-import";
 import { createAdminContentRouter } from "./admin-content";
 import { createAdminSiteControlsRouter } from "./site-controls";
 
@@ -28,17 +29,17 @@ function parseCookie(header: string) {
   const part = header.split(";").map(s => s.trim()).find(s => s.startsWith(cookieName + "="));
   return part?.slice(cookieName.length + 1) || "";
 }
-export function createAdminRouter(config: Config) {
+export function createAdminRouter(config: Config, database?: pg.Pool) {
   const router = Router();
   const secret = config.ADMIN_SESSION_SECRET;
   const username = config.ADMIN_USERNAME;
   const passwordHash = config.ADMIN_PASSWORD_HASH;
   const enabled = Boolean(secret && secret.length >= 32 && username && passwordHash && config.DATABASE_URL);
-  const pool = enabled ? new pg.Pool({ connectionString: config.DATABASE_URL, max: 3, connectionTimeoutMillis: config.DB_TIMEOUT_MS }) : null;
+  const pool = enabled ? database ?? new pg.Pool({ connectionString: config.DATABASE_URL, max: 3, connectionTimeoutMillis: config.DB_TIMEOUT_MS }) : null;
   pool?.on("error", () => console.error("Admin PostgreSQL idle connection failed."));
   router.use((_req,res,next) => { res.setHeader("Cache-Control", "no-store"); next(); });
-  router.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false }));
-  router.use(json({ limit: "8kb" }));
+  router.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: "draft-8", legacyHeaders: false }));
+  router.use(json({ limit: "2mb" }));
   const isAuthenticated = (cookie: string) => {
     if (!secret || !cookie) return false;
     const [user, expiry, nonce, mac] = cookie.split(".");
@@ -53,7 +54,7 @@ export function createAdminRouter(config: Config) {
     }
     next();
   });
-  router.post("/login", async (req,res) => {
+  router.post("/login", rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false }), async (req,res) => {
     const user = req.body?.username;
     const password = req.body?.password;
     if (!enabled || typeof user !== "string" || typeof password !== "string" || !constantEqual(user, username!) || !passwordMatches(password, passwordHash!))
@@ -68,6 +69,7 @@ export function createAdminRouter(config: Config) {
     next();
   });
   if (pool) {
+    router.use(createContentImportRouter(pool, secret!));
     router.use(createAdminContentRouter(pool));
     router.use(createAdminSiteControlsRouter(pool));
   }
