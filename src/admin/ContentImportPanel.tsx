@@ -6,6 +6,7 @@ type Preview = {
  approval_token?: string;
  modules: {key:string;action:string;reason:string;data:unknown}[];
  catalog: { notes: string[]; mappings: unknown[]; source_ref: string };
+ coverage: { complete: boolean; outstanding: string[] };
 };
 function SourceValues({data}:{data:unknown}) {
  const rows=Array.isArray(data)?data:[data];
@@ -49,9 +50,10 @@ export default function ContentImportPanel({onImported,blocked,onBusy}:{onImport
   {notice&&<p role="status" className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
   <div className="flex flex-wrap gap-2"><button disabled={busy||blocked} onClick={()=>void review()} className="rounded-md border border-[#004179] px-4 py-2.5 text-sm font-bold text-[#004179] disabled:opacity-50">{busy?"Working…":"Preview import"}</button>{preview&&<button disabled={busy||blocked} onClick={()=>void review(true)} className="rounded-md border border-[#004179] px-4 py-2.5 text-sm font-bold text-[#004179] disabled:opacity-50">Download backup for approval</button>}</div>
   {preview&&<div className="space-y-3">
+   {!preview.coverage?.complete && <div role="alert" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"><strong>Full import is not ready. Approval is disabled until all static site content is mapped.</strong><ul className="mt-2 list-disc pl-5">{preview.coverage?.outstanding?.map(item=><li key={item}>{item}</li>)}</ul></div>}
    {preview.modules.map(item=><details key={item.key} className="rounded-md border border-slate-200 p-3"><summary className="cursor-pointer text-sm font-semibold">{item.key.replaceAll("_"," ")} — {item.action==="skip"?"Preserve existing content":"Import as draft"}</summary><p className="mt-2 text-xs text-slate-500">{item.reason}</p>{item.action!=="skip"&&<SourceValues data={item.data}/>}</details>)}
    <details className="rounded-md border border-slate-200 p-3"><summary className="cursor-pointer text-sm font-semibold">Source mapping and limitations</summary>{preview.catalog.notes.map(note=><p key={note} className="mt-2 text-xs text-slate-500">{note}</p>)}<pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs">{JSON.stringify(preview.catalog.mappings,null,2)}</pre></details>
-   {token&&<div className="space-y-3"><label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" disabled={busy||blocked} checked={approved} onChange={e=>setApproved(e.target.checked)}/>I retained the backup and approve importing the previewed content as drafts into this environment.</label><button disabled={busy||blocked||!approved||!preview.modules.some(item=>item.action==="import-draft")} onClick={()=>void apply()} className="rounded-md bg-[#004179] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">Approve draft import</button></div>}
+   {token&&<div className="space-y-3"><label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" disabled={busy||blocked} checked={approved} onChange={e=>setApproved(e.target.checked)}/>I retained the backup and approve importing the previewed content as drafts into this environment.</label><button disabled={busy||blocked||!approved||!preview.coverage?.complete||!preview.modules.some(item=>item.action==="import-draft")} onClick={()=>void apply()} className="rounded-md bg-[#004179] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">Approve draft import</button></div>}
   </div>}
  </section>;
 }
