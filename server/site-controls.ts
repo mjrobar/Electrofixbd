@@ -65,6 +65,22 @@ const page = z
     heading: z.string().trim().max(250),
     body: z.string().trim().max(8000).default(""),
     image_url: link.default(""),
+    eyebrow: z.string().trim().max(250).default(""),
+    eyebrow_secondary: z.string().trim().max(250).default(""),
+    group_heading: z.string().trim().max(250).default(""),
+    highlights: z.array(z.object({
+      id: z.string().trim().min(1).max(100),
+      icon: z.enum(["cpu","map-pin","settings","shield-check","none"]).default("none"),
+      title: z.string().trim().max(250),
+      subtitle: z.string().trim().max(500).default(""),
+      description: z.string().trim().max(3000).default(""),
+    }).strict()).max(30).default([]),
+    statistics: z.array(z.object({
+      id: z.string().trim().min(1).max(100),
+      value: z.number().int().min(0).max(100000000),
+      suffix: z.string().trim().max(20).default(""),
+      label: z.string().trim().max(250),
+    }).strict()).max(30).default([]),
     is_active: z.boolean().default(true),
   })
   .strict();
