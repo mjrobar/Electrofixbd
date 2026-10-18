@@ -8,7 +8,7 @@ import {
   lstat,
   open,
 } from "node:fs/promises";
-import { resolve, join } from "node:path";
+import { resolve, join, relative, isAbsolute, parse, sep } from "node:path";
 import sharp from "sharp";
 import type pg from "pg";
 import type { Config } from "./config";
@@ -26,12 +26,16 @@ const unavailable = () =>
 export async function mediaRoot(config: Config) {
   if (!config.MEDIA_ROOT || !config.MEDIA_STORAGE_DURABLE) throw unavailable();
   const root = resolve(config.MEDIA_ROOT);
+  const app = resolve(".");
+  const within = (parent: string, child: string) => {
+    const path = relative(parent, child);
+    return path === "" || (path !== ".." && !path.startsWith(".." + sep) && !isAbsolute(path));
+  };
   if (
-    root === "/" ||
-    resolve(".").startsWith(root + "/") ||
-    root === resolve(".") ||
-    root.startsWith(resolve(".") + "/") ||
-    (config.NODE_ENV === "production" && /^\/(tmp|var\/tmp)(\/|$)/.test(root))
+    root === parse(root).root ||
+    within(root, app) ||
+    within(app, root) ||
+    (config.NODE_ENV === "production" && process.platform !== "win32" && /^\/(tmp|var\/tmp)(\/|$)/.test(root))
   )
     throw unavailable();
   await mkdir(root, { recursive: true, mode: 0o700 });
@@ -39,7 +43,7 @@ export async function mediaRoot(config: Config) {
   const directory = await lstat(root);
   if (
     !directory.isDirectory() ||
-    (directory.mode & 0o077) !== 0 ||
+    (process.platform !== "win32" && (directory.mode & 0o077) !== 0) ||
     (process.getuid && directory.uid !== process.getuid())
   )
     throw unavailable();
@@ -127,7 +131,12 @@ export async function uploadImage(
   try {
     const directory = await open(root, "r");
     try {
-      await directory.sync();
+      try {
+        await directory.sync();
+      } catch (error) {
+        // Directory fsync is unsupported by Windows; file flush remains enforced.
+        if (process.platform !== "win32") throw error;
+      }
     } finally {
       await directory.close();
     }
