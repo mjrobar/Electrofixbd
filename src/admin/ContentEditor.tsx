@@ -563,7 +563,7 @@ function ContentModule({
                       Suggest available slug
                     </button>
                   )}
-                  {["cover_image", "media_url", "avatar_url"].includes(
+                  {["cover_image", "media_url"].includes(
                     f.key,
                   ) && (
                     <ImageUpload
