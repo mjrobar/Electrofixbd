@@ -15,12 +15,7 @@ import { TESTIMONIALS_DATA } from '../../data/testimonialsData';
 import { Testimonial } from '../../types';
 
 export const TestimonialsSection: React.FC = () => {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('electrofix_user_feedbacks') || '[]');
-      return [...(Array.isArray(saved) ? saved : []), ...TESTIMONIALS_DATA];
-    } catch { return TESTIMONIALS_DATA; }
-  });
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(TESTIMONIALS_DATA);
   const [selectedFeedback, setSelectedFeedback] = useState<Testimonial | null>(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -30,7 +25,12 @@ export const TestimonialsSection: React.FC = () => {
   // Form states
   const [customerName, setCustomerName] = useState('');
   const [location, setLocation] = useState('');
-  const [serviceType, setServiceType] = useState('AC Repair & Servicing');
+  const [serviceType, setServiceType] = useState('');
+  const [availableServices, setAvailableServices] = useState<{id:string;name:string}[]>([]);
+  const [consent, setConsent] = useState(false);
+  const [submissionError, setSubmissionError] = useState('');
+  const [submissionKey, setSubmissionKey] = useState<string | null>(null);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
   const [attachedMediaUrl, setAttachedMediaUrl] = useState<string | null>(null);
@@ -58,6 +58,7 @@ export const TestimonialsSection: React.FC = () => {
         const records: Testimonial[] = payload.testimonials.map((record: any) => ({
           id: String(record.id), customerName: String(record.customer_name),
           review: String(record.review), serviceType: String(record.service_type),
+          location: record.address || undefined,
           rating: Number(record.rating) || 5,
           avatarUrl: record.avatar_url || undefined, mediaUrl: record.media_url || undefined,
           mediaType: record.media_type === 'video' ? 'video' : record.media_type === 'image' ? 'image' : undefined,
@@ -65,7 +66,7 @@ export const TestimonialsSection: React.FC = () => {
           date: new Date(record.created_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }),
           time: new Date(record.created_at).toLocaleTimeString('bn-BD', { hour: 'numeric', minute: '2-digit' })
         }));
-        if (!controller.signal.aborted && records.length > 0) { setTestimonials(sortNewestFirst(records)); setCurrentPage(1); }
+        if (!controller.signal.aborted) { setTestimonials(records.length ? sortNewestFirst(records) : TESTIMONIALS_DATA); setCurrentPage(1); }
       } catch (error) {
         if (!controller.signal.aborted) console.error('Unable to load published testimonials:', error);
       }
@@ -91,84 +92,83 @@ export const TestimonialsSection: React.FC = () => {
     }
   };
 
-  // Handle file attachment (Image or Video)
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadCategories() {
+      try {
+        const results: {id:string;name:string}[] = [];
+        for (let offset = 0; offset < 1000; offset += 100) {
+          const response = await fetch(`/api/services?limit=100&offset=${offset}`, {signal:controller.signal});
+          if (!response.ok) throw new Error('Unable to load service categories');
+          const data = await response.json();
+          const batch = Array.isArray(data.services) ? data.services : [];
+          results.push(...batch.map((x:any)=>({id:String(x.id), name:String(x.name)})));
+          if (batch.length < 100) break;
+        }
+        if (!controller.signal.aborted) {setAvailableServices(results);setServiceType(v=>v || results[0]?.id || '');}
+      } catch(e) {
+        if (!controller.signal.aborted) setSubmissionError('সার্ভিস ক্যাটাগরি লোড হয়নি। পেজ রিফ্রেশ করুন।');
+      }
+    }
+    void loadCategories();
+    return ()=>controller.abort();
+  }, []);
+
+  useEffect(() => () => { if (attachedMediaUrl) URL.revokeObjectURL(attachedMediaUrl); }, [attachedMediaUrl]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const isVideo = file.type.startsWith('video/');
-    setAttachedMediaType(isVideo ? 'video' : 'image');
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setAttachedMediaUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5*1024*1024) {
+      setSubmissionError('শুধু JPEG, PNG বা WebP ছবি (সর্বোচ্চ ৫ MB) নির্বাচন করুন।');
+      e.target.value='';
+      return;
+    }
+    setSubmissionError('');
+    setAttachedFile(file);
+    setAttachedMediaType('image');
+    setAttachedMediaUrl(URL.createObjectURL(file));
+    setSubmissionKey(null);
   };
 
-  // Submit Feedback Handler
-  const handleSubmitFeedback = (e: React.FormEvent) => {
+  // Server-confirmed pending intake. Never insert unapproved submissions in public cards.
+  const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerName.trim() || !reviewText.trim()) return;
-
+    if (isSubmitting || !customerName.trim() || !reviewText.trim() || !serviceType || !consent) return;
     setIsSubmitting(true);
-
-    const now = new Date();
-    // Format date in Bengali
-    const dateStr = now.toLocaleDateString('bn-BD', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    // Format time in Bengali
-    const timeStr = now.toLocaleTimeString('bn-BD', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-
-    const newFeedback: Testimonial = {
-      id: `user-feedback-${Date.now()}`,
-      customerName: customerName.trim(),
-      location: location.trim() || 'ঢাকা',
-      serviceType,
-      rating,
-      review: reviewText.trim(),
-      date: dateStr,
-      time: timeStr,
-      mediaUrl: attachedMediaUrl || undefined,
-      mediaType: attachedMediaUrl ? attachedMediaType : undefined,
-      createdAt: now.toISOString()
-    };
-
-    // Save to localStorage
+    setSubmissionError('');
+    const key = submissionKey ?? crypto.randomUUID();
+    setSubmissionKey(key);
     try {
-      const existingSaved = localStorage.getItem('electrofix_user_feedbacks');
-      const savedList = existingSaved ? JSON.parse(existingSaved) : [];
-      savedList.unshift(newFeedback);
-      localStorage.setItem('electrofix_user_feedbacks', JSON.stringify(savedList));
-    } catch (err) {
-      console.error('Failed to save feedback in localStorage', err);
+      let image: {id:string;claim_token:string} | undefined;
+      if (attachedFile) {
+        const uploaded = await fetch('/api/review-images', {
+          method:'POST', headers:{'Content-Type':attachedFile.type}, body:attachedFile,
+        });
+        const uploadData = await uploaded.json();
+        if (!uploaded.ok) throw new Error(uploadData.error || 'ছবি আপলোড করা যায়নি।');
+        image = {id:uploadData.image.id,claim_token:uploadData.image.claim_token};
+      }
+      const response = await fetch('/api/reviews', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          submission_key:key, customer_name:customerName.trim(),
+          address:location.trim(), service_id:serviceType, rating, review:reviewText.trim(),
+          consent:true, website:'', ...(image ? {image} : {}),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok || response.status !== 201) throw new Error(result.error || 'রিভিউ সংরক্ষণ করা যায়নি।');
+      setCustomerName('');setLocation('');setReviewText('');setRating(5);
+      setAttachedFile(null);setAttachedMediaUrl(null);setConsent(false);setSubmissionKey(null);
+      setIsSubmitModalOpen(false);
+      setSuccessMessage('আপনার রিভিউ সংরক্ষিত হয়েছে। অ্যাডমিন অনুমোদনের পর এটি ওয়েবসাইটে প্রকাশিত হবে।');
+    } catch(error) {
+      setSubmissionError(error instanceof Error ? error.message : 'রিভিউ জমা দেওয়া যায়নি। আবার চেষ্টা করুন।');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Prepend new feedback and sort so it appears on the FRONT PAGE (Page 1) immediately!
-    setTestimonials((prev) => sortNewestFirst([newFeedback, ...prev]));
-    setCurrentPage(1); // Set to front page!
-
-    // Reset Form
-    setCustomerName('');
-    setLocation('');
-    setReviewText('');
-    setAttachedMediaUrl(null);
-    setRating(5);
-    setIsSubmitting(false);
-    setIsSubmitModalOpen(false);
-
-    // Show Confirmation
-    setSuccessMessage('আপনার ফিডব্যাক সফলভাবে জমা হয়েছে এবং প্রথম পেজের সবার শীর্ষে যুক্ত করা হয়েছে!');
-    setTimeout(() => {
-      setSuccessMessage(null);
-    }, 6000);
   };
 
   return (
@@ -556,7 +556,6 @@ export const TestimonialsSection: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    required
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     placeholder="যেমন: মিরপুর-১০, ঢাকা"
@@ -578,12 +577,10 @@ export const TestimonialsSection: React.FC = () => {
                     className="w-full px-3 py-2 bg-white border border-[#DCE3E8] focus:border-[#004179] text-xs sm:text-sm text-[#17202A] rounded-[0.4rem] focus:outline-none"
                     style={{ borderRadius: '0.4rem' }}
                   >
-                    <option value="AC Repair & Servicing">AC Repair & Servicing</option>
-                    <option value="Refrigerator / Fridge Repair">Refrigerator / Fridge Repair</option>
-                    <option value="Washing Machine Repair">Washing Machine Repair</option>
-                    <option value="Microwave Oven Repair">Microwave Oven Repair</option>
-                    <option value="Dishwasher Repair">Dishwasher Repair</option>
-                    <option value="Circuit Board / Chip-Level Repair">Circuit Board / Chip-Level Repair</option>
+                    <option value="" disabled>সার্ভিস নির্বাচন করুন</option>
+                    {availableServices.map((service) => (
+                      <option key={service.id} value={service.id}>{service.name}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -637,15 +634,15 @@ export const TestimonialsSection: React.FC = () => {
                 style={{ borderRadius: '0.4rem' }}
               >
                 <label className="block text-xs font-bold text-[#17202A] mb-1">
-                  ছবি বা ভিডিও সংযুক্ত করুন (ঐচ্ছিক):
+                  ছবি সংযুক্ত করুন (ঐচ্ছিক):
                 </label>
                 <p className="text-[11px] text-[#5F6B76] mb-2">
-                  মেরামতকৃত এসি, ফ্রিজ বা সার্কিট বোর্ডের ছবি অথবা ছোট ভিডিও আপলোড করতে পারেন।
+                  JPEG, PNG অথবা WebP ছবি, সর্বোচ্চ ৫ MB।
                 </p>
 
                 <input
                   type="file"
-                  accept="image/*,video/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleFileChange}
                   className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-[0.4rem] file:border file:border-[#004179] file:text-xs file:font-bold file:bg-[#004179] file:text-white hover:file:bg-[#00325E] cursor-pointer"
                 />
@@ -656,14 +653,10 @@ export const TestimonialsSection: React.FC = () => {
                     className="mt-3 relative border border-[#DCE3E8] bg-black p-1 max-h-48 overflow-hidden flex items-center justify-center rounded-[0.4rem]"
                     style={{ borderRadius: '0.4rem' }}
                   >
-                    {attachedMediaType === 'video' ? (
-                      <video src={attachedMediaUrl} controls className="max-h-44" />
-                    ) : (
-                      <img src={attachedMediaUrl} alt="Preview" className="max-h-44 object-contain" />
-                    )}
+                    <img src={attachedMediaUrl} alt="Preview" className="max-h-44 object-contain" />
                     <button
                       type="button"
-                      onClick={() => setAttachedMediaUrl(null)}
+                      onClick={() => {setAttachedMediaUrl(null);setAttachedFile(null);setSubmissionKey(null);}}
                       className="absolute top-2 right-2 px-2 py-0.5 bg-red-600 text-white font-bold text-xs rounded-[0.4rem]"
                       style={{ borderRadius: '0.4rem' }}
                     >
@@ -673,6 +666,11 @@ export const TestimonialsSection: React.FC = () => {
                 )}
               </div>
 
+              <label className="flex items-start gap-2 text-xs text-slate-700">
+                <input type="checkbox" required checked={consent} onChange={e=>setConsent(e.target.checked)} />
+                আমার নাম, রিভিউ, রেটিং, সার্ভিস এবং দেওয়া এলাকা/ছবি অ্যাডমিনের অনুমোদনের পরে প্রকাশ হতে পারে। ব্যক্তিগত যোগাযোগের তথ্য লিখব না।
+              </label>
+              {submissionError && <p role="alert" className="text-sm text-red-700">{submissionError}</p>}
               {/* Modal Submit and Cancel Buttons */}
               <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#DCE3E8]">
                 <button
@@ -685,7 +683,7 @@ export const TestimonialsSection: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !availableServices.length}
                   className="px-6 py-2.5 bg-[#004179] hover:bg-[#00325E] text-white font-extrabold text-xs sm:text-sm border border-[#004179] rounded-[0.4rem] cursor-pointer transition-colors disabled:opacity-60"
                   style={{ borderRadius: '0.4rem' }}
                 >
