@@ -1,5 +1,7 @@
 # Issue 21 consolidated implementation report
 
+Consolidated Draft PR: [#28](https://github.com/mjrobar/Electrofixbd/pull/28).
+
 Review date: 19 October 2026 (Asia/Dhaka). Branch: `feat/issue-21-complete-cms`. Implementation starts at Draft PR #27 (`d8610dcdd87c6fcf6034ec08ca8122fce780627c`) and includes all preceding Issue 21 changes. The consolidated Draft PR targets `fix/windows-local-media-storage` (PR #20), so reviewers see the whole Issue 21 stack in one diff. Earlier Draft PRs #22–#27 are retained, not merged or closed.
 
 **Backend/Admin implementation and safe static/mock checks are complete for this handoff. Production readiness is not verified.** PostgreSQL execution, shared Secondary acceptance and independent original AI Studio/public CMS integration remain pending. No migration/import, real customer update, local PostgreSQL creation, Supabase connection, merge or deployment occurred in this task.
