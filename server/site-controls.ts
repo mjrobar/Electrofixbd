@@ -1,3 +1,6 @@
+import { assertMediaReferences } from "./media-storage";
+import { ApiError } from "./errors";
+import { transaction } from "./db/transaction";
 import { mediaUrl } from "./media";
 import { Router } from "express";
 import { z } from "zod";
@@ -6,6 +9,15 @@ import type pg from "pg";
 const link = mediaUrl;
 const entry = z
   .object({
+    source_id: z.number().int().optional(),
+    source_flags: z
+      .object({
+        isPhoneCall: z.boolean().optional(),
+        isWhatsApp: z.boolean().optional(),
+        isNavigateServices: z.boolean().optional(),
+      })
+      .strict()
+      .optional(),
     id: z.string().trim().min(1).max(100),
     title: z.string().trim().max(250).default(""),
     subtitle: z.string().trim().max(500).default(""),
@@ -64,29 +76,64 @@ const page = z
     section: z.string().trim().min(1).max(100),
     heading: z.string().trim().max(250),
     body: z.string().trim().max(8000).default(""),
+    description: z.string().trim().max(8000).default(""),
     image_url: link.default(""),
     eyebrow: z.string().trim().max(250).default(""),
     eyebrow_secondary: z.string().trim().max(250).default(""),
     group_heading: z.string().trim().max(250).default(""),
-    highlights: z.array(z.object({
-      id: z.string().trim().min(1).max(100),
-      icon: z.enum(["cpu","map-pin","settings","shield-check","check-circle","clock","wrench","headphones","tag","none"]).default("none"),
-      title: z.string().trim().max(250),
-      subtitle: z.string().trim().max(500).default(""),
-      description: z.string().trim().max(3000).default(""),
-    }).strict()).max(30).default([]),
-    actions: z.array(z.object({
-      id: z.string().trim().min(1).max(100),
-      label: z.string().trim().max(150),
-      action: z.enum(["booking","phone","whatsapp","navigate"]),
-      url: link.default(""),
-    }).strict()).max(15).default([]),
-    statistics: z.array(z.object({
-      id: z.string().trim().min(1).max(100),
-      value: z.number().int().min(0).max(100000000),
-      suffix: z.string().trim().max(20).default(""),
-      label: z.string().trim().max(250),
-    }).strict()).max(30).default([]),
+    highlights: z
+      .array(
+        z
+          .object({
+            id: z.string().trim().min(1).max(100),
+            icon: z
+              .enum([
+                "cpu",
+                "map-pin",
+                "settings",
+                "shield-check",
+                "check-circle",
+                "clock",
+                "wrench",
+                "headphones",
+                "tag",
+                "none",
+              ])
+              .default("none"),
+            title: z.string().trim().max(250),
+            subtitle: z.string().trim().max(500).default(""),
+            description: z.string().trim().max(3000).default(""),
+          })
+          .strict(),
+      )
+      .max(30)
+      .default([]),
+    actions: z
+      .array(
+        z
+          .object({
+            id: z.string().trim().min(1).max(100),
+            label: z.string().trim().max(150),
+            action: z.enum(["booking", "phone", "whatsapp", "navigate"]),
+            url: link.default(""),
+          })
+          .strict(),
+      )
+      .max(15)
+      .default([]),
+    statistics: z
+      .array(
+        z
+          .object({
+            id: z.string().trim().min(1).max(100),
+            value: z.number().int().min(0).max(100000000),
+            suffix: z.string().trim().max(20).default(""),
+            label: z.string().trim().max(250),
+          })
+          .strict(),
+      )
+      .max(30)
+      .default([]),
     is_active: z.boolean().default(true),
   })
   .strict();
@@ -116,8 +163,22 @@ function isKey(value: string): value is Key {
 }
 export function validate(key: Key, body: unknown) {
   switch (key) {
-    case "hero_slides":
-      return schemas.hero_slides.safeParse(body);
+    case "hero_slides": {
+      const parsed = schemas.hero_slides.safeParse(body);
+      if (parsed.success)
+        for (const row of parsed.data)
+          if (row.source_flags && row.actions_configured) {
+            row.source_flags =
+              row.secondary_action === "phone"
+                ? { isPhoneCall: true }
+                : row.secondary_action === "whatsapp"
+                  ? { isWhatsApp: true }
+                  : row.secondary_action === "navigate"
+                    ? { isNavigateServices: true }
+                    : {};
+          }
+      return parsed;
+    }
     case "faqs":
       return schemas.faqs.safeParse(body);
     case "business_settings":
@@ -238,21 +299,26 @@ export function createAdminSiteControlsRouter(db: pg.Pool) {
       const parsed = validate(key, current.rows[0].draft);
       if (!parsed.success || !publishable(key, parsed.data)) {
         await client.query("ROLLBACK");
-        return res
-          .status(409)
-          .json({
-            error:
-              "Add active, complete content before publishing. Hero slides need headline, image and button text. Use Unpublish module to clear a publication.",
-          });
+        return res.status(409).json({
+          error:
+            "Add active, complete content before publishing. Hero slides need headline, image and button text. Use Unpublish module to clear a publication.",
+        });
       }
+      await assertSiteMediaReferences(client, parsed.data);
       const result = await client.query(
         "UPDATE public.site_content SET published=draft,revision=revision+1,updated_at=now() WHERE key=$1 AND revision=$2 RETURNING key,draft,published,revision,updated_at",
         [key, req.body.revision],
       );
+      await client.query(
+        "INSERT INTO cms_publication_state(key,state) VALUES($1,'published') ON CONFLICT(key) DO UPDATE SET state='published',updated_at=now()",
+        [key],
+      );
       await client.query("COMMIT");
       return res.json({ item: result.rows[0] });
-    } catch {
+    } catch (error) {
       await client.query("ROLLBACK").catch(() => {});
+      if (error instanceof ApiError)
+        return res.status(error.status).json({ error: error.message });
       return res.status(503).json({ error: "Unable to publish content." });
     } finally {
       client.release();
@@ -264,14 +330,22 @@ export function createAdminSiteControlsRouter(db: pg.Pool) {
     if (!Number.isSafeInteger(req.body?.revision) || req.body.revision < 0)
       return res.status(400).json({ error: "Valid revision required." });
     try {
-      const result = await db.query(
-        "UPDATE public.site_content SET published=$1::jsonb,updated_at=now() WHERE key=$2 AND revision=$3 RETURNING *",
-        [
-          JSON.stringify(key === "business_settings" ? {} : []),
-          key,
-          req.body.revision,
-        ],
-      );
+      const result = await transaction(db, async (client) => {
+        const updated = await client.query(
+          "UPDATE public.site_content SET published=$1::jsonb,updated_at=now() WHERE key=$2 AND revision=$3 RETURNING *",
+          [
+            JSON.stringify(key === "business_settings" ? {} : []),
+            key,
+            req.body.revision,
+          ],
+        );
+        if (updated.rowCount)
+          await client.query(
+            "INSERT INTO cms_publication_state(key,state) VALUES($1,'unpublished') ON CONFLICT(key) DO UPDATE SET state='unpublished',updated_at=now()",
+            [key],
+          );
+        return updated;
+      });
       return result.rowCount
         ? res.json({ item: result.rows[0] })
         : res.status(409).json({ error: "Content changed. Reload first." });
@@ -289,13 +363,15 @@ export function createPublicSiteControlsRouter(db: pg.Pool) {
     res.setHeader("Cache-Control", "no-store");
     try {
       const result = await db.query(
-        "SELECT published,updated_at FROM public.site_content WHERE key=$1",
+        "SELECT s.published,s.updated_at,coalesce(p.state,'uninitialized') AS state FROM public.site_content s LEFT JOIN cms_publication_state p ON p.key=s.key WHERE s.key=$1",
         [key],
       );
       return result.rows[0]
         ? res.json({
             success: true,
             data: result.rows[0].published,
+            state: result.rows[0].state,
+            fallback_allowed: result.rows[0].state === "uninitialized",
             updated_at: result.rows[0].updated_at,
           })
         : res.status(503).json({ error: "Content not configured." });
@@ -306,4 +382,18 @@ export function createPublicSiteControlsRouter(db: pg.Pool) {
     }
   });
   return router;
+}
+
+// Only known media fields can make uploaded images public; CTA/text URLs cannot.
+export async function assertSiteMediaReferences(
+  db: Pick<pg.Pool, "query">,
+  value: unknown,
+): Promise<void> {
+  if (!value || typeof value !== "object") return;
+  for (const [key, child] of Object.entries(value)) {
+    if (["image_url", "about_image_url", "logo_url"].includes(key))
+      await assertMediaReferences(db, { media_url: child });
+    else if (child && typeof child === "object")
+      await assertSiteMediaReferences(db, child);
+  }
 }

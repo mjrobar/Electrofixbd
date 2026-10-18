@@ -19,6 +19,7 @@ import {
 } from "./admin-utils";
 export const contentSchemas = {
   services: z.object({
+    sort_order: z.number().int().min(0).max(100000).nullish(),
     slug: z
       .string()
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
@@ -32,7 +33,9 @@ export const contentSchemas = {
     is_active: z.boolean(),
   }),
   works: z.object({
+    display_date: text.max(250).default(""),
     title: text.min(2).max(200),
+    sort_order: z.number().int().min(0).max(100000).nullish(),
     slug: z
       .string()
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
@@ -47,6 +50,12 @@ export const contentSchemas = {
     is_published: z.boolean(),
   }),
   testimonials: z.object({
+    sort_order: z.number().int().min(0).max(100000).nullish(),
+    display_date: text.max(250).default(""),
+    display_time: text.max(100).default(""),
+    source_created_at: z
+      .union([z.literal(""), z.string().datetime({ offset: true })])
+      .default(""),
     customer_name: text.min(2).max(150),
     address: text.max(150).default(""),
     review: text.min(1).max(5000),
@@ -62,6 +71,7 @@ export const contentSchemas = {
 export type Kind = keyof typeof contentSchemas;
 export const columns: Record<Kind, string[]> = {
   services: [
+    "sort_order",
     "slug",
     "name",
     "short_description",
@@ -72,6 +82,8 @@ export const columns: Record<Kind, string[]> = {
     "is_active",
   ],
   works: [
+    "sort_order",
+    "display_date",
     "title",
     "slug",
     "service_type",
@@ -84,6 +96,10 @@ export const columns: Record<Kind, string[]> = {
     "is_published",
   ],
   testimonials: [
+    "sort_order",
+    "display_date",
+    "display_time",
+    "source_created_at",
     "customer_name",
     "address",
     "review",
@@ -310,6 +326,10 @@ export function createAdminContentRouter(pool: pg.Pool) {
         const item = await transaction(pool, async (db) => {
           const current = await locked(db, kind, id, expected),
             pub = publication(kind);
+          await db.query(
+            "INSERT INTO cms_publication_state(key,state) VALUES($1,'published') ON CONFLICT(key) DO UPDATE SET state='published',updated_at=now()",
+            [kind],
+          );
           if (action !== "restore" && current.archived_at)
             throw new ApiError(
               409,
@@ -362,6 +382,10 @@ export function createAdminContentRouter(pool: pg.Pool) {
       const expected = revision(req.body?.revision);
       await transaction(pool, async (db) => {
         await locked(db, kind, id, expected);
+        await db.query(
+          "INSERT INTO cms_publication_state(key,state) VALUES($1,'published') ON CONFLICT(key) DO UPDATE SET state='published',updated_at=now()",
+          [kind],
+        );
         await db.query(
           `UPDATE public.${kind} SET archived_at=now(),${publication(kind)}=false WHERE id=$1`,
           [id],

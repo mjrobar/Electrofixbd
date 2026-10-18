@@ -1,3 +1,4 @@
+import { documentSchema } from "./cms-contract";
 import { Router } from "express";
 import type pg from "pg";
 import { z } from "zod";
@@ -17,7 +18,11 @@ export function createHistoryRouter(pool: pg.Pool) {
     "/history/:entity/:id",
     route(async (req, res) => {
       const { entity, id } = req.params;
-      if (!isKind(entity) && entity !== "site_content")
+      if (
+        !isKind(entity) &&
+        entity !== "site_content" &&
+        entity !== "cms_documents"
+      )
         throw new ApiError(404, "UNKNOWN_MODULE", "Unknown module.");
       const result = await pool.query(
         "SELECT revision,snapshot,saved_at FROM public.content_history WHERE entity=$1 AND record_id=$2 ORDER BY revision DESC LIMIT 30",
@@ -30,7 +35,11 @@ export function createHistoryRouter(pool: pg.Pool) {
     "/history/:entity/:id/restore",
     route(async (req, res) => {
       const { entity, id } = req.params;
-      if (!isKind(entity) && entity !== "site_content")
+      if (
+        !isKind(entity) &&
+        entity !== "site_content" &&
+        entity !== "cms_documents"
+      )
         throw new ApiError(404, "UNKNOWN_MODULE", "Unknown module.");
       const input = parse(
         z
@@ -59,6 +68,17 @@ export function createHistoryRouter(pool: pg.Pool) {
             "HISTORY_NOT_FOUND",
             "Saved version not found.",
           );
+        if (entity === "cms_documents") {
+          if (current.archived_at)
+            throw new ApiError(409, "ARCHIVED", "Restore section first.");
+          const data = parse(documentSchema, old.draft);
+          return (
+            await db.query(
+              "UPDATE cms_documents SET draft=$1,updated_at=now() WHERE id=$2 RETURNING *",
+              [JSON.stringify(data), id],
+            )
+          ).rows[0];
+        }
         if (entity === "site_content") {
           if (!Object.hasOwn(schemas, id))
             throw new ApiError(404, "UNKNOWN_MODULE", "Unknown site module.");

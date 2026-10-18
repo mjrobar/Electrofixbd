@@ -10,9 +10,20 @@ const schema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   PUBLIC_ORIGIN: z.string().url().optional(),
   DATABASE_URL: z.string().optional(),
+  CONTENT_IMPORT_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
+  CONTENT_IMPORT_TARGET_LABEL: z.string().max(200).optional(),
   MEDIA_ROOT: z.preprocess(
     (v) => (v === "" ? undefined : v),
-    z.string().refine((value) => isAbsolute(value), "MEDIA_ROOT must be an absolute path.").optional(),
+    z
+      .string()
+      .refine(
+        (value) => isAbsolute(value),
+        "MEDIA_ROOT must be an absolute path.",
+      )
+      .optional(),
   ),
   MEDIA_STORAGE_DURABLE: z
     .enum(["true", "false"])

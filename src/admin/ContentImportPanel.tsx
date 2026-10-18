@@ -1,59 +1,357 @@
 import React, { useEffect, useState } from "react";
-
-type Preview = {
- preview_digest: string;
- backup_digest: string;
- approval_token?: string;
- modules: {key:string;action:string;reason:string;data:unknown}[];
- catalog: { notes: string[]; mappings: unknown[]; source_ref: string };
- coverage: { complete: boolean; outstanding: string[] };
+import { adminRequest, Feedback, ui } from "./ui";
+type Entry = {
+  kind: string;
+  id: string;
+  source_id: string;
+  action: string;
+  reason: string;
+  data: unknown;
+  differences: { field: string; before: unknown; after: unknown }[];
 };
-function SourceValues({data}:{data:unknown}) {
- const rows=Array.isArray(data)?data:[data];
- return <div className="mt-3 space-y-3">{rows.map((row,index)=><dl key={index} className="space-y-2 rounded-md border border-slate-200 p-3">{Object.entries(row as Record<string,unknown>).filter(([key,value])=>key!=="id"&&key!=="is_active"&&value!=="").map(([key,value])=><div key={key}><dt className="text-xs font-semibold capitalize text-slate-500">{key.replaceAll("_"," ")}</dt><dd className="mt-1 break-words whitespace-pre-wrap text-sm text-slate-700">{String(value)}</dd></div>)}</dl>)}</div>;
+type Preview = {
+  target: { enabled: boolean; label: string };
+  preview_digest: string;
+  backup_digest: string;
+  approval_token?: string;
+  entries: Entry[];
+  coverage: {
+    complete: boolean;
+    outstanding: string[];
+    source_files: number;
+    fields: number;
+    documents: number;
+    bindings: number;
+    behavior: number;
+    original_ai_studio_reconciled: boolean;
+    collections: Record<string, number>;
+  };
+  totals: { imported: number; skipped: number; conflicted: number };
+  catalog: { source_ref: string; notes: string[] };
+};
+function Values({ data }: { data: unknown }) {
+  if (data === null || typeof data !== "object")
+    return (
+      <span className="whitespace-pre-wrap break-words">
+        {String(data ?? "Empty")}
+      </span>
+    );
+  return (
+    <dl className="space-y-2 border-l border-[#DCE3E8] pl-3">
+      {Object.entries(data).map(([key, value]) => (
+        <div key={key}>
+          <dt className="text-xs font-semibold text-slate-500">
+            {key.replaceAll("_", " ")}
+          </dt>
+          <dd className="text-sm">
+            <Values data={value} />
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
-const approval = "IMPORT EXISTING CONTENT AS DRAFTS";
-export default function ContentImportPanel({onImported,blocked,onBusy}:{onImported:()=>void;blocked:boolean;onBusy:(busy:boolean)=>void}) {
- const [preview,setPreview]=useState<Preview|null>(null);
- const [token,setToken]=useState("");
- const [approved,setApproved]=useState(false);
- const [busy,setBusy]=useState(false);
- useEffect(()=>{onBusy(busy);return ()=>onBusy(false)},[busy,onBusy]);
- const [error,setError]=useState("");
- const [notice,setNotice]=useState("");
- async function request(path:string,body?:unknown) {
-  const response=await fetch("/api/admin/site-content-import/"+path,{method:body?"POST":"GET",credentials:"same-origin",cache:"no-store",headers:body?{"Content-Type":"application/json","X-Admin-Request":"1"}:{},...(body?{body:JSON.stringify(body)}:{})});
-  const result=await response.json();
-  if(!response.ok)throw Error(result.error||"Import request failed.");
-  return result;
- }
- async function review(backup=false) {
-  setBusy(true);setError("");setNotice("");setToken("");setApproved(false);
-  try {
-   const result=await request(backup?"backup":"preview");setPreview(result);
-   if(backup){
-    const url=URL.createObjectURL(new Blob([JSON.stringify(result,null,2)],{type:"application/json"}));
-    const link=document.createElement("a");link.href=url;link.download="electrofix-content-backup.json";document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-    setToken(result.approval_token);setNotice("Backup downloaded. Review the preview and retain the file before approving. Approval expires in 15 minutes.");
-   }
-  }catch(e){setError(e instanceof Error?e.message:"Preview failed.")}finally{setBusy(false)}
- }
- async function apply() {
-  if(!approved||!token)return;
-  setBusy(true);setError("");setNotice("");
-  try{const result=await request("apply",{approval,approval_token:token});setToken("");setApproved(false);setPreview(null);setNotice(`${result.imported.length} modules imported as drafts. ${result.skipped.length} preserved. Review and publish each module when ready.`);onImported();}
-  catch(e){setToken("");setApproved(false);setError(e instanceof Error?e.message:"Import failed.")}finally{setBusy(false)}
- }
- return <section className="mt-6 space-y-4 rounded-lg border border-[#DCE3E8] bg-white p-5 sm:p-6" aria-label="Existing content import">
-  <div><h2 className="text-lg font-bold">Import existing website content</h2><p className="mt-1 text-sm text-slate-500">Preview existing content, download a backup, then approve importing untouched modules as drafts. Existing edits and publications are preserved.</p></div>
-  {error&&<p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-  {notice&&<p role="status" className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
-  <div className="flex flex-wrap gap-2"><button disabled={busy||blocked} onClick={()=>void review()} className="rounded-md border border-[#004179] px-4 py-2.5 text-sm font-bold text-[#004179] disabled:opacity-50">{busy?"Working…":"Preview import"}</button>{preview&&<button disabled={busy||blocked} onClick={()=>void review(true)} className="rounded-md border border-[#004179] px-4 py-2.5 text-sm font-bold text-[#004179] disabled:opacity-50">Download backup for approval</button>}</div>
-  {preview&&<div className="space-y-3">
-   {!preview.coverage?.complete && <div role="alert" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"><strong>Full import is not ready. Approval is disabled until all static site content is mapped.</strong><ul className="mt-2 list-disc pl-5">{preview.coverage?.outstanding?.map(item=><li key={item}>{item}</li>)}</ul></div>}
-   {preview.modules.map(item=><details key={item.key} className="rounded-md border border-slate-200 p-3"><summary className="cursor-pointer text-sm font-semibold">{item.key.replaceAll("_"," ")} — {item.action==="skip"?"Preserve existing content":"Import as draft"}</summary><p className="mt-2 text-xs text-slate-500">{item.reason}</p>{item.action!=="skip"&&<SourceValues data={item.data}/>}</details>)}
-   <details className="rounded-md border border-slate-200 p-3"><summary className="cursor-pointer text-sm font-semibold">Source mapping and limitations</summary>{preview.catalog.notes.map(note=><p key={note} className="mt-2 text-xs text-slate-500">{note}</p>)}<pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs">{JSON.stringify(preview.catalog.mappings,null,2)}</pre></details>
-   {token&&<div className="space-y-3"><label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" disabled={busy||blocked} checked={approved} onChange={e=>setApproved(e.target.checked)}/>I retained the backup and approve importing the previewed content as drafts into this environment.</label><button disabled={busy||blocked||!approved||!preview.coverage?.complete||!preview.modules.some(item=>item.action==="import-draft")} onClick={()=>void apply()} className="rounded-md bg-[#004179] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">Approve draft import</button></div>}
-  </div>}
- </section>;
+export default function ContentImportPanel({
+  onImported,
+  blocked,
+  onBusy,
+}: {
+  onImported: () => void;
+  blocked: boolean;
+  onBusy: (busy: boolean) => void;
+}) {
+  const [preview, setPreview] = useState<Preview | null>(null),
+    [approved, setApproved] = useState(false),
+    [token, setToken] = useState(""),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(""),
+    [notice, setNotice] = useState(""),
+    [runs, setRuns] = useState<any[]>([]);
+  useEffect(() => {
+    onBusy(busy);
+    return () => onBusy(false);
+  }, [busy, onBusy]);
+  const request = (path: string, method = "GET", body?: unknown) =>
+    adminRequest("/full-content-import/" + path, method, body);
+  async function loadRuns() {
+    try {
+      setRuns((await request("runs")).items);
+    } catch {
+      /* The preview will report unapplied migration 006; never fabricate a run. */
+    }
+  }
+  useEffect(() => {
+    void loadRuns();
+  }, []);
+  async function review(backup = false) {
+    setBusy(true);
+    setError("");
+    setToken("");
+    setApproved(false);
+    try {
+      const result = await request(backup ? "backup" : "preview");
+      setPreview(result);
+      if (backup) {
+        const url = URL.createObjectURL(
+            new Blob([JSON.stringify(result, null, 2)], {
+              type: "application/json",
+            }),
+          ),
+          link = document.createElement("a");
+        link.href = url;
+        link.download = "electrofix-full-application-backup.json";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setToken(result.approval_token);
+        setNotice(
+          "Full application backup downloaded. Contains private records: retain securely. Approval expires in 15 minutes.",
+        );
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function apply() {
+    if (!approved || !token) return;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await request("apply", "POST", {
+        approval: "IMPORT COMPLETE PINNED CONTENT AS DRAFTS",
+        approval_token: token,
+        acknowledge_conflicts: true,
+      });
+      setNotice(
+        `${result.imported.length} records imported as drafts, ${result.skipped.length} identical records skipped, ${result.conflicted.length} conflicts preserved. Run: ${result.run_id}. Nothing was published.`,
+      );
+      setToken("");
+      setApproved(false);
+      setPreview(null);
+      await loadRuns();
+      onImported();
+    } catch (e) {
+      setToken("");
+      setApproved(false);
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function rollback(id: string) {
+    if (
+      !window.confirm(
+        "Roll back this import only if no target has been edited or published since? New static records are archived; no customer records are deleted.",
+      )
+    )
+      return;
+    setBusy(true);
+    setError("");
+    try {
+      await request("runs/" + id + "/rollback", "POST", {
+        approval: "ROLL BACK UNEDITED IMPORT DRAFTS",
+      });
+      setNotice("Import rollback confirmed. Saved versions remain in history.");
+      await loadRuns();
+      onImported();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <section
+      className={ui.card + " mt-6 space-y-4"}
+      aria-label="Existing content import"
+    >
+      <h2 className="text-lg font-bold">Import complete website content</h2>
+      <p className="text-sm text-slate-500">
+        Preview every source section and field, download a full database-content
+        backup, then explicitly approve drafts. Existing edits, publications and
+        customer records are preserved. Never run this against an unapproved
+        database.
+      </p>
+      <Feedback error={error} notice={notice} />
+      <div className="flex flex-wrap gap-2">
+        <button
+          disabled={busy || blocked}
+          className={ui.button}
+          onClick={() => void review()}
+        >
+          Preview import
+        </button>
+        {preview && (
+          <button
+            disabled={busy || blocked}
+            className={ui.button}
+            onClick={() => void review(true)}
+          >
+            Download full backup for approval
+          </button>
+        )}
+      </div>
+      {preview && (
+        <div className="space-y-4">
+          <p className="text-sm font-semibold">
+            Database target: {preview.target.label} ·{" "}
+            {preview.target.enabled ? "Owner-enabled" : "Import disabled"}
+          </p>
+          <div className="rounded-md border border-[#DCE3E8] p-3 text-sm">
+            <p>
+              {preview.coverage.source_files} source files ·{" "}
+              {preview.coverage.fields} mapped fields ·{" "}
+              {preview.coverage.documents} component documents
+            </p>
+            <p>
+              {Object.entries(preview.coverage.collections)
+                .map(([k, n]) => n + " " + k)
+                .join(" · ")}
+            </p>
+            <p>
+              {preview.totals.imported} eligible · {preview.totals.skipped}{" "}
+              identical · {preview.totals.conflicted} conflicts preserved
+            </p>
+            <p>
+              {preview.coverage.behavior} code/design exclusions ·{" "}
+              {preview.coverage.bindings} dynamic bindings
+            </p>
+            <p className="mt-2">Source: {preview.catalog.source_ref}</p>
+          </div>
+          {!preview.coverage.complete && (
+            <div role="alert" className="text-sm text-red-700">
+              Approval disabled: {preview.coverage.outstanding.join(", ")}
+            </div>
+          )}
+          {!preview.coverage.original_ai_studio_reconciled && (
+            <p className="text-sm text-amber-800">
+              Pinned repository source is inventoried. Original independent AI
+              Studio reconciliation and public CMS wiring still block production
+              rollout.
+            </p>
+          )}
+          {preview.entries.map((item) => (
+            <details
+              key={item.kind + item.id}
+              className="rounded-md border border-[#DCE3E8] p-3"
+            >
+              <summary className="cursor-pointer break-words text-sm font-semibold">
+                {item.kind} / {item.source_id} — {item.action}
+              </summary>
+              <p className="my-2 text-xs text-slate-500">{item.reason}</p>
+              <details>
+                <summary className="text-sm font-semibold">
+                  Exact field differences ({item.differences.length})
+                </summary>
+                {item.differences.map((d, i) => (
+                  <div key={i} className="mt-2 border-t border-[#DCE3E8] pt-2">
+                    <strong className="break-words text-xs">{d.field}</strong>
+                    <div className="mt-1 grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs text-slate-500">Current</p>
+                        <Values data={d.before} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Source draft</p>
+                        <Values data={d.after} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </details>
+              <details className="mt-2">
+                <summary className="text-sm font-semibold">
+                  Source values
+                </summary>
+                <Values data={item.data} />
+              </details>
+            </details>
+          ))}
+          <details>
+            <summary className="text-sm font-semibold">
+              Source mapping and limitations
+            </summary>
+            {preview.catalog.notes.map((n) => (
+              <p key={n} className="mt-2 text-xs text-slate-500">
+                {n}
+              </p>
+            ))}
+            <a
+              className="mt-3 block text-sm font-semibold text-[#004179]"
+              href="/api/admin/full-content-import/inventory"
+              target="_blank"
+              rel="noreferrer"
+            >
+              View complete field inventory
+            </a>
+          </details>
+          {token && (
+            <div className="space-y-3">
+              <label className="flex gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  disabled={
+                    busy ||
+                    blocked ||
+                    !preview.coverage.complete ||
+                    !preview.target.enabled
+                  }
+                  checked={approved}
+                  onChange={(e) => setApproved(e.target.checked)}
+                />
+                I retained the full backup, reviewed the counts/differences,
+                approve this database target and draft import, and acknowledge
+                that conflicts are preserved.
+              </label>
+              <button
+                className={ui.primary}
+                disabled={
+                  busy ||
+                  blocked ||
+                  !approved ||
+                  !preview.coverage.complete ||
+                  !preview.totals.imported ||
+                  !preview.target.enabled
+                }
+                onClick={() => void apply()}
+              >
+                Approve complete draft import
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {runs.length > 0 && (
+        <details>
+          <summary className="text-sm font-semibold">
+            Import runs and safe rollback
+          </summary>
+          {runs.map((run) => (
+            <div
+              key={run.id}
+              className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#DCE3E8] pt-3"
+            >
+              <span className="break-all text-xs">
+                {run.id} · {run.created_at}
+                {run.rolled_back_at ? " · Rolled back" : ""}
+              </span>
+              <button
+                className={ui.button}
+                disabled={
+                  busy ||
+                  blocked ||
+                  !preview?.target.enabled ||
+                  Boolean(run.rolled_back_at)
+                }
+                onClick={() => void rollback(run.id)}
+              >
+                Roll back unedited drafts
+              </button>
+            </div>
+          ))}
+        </details>
+      )}
+    </section>
+  );
 }

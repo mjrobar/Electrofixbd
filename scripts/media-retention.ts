@@ -29,6 +29,7 @@ export async function retainMedia(pool: pg.Pool, root: string, apply = false) {
         "works",
         "testimonials",
         "site_content",
+        "cms_documents",
         "content_history",
       ]) {
         if (

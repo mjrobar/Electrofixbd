@@ -14,6 +14,9 @@ export const securityTables = [
   "admin_audit",
   "media_assets",
   "review_quotas",
+  "cms_documents",
+  "cms_import_runs",
+  "cms_publication_state",
   "schema_migrations",
 ];
 export async function securityPreview(db: Pick<pg.Pool, "query">) {
