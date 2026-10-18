@@ -167,7 +167,12 @@
       "source": "src/components/services/ServicesPageView.tsx",
       "fields": {
         "heading": "first h1",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "page badge",
+        "eyebrow_secondary": "secondary badge",
+        "description": "extra descriptive paragraph",
+        "image_url": "page hero background image",
+        "highlights": "ordered trust highlight labels and icon IDs"
       }
     },
     {
@@ -176,7 +181,12 @@
       "source": "src/components/works/OurWorksPageView.tsx",
       "fields": {
         "heading": "first h1",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "page badge",
+        "eyebrow_secondary": "secondary badge",
+        "description": "extra descriptive paragraph",
+        "image_url": "page hero background image",
+        "highlights": "ordered trust highlight labels and icon IDs"
       }
     }
   ],
@@ -491,7 +501,35 @@
         "section": "intro",
         "heading": "হোম অ্যাপ্লায়েন্স রিপেয়ার ও সার্ভিসিং",
         "body": "দক্ষ টেকনিশিয়ান • চিপ-লেভেল সার্কিট বোর্ড মেরামত • জেনুইন স্পেয়ার পার্টস",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "সার্ভিসসমূহ",
+        "eyebrow_secondary": "হোম কেয়ার ও রিপেয়ার সল্যুশন",
+        "group_heading": "📍 সমগ্র ঢাকা সিটি হোম সার্ভিস",
+        "description": "ইনভার্টার এসি, রেফ্রিজারেটর, ওয়াশিং মেশিন, মাইক্রোওভেন, ডিশওয়াশার ও সার্কিট বোর্ডের চিপ-লেভেল কাজের জন্য আমাদের নির্ভরযোগ্য সার্ভিস তালিকা থেকে আপনার কাঙ্ক্ষিত সেবাটি বেছে নিন।",
+        "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80",
+        "highlights": [
+          {
+            "id": "srv-1",
+            "icon": "check-circle",
+            "title": "৬+ স্পেশালাইজড সার্ভিস",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "srv-2",
+            "icon": "shield-check",
+            "title": "১০+ বছরের বাস্তব অভিজ্ঞতা",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "srv-3",
+            "icon": "wrench",
+            "title": "১০০% ডোরস্টেপ সার্ভিস",
+            "subtitle": "",
+            "description": ""
+          }
+        ]
       },
       {
         "id": "legacy-works-intro",
@@ -499,7 +537,34 @@
         "section": "intro",
         "heading": "আমাদের পূর্ববর্তী কাজের বাস্তব গ্যালারি",
         "body": "১০+ বছরের টেকনিক্যাল অভিজ্ঞতা • চিপ-লেভেল মেরামত • সফল বাস্তব কাজ",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "আমাদের কাজসমূহ",
+        "eyebrow_secondary": "বাস্তব কাজের পোর্টফোলিও",
+        "description": "ঢাকার বিভিন্ন এলাকায় আমাদের দক্ষ টেকনিশিয়ানদের সম্পন্নকৃত বাস্তব কাজের নমুনা ও সমাধান বিবরণ। প্রতিটি কাজের সাথে নিশ্চিত করা হয়েছে জেনুইন পার্টস ও ৩০ দিনের লিখিত সার্ভিস ওয়ারেন্টি।",
+        "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80",
+        "highlights": [
+          {
+            "id": "works-1",
+            "icon": "check-circle",
+            "title": "১০০% সমস্যার সমাধান নিশ্চয়তা",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "works-2",
+            "icon": "wrench",
+            "title": "অন-সাইট ডায়াগনসিস ও পার্টস পরিবর্তন",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "works-3",
+            "icon": "shield-check",
+            "title": "৩০ দিনের সার্ভিস নিশ্চয়তা",
+            "subtitle": "",
+            "description": ""
+          }
+        ]
       }
     ]
   }
