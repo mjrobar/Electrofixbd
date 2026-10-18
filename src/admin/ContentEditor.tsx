@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import SiteControlsEditor from "./SiteControlsEditor";
+import { SERVICES_DATA } from "../data/servicesData";
 import {
   useUnsavedChanges,
   adminRequest,
@@ -193,7 +194,30 @@ function ContentModule({
   }, []);
   function edit(item: Row) {
     const data = (item.admin_draft as Row) ?? item;
-    setEditing({ ...item, ...data });
+    // Legacy test rows are incomplete. The public site currently hydrates
+    // missing fields from the approved static service catalogue. Show the
+    // same fallback while editing; saving a draft persists only on approval.
+    const original = kind === "services"
+      ? SERVICES_DATA.find((service) => service.slug === data.slug)
+      : undefined;
+    const fieldsFromOriginal = original ? {
+      short_description: original.shortDescription,
+      full_description: original.fullDescription,
+      common_problems: original.commonProblems,
+      service_process: original.serviceProcess,
+      cover_image: original.coverImage,
+    } : null;
+    const hydrated = { ...item, ...data };
+    if (fieldsFromOriginal && !item.admin_draft) {
+      for (const [key, value] of Object.entries(fieldsFromOriginal)) {
+        const current = hydrated[key];
+        if (current == null || current === "" ||
+            (Array.isArray(current) && current.length === 0)) {
+          hydrated[key] = value;
+        }
+      }
+    }
+    setEditing(hydrated);
     setPreview(false);
     setNotice("");
   }

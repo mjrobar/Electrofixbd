@@ -78,7 +78,7 @@ export const ServiceDetailView: React.FC<ServiceDetailViewProps> = ({
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
                 {service.name}
               </h1>
-              <p className="text-sm sm:text-base text-white/90 max-w-2xl leading-relaxed font-normal">
+              <p className="text-sm sm:text-base text-white/90 max-w-2xl leading-relaxed font-normal whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
                 {service.shortDescription}
               </p>
             </div>
@@ -132,7 +132,7 @@ export const ServiceDetailView: React.FC<ServiceDetailViewProps> = ({
                 <Wrench className="w-5 h-5 text-[#004179]" />
                 <span>সার্ভিসের বিবরণ ও বৈশিষ্ট্য</span>
               </h2>
-              <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
+              <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
                 {service.fullDescription}
               </p>
             </div>
