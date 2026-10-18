@@ -69,6 +69,7 @@ const fields: Record<
     { key: "eyebrow", label: "Section credential / eyebrow" },
     { key: "eyebrow_secondary", label: "Secondary eyebrow" },
     { key: "group_heading", label: "Highlight group heading" },
+    { key: "description", label: "Supporting description", multiline: true },
   ],
 };
 const defaults: Record<Key, Row> = {
@@ -118,6 +119,7 @@ const defaults: Record<Key, Row> = {
     eyebrow_secondary: "",
     group_heading: "",
     highlights: [],
+    actions: [],
     statistics: [],
     is_active: true,
   },
@@ -275,7 +277,7 @@ function ModuleEditor({
       ),
     );
   }
-  function changeNested(index: number, field: "highlights" | "statistics", itemIndex: number, property: string, value: string) {
+  function changeNested(index: number, field: "highlights" | "statistics" | "actions", itemIndex: number, property: string, value: string) {
     setDirty(true);
     setData(prev => (prev as Row[]).map((row, i) => {
       if (i !== index) return row;
@@ -284,15 +286,14 @@ function ModuleEditor({
       return {...row, [field]: nested};
     }));
   }
-  function addNested(index: number, field: "highlights" | "statistics") {
+  function addNested(index: number, field: "highlights" | "statistics" | "actions") {
     setDirty(true);
     setData(prev => (prev as Row[]).map((row, i) => i !== index ? row : {
       ...row, [field]: [...(Array.isArray(row[field]) ? row[field] as Row[] : []),
-        field === "highlights" ? {id:crypto.randomUUID(),icon:"none",title:"",subtitle:"",description:""} :
-          {id:crypto.randomUUID(),value:0,suffix:"",label:""}],
+        field === "highlights" ? {id:crypto.randomUUID(),icon:"none",title:"",subtitle:"",description:""} : field === "actions" ? {id:crypto.randomUUID(),label:"",action:"booking",url:""} : {id:crypto.randomUUID(),value:0,suffix:"",label:""}],
     }));
   }
-  function removeNested(index: number, field: "highlights" | "statistics", child: number) {
+  function removeNested(index: number, field: "highlights" | "statistics" | "actions", child: number) {
     setDirty(true);
     setData(prev => (prev as Row[]).map((row, i) => i !== index ? row : {
       ...row, [field]: (Array.isArray(row[field]) ? row[field] as Row[] : []).filter((_,j)=>j!==child),
@@ -522,19 +523,19 @@ function ModuleEditor({
                     )}
                   </label>
                 ))}
-                {key === "page_sections" && (["highlights","statistics"] as const).map((field) => (
+                {key === "page_sections" && (["highlights","statistics","actions"] as const).map((field) => (
                   <div key={field} className="col-span-full space-y-2 rounded-md border border-slate-200 p-3">
                     <div className="flex items-center justify-between">
                       <strong className="text-sm capitalize">{field}</strong>
-                      <button type="button" className="text-xs font-bold text-[#004179]" onClick={()=>addNested(i,field)}>Add {field === "highlights" ? "highlight" : "statistic"}</button>
+                      <button type="button" className="text-xs font-bold text-[#004179]" onClick={()=>addNested(i,field)}>Add {field === "highlights" ? "highlight" : field === "actions" ? "action" : "statistic"}</button>
                     </div>
                     {(Array.isArray(item[field]) ? item[field] as Row[] : []).map((child,j)=>(
                       <div key={String(child.id ?? j)} className="grid gap-2 rounded-md border border-slate-200 p-3 sm:grid-cols-2">
-                        {(field === "highlights" ? ["icon","title","subtitle","description"] : ["value","suffix","label"]).map(prop=>(
+                        {(field === "highlights" ? ["icon","title","subtitle","description"] : field === "actions" ? ["label","action","url"] : ["value","suffix","label"]).map(prop=>(
                           <label key={prop} className="text-xs font-medium capitalize">
                             {prop}
-                            {prop === "icon" ? <select className="mt-1 w-full border p-2" value={String(child.icon ?? "none")} onChange={e=>changeNested(i,field,j,prop,e.target.value)}>
-                              {["none","cpu","map-pin","settings","shield-check"].map(icon=><option key={icon} value={icon}>{icon}</option>)}
+                            {(prop === "icon" || prop === "action") ? <select className="mt-1 w-full border p-2" value={String(child[prop] ?? (prop === "icon" ? "none" : "booking"))} onChange={e=>changeNested(i,field,j,prop,e.target.value)}>
+                              {(prop === "action" ? ["booking","phone","whatsapp","navigate"] : ["none","cpu","map-pin","settings","shield-check","check-circle","clock","wrench","headphones","tag"]).map(option=><option key={option} value={option}>{option}</option>)}
                             </select> : <input className="mt-1 w-full border p-2" type={prop === "value" ? "number" : "text"} value={String(child[prop] ?? "")} onChange={e=>changeNested(i,field,j,prop,e.target.value)}/>}
                           </label>
                         ))}

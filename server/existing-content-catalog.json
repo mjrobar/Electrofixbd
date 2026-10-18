@@ -122,7 +122,13 @@
       "source": "src/components/home/EmergencyBanner.tsx",
       "fields": {
         "heading": "first h3",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "section badge text",
+        "eyebrow_secondary": "secondary badge (when authored)",
+        "group_heading": "section auxiliary heading/badge",
+        "description": "section supporting description",
+        "highlights": "source trust-highlight labels with icon IDs",
+        "actions": "source CTA labels and action semantics, no invented external URL"
       }
     },
     {
@@ -131,7 +137,13 @@
       "source": "src/components/home/FAQSection.tsx",
       "fields": {
         "heading": "first h2",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "section badge text",
+        "eyebrow_secondary": "secondary badge (when authored)",
+        "group_heading": "section auxiliary heading/badge",
+        "description": "section supporting description",
+        "highlights": "source trust-highlight labels with icon IDs",
+        "actions": "source CTA labels and action semantics, no invented external URL"
       }
     },
     {
@@ -140,7 +152,13 @@
       "source": "src/components/contact/ContactSection.tsx",
       "fields": {
         "heading": "first h1",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "section badge text",
+        "eyebrow_secondary": "secondary badge (when authored)",
+        "group_heading": "section auxiliary heading/badge",
+        "description": "section supporting description",
+        "highlights": "source trust-highlight labels with icon IDs",
+        "actions": "source CTA labels and action semantics, no invented external URL"
       }
     },
     {
@@ -360,7 +378,51 @@
         "section": "emergency",
         "heading": "জরুরি এসি, ফ্রিজ বা ওয়াশিং মেশিন মেরামতের প্রয়োজন?",
         "body": "ভারি অ্যাপ্লায়েন্স নিয়ে দোকানে যাওয়ার দরকার নেই। আমাদের অভিজ্ঞ টেকনিশিয়ান সরাসরি আপনার বাসায় পৌঁছে যাবেন।",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "সকাল ৮:০০ – রাত ১০:০০ • ঢাকা হোম সার্ভিস",
+        "highlights": [
+          {
+            "id": "emg-trust-1",
+            "icon": "check-circle",
+            "title": "কোনো হিডেন চার্জ নেই",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "emg-trust-2",
+            "icon": "shield-check",
+            "title": "৩০ দিনের রিপেয়ার ওয়ারেন্টি",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "emg-trust-3",
+            "icon": "check-circle",
+            "title": "জেনুইন স্পেয়ার পার্টস",
+            "subtitle": "",
+            "description": ""
+          }
+        ],
+        "actions": [
+          {
+            "id": "emg-book",
+            "label": "অনলাইন বুকিং করুন",
+            "action": "booking",
+            "url": ""
+          },
+          {
+            "id": "emg-call",
+            "label": "কল করুন: 01619-487788",
+            "action": "phone",
+            "url": ""
+          },
+          {
+            "id": "emg-wa",
+            "label": "WhatsApp চ্যাট",
+            "action": "whatsapp",
+            "url": ""
+          }
+        ]
       },
       {
         "id": "legacy-home-faq",
@@ -368,7 +430,24 @@
         "section": "faq",
         "heading": "সাধারণ জিজ্ঞাসা ও উত্তর (FAQ)",
         "body": "সার্ভিস বুকিং, টেকনিশিয়ান ভিজিট এবং অ্যাপ্লায়েন্স সম্পর্কিত সাধারণ প্রশ্নসমূহ।",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "Frequently Asked Questions",
+        "group_heading": "আপনার কি অন্য কোনো প্রশ্ন আছে?",
+        "description": "আমাদের টেকনিশিয়ানের সাথে সরাসরি কথা বলতে পারেন যেকোনো সময়।",
+        "actions": [
+          {
+            "id": "faq-call",
+            "label": "01619-487788",
+            "action": "phone",
+            "url": ""
+          },
+          {
+            "id": "faq-wa",
+            "label": "WhatsApp",
+            "action": "whatsapp",
+            "url": ""
+          }
+        ]
       },
       {
         "id": "legacy-contact-intro",
@@ -376,7 +455,35 @@
         "section": "intro",
         "heading": "যোগাযোগ ও অনুসন্ধান (Contact Us)",
         "body": "সরাসরি হটলাইন • দ্রুত হোয়াটসঅ্যাপ রিপ্লাই • অন-সাইট টেকনিশিয়ান সহায়তা",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "Page: Contact Us",
+        "eyebrow_secondary": "Get In Touch",
+        "group_heading": "📍 সমগ্র ঢাকা সিটি সরাসরি হোম সার্ভিস",
+        "description": "আপনার যেকোনো হোম অ্যাপ্লায়েন্স রিপেয়ারের প্রয়োজনে কল করুন, হোয়াটসঅ্যাপে মেসেজ দিন অথবা নিচের ফর্মটি পূরণ করে সরাসরি বার্তা পাঠান। আমাদের সাপোর্ট টিম দ্রুত আপনার সাথে যোগাযোগ করবে।",
+        "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80",
+        "highlights": [
+          {
+            "id": "contact-trust-call",
+            "icon": "check-circle",
+            "title": "তাৎক্ষণিক কল সহায়তা",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "contact-trust-hours",
+            "icon": "shield-check",
+            "title": "সকাল ৮:০০ – রাত ১০:০০ সক্রিয়",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "contact-trust-fee",
+            "icon": "wrench",
+            "title": "কোনো অগ্রিম বুকিং ফি নেই",
+            "subtitle": "",
+            "description": ""
+          }
+        ]
       },
       {
         "id": "legacy-services-intro",

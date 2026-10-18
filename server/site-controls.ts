@@ -70,11 +70,17 @@ const page = z
     group_heading: z.string().trim().max(250).default(""),
     highlights: z.array(z.object({
       id: z.string().trim().min(1).max(100),
-      icon: z.enum(["cpu","map-pin","settings","shield-check","none"]).default("none"),
+      icon: z.enum(["cpu","map-pin","settings","shield-check","check-circle","clock","wrench","headphones","tag","none"]).default("none"),
       title: z.string().trim().max(250),
       subtitle: z.string().trim().max(500).default(""),
       description: z.string().trim().max(3000).default(""),
     }).strict()).max(30).default([]),
+    actions: z.array(z.object({
+      id: z.string().trim().min(1).max(100),
+      label: z.string().trim().max(150),
+      action: z.enum(["booking","phone","whatsapp","navigate"]),
+      url: link.default(""),
+    }).strict()).max(15).default([]),
     statistics: z.array(z.object({
       id: z.string().trim().min(1).max(100),
       value: z.number().int().min(0).max(100000000),
