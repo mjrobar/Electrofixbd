@@ -4,6 +4,18 @@ import type pg from "pg";
 import catalog from "./existing-content-catalog.json";
 import { validate, type Key } from "./site-controls";
 
+// Full-fidelity migration gate: the old four-module catalog is incomplete.
+// Never allow approval while public sitewide and detailed copy remains unmapped.
+export const outstandingContentCoverage = [
+  "Navbar announcements and navigation labels",
+  "Footer copy, footer navigation and contact labels",
+  "Contact page detailed cards and form editorial labels",
+  "Services page filters, search and pagination labels",
+  "Remaining About editorial text and presentation elements",
+  "Remaining testimonials and sitewide UI copy",
+  "Final Google AI Studio public frontend reconciliation",
+] as const;
+export const completeContentCoverage = outstandingContentCoverage.length === 0;
 export const importApproval = "IMPORT EXISTING CONTENT AS DRAFTS";
 export const importKeys: Key[] = ["hero_slides", "faqs", "business_settings", "page_sections"];
 export type ContentRow = { key: Key; draft: unknown; published: unknown; revision: number; updated_at: string | Date };
@@ -29,7 +41,7 @@ export function buildImportPreview(rows: ContentRow[]) {
   });
   const backup_digest = digest(backup);
   const preview_digest = digest({ backup_digest, modules, catalog });
-  return { catalog, backup, backup_digest, preview_digest, modules };
+  return { catalog, backup, backup_digest, preview_digest, modules, coverage: { complete: completeContentCoverage, outstanding: [...outstandingContentCoverage] } };
 }
 export async function readImportPreview(db: Pick<pg.Pool, "query">) {
   const result = await db.query<ContentRow>("SELECT key,draft,published,revision,updated_at FROM public.site_content ORDER BY key");
@@ -77,6 +89,7 @@ export function createContentImportRouter(db: pg.Pool, secret: string) {
     } catch { return res.status(503).json({error:"Backup could not be exported. Import remains disabled."}); }
   });
   router.post("/site-content-import/apply", async (req,res) => {
+    if (!completeContentCoverage) return res.status(409).json({error:"Full content import is blocked: some website content is not yet mapped.", outstanding:[...outstandingContentCoverage]});
     if(req.body?.approval !== importApproval || typeof req.body?.approval_token !== "string") return res.status(400).json({error:"Download a backup and explicitly approve the draft import first."});
     const [hash,expiry,mac,...extra] = req.body.approval_token.split(".");
     const expected = sign(`${hash}.${expiry}`,secret);
