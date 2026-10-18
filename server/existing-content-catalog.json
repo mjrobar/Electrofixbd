@@ -49,18 +49,18 @@
         "subtitle": "slides[].titleBn",
         "description": "slides[].description",
         "image_url": "slides[].image",
-        "button_label": "slides[].primaryCta"
+        "button_label": "slides[].primaryCta",
+        "badge": "slides[].badge",
+        "primary_action": "slides[].primaryCta → booking callback",
+        "secondary_label": "slides[].secondaryCta",
+        "secondary_action": "slides[].isPhoneCall/isWhatsApp/isNavigateServices",
+        "secondary_url": "/services route only for navigate-services action",
+        "service_hint": "slides[].serviceHint",
+        "actions_configured": "true when original CTA behavior is mapped"
       },
-      "unmapped": [
-        "badge",
-        "secondaryCta",
-        "serviceHint",
-        "isPhoneCall",
-        "isWhatsApp",
-        "isNavigateServices"
-      ],
+      "unmapped": [],
       "missing": [
-        "button_url: booking callback has no URL; left blank"
+        "button_url: primary CTA uses application booking callback, not a web URL"
       ]
     },
     {
@@ -85,21 +85,21 @@
         "address": "BUSINESS_CONFIG.location (city only)",
         "hours": "BUSINESS_CONFIG.businessHours",
         "facebook_url": "BUSINESS_CONFIG.facebookUrl",
-        "youtube_url": "BUSINESS_CONFIG.youtubeUrl"
+        "youtube_url": "BUSINESS_CONFIG.youtubeUrl",
+        "short_name": "BUSINESS_CONFIG.shortName",
+        "tagline": "BUSINESS_CONFIG.tagline",
+        "phone_clean": "BUSINESS_CONFIG.phoneClean",
+        "phone_international": "BUSINESS_CONFIG.phoneInternational",
+        "service_coverage": "BUSINESS_CONFIG.serviceCoverage",
+        "experience": "BUSINESS_CONFIG.experience",
+        "circuit_board_specialty": "BUSINESS_CONFIG.circuitBoardSpecialty",
+        "about_image_url": "BUSINESS_CONFIG.aboutSectionImage"
       },
       "missing": [
         "email",
         "logo_url"
       ],
-      "unmapped": [
-        "shortName",
-        "tagline",
-        "phoneClean",
-        "phoneInternational",
-        "serviceCoverage",
-        "experience",
-        "circuitBoardSpecialty"
-      ]
+      "unmapped": []
     },
     {
       "module": "page_sections",
@@ -161,7 +161,7 @@
     "Snapshot of existing source text; no public files executed or changed.",
     "IDs and is_active=true are import metadata, not authored editorial content.",
     "Partial mapping: no invented URLs, email, logo or street address.",
-    "Only primary hero text/CTA label supported by current schema. Booking callbacks, badges, secondary CTAs and behavior remain owned by AI Studio.",
+    "Hero primary and secondary CTA labels/action types are retained. The original booking callback remains owned by the public frontend; imported action type must be handled by frontend integration.",
     "Page sections cover primary introductions, about, emergency and FAQ text only. Other nested cards, stats, navigation and footer text are outside the current schema."
   ],
   "data": {
@@ -173,7 +173,13 @@
         "description": "Reliable repair and servicing for AC, Refrigerator, Washing Machine, Microwave Oven & Dishwasher across all areas of Dhaka.",
         "image_url": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1600&q=80",
         "button_label": "Book a Service",
-        "is_active": true
+        "is_active": true,
+        "badge": "📍 ঢাকা – দ্রুত ও নির্ভরযোগ্য হোম সার্ভিস",
+        "secondary_label": "Call Now",
+        "secondary_action": "phone",
+        "service_hint": "AC Repair & Servicing",
+        "primary_action": "booking",
+        "actions_configured": true
       },
       {
         "id": "legacy-hero-2",
@@ -182,7 +188,13 @@
         "description": "Accurate fault diagnosis, master jet servicing, gas charging, and genuine parts replacement with 10+ years of practical field experience.",
         "image_url": "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=1600&q=80",
         "button_label": "Request a Service",
-        "is_active": true
+        "is_active": true,
+        "badge": "❄️ ইনভার্টার এসি ও রেফ্রিজারেটর স্পেশালিস্ট",
+        "secondary_label": "WhatsApp Us",
+        "secondary_action": "whatsapp",
+        "service_hint": "Refrigerator / Fridge Repair",
+        "primary_action": "booking",
+        "actions_configured": true
       },
       {
         "id": "legacy-hero-3",
@@ -191,7 +203,14 @@
         "description": "Electronic control board troubleshooting, micro-soldering, and inverter module recovery for compatible air conditioners and refrigerators.",
         "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80",
         "button_label": "Book Chip-Level Repair",
-        "is_active": true
+        "is_active": true,
+        "badge": "🛠️ সার্কিট বোর্ড রিপেয়ার – চিপ লেভেল কাজ",
+        "secondary_label": "Explore Services",
+        "secondary_action": "navigate",
+        "secondary_url": "/services",
+        "service_hint": "Circuit Board / Chip-Level Repair",
+        "primary_action": "booking",
+        "actions_configured": true
       }
     ],
     "faqs": [
@@ -251,7 +270,15 @@
       "address": "Dhaka, Bangladesh",
       "hours": "Open Everyday: 8:00 AM – 10:00 PM",
       "facebook_url": "https://www.facebook.com/jafransarder",
-      "youtube_url": "https://www.youtube.com/@ElectroFixBD-d9m"
+      "youtube_url": "https://www.youtube.com/@ElectroFixBD-d9m",
+      "short_name": "Electrofixbd",
+      "tagline": "Professional Home Appliance Repair & Servicing at Your Doorstep",
+      "service_coverage": "All areas of Dhaka — Home Service Available",
+      "experience": "10+ Years Experienced Technician",
+      "circuit_board_specialty": "Circuit Board Repair – Chip-Level Work",
+      "phone_clean": "01619487788",
+      "phone_international": "+8801619487788",
+      "about_image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80"
     },
     "page_sections": [
       {
