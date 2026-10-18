@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { scryptSync, randomUUID } from "node:crypto";
 import { mkdtemp, rm, symlink, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, parse } from "node:path";
 import sharp from "sharp";
 import { createApp } from "../server/app";
 import { createStore } from "../server/store";
@@ -50,16 +50,32 @@ test("image normalization strips metadata and rejects unsafe bytes, MIME, dimens
   await assert.rejects(normalizeImage(huge, "image/png"));
   const config = loadConfig({ NODE_ENV: "test" });
   await assert.rejects(mediaRoot(config));
+  // A POSIX /tmp path resolves to a normal drive path on Windows. Test its
+  // rejection only where that production restriction applies; unsafe roots
+  // and application directories must remain forbidden on every platform.
+  for (const root of [
+    parse(process.cwd()).root,
+    process.cwd(),
+    join(process.cwd(), "media"),
+    ...(process.platform === "win32" ? [] : ["/tmp/media", "/var/tmp/media"]),
+  ]) {
+    await assert.rejects(
+      mediaRoot(
+        loadConfig({
+          NODE_ENV: "production",
+          DATABASE_URL: "postgresql://localhost/test",
+          PUBLIC_ORIGIN: "https://example.com",
+          MEDIA_ROOT: root,
+          MEDIA_STORAGE_DURABLE: "true",
+        }),
+      ),
+      { code: "MEDIA_UNAVAILABLE" },
+      `Unsafe production media directory must be rejected: ${root}`,
+    );
+  }
   await assert.rejects(
-    mediaRoot(
-      loadConfig({
-        NODE_ENV: "production",
-        DATABASE_URL: "postgresql://localhost/test",
-        PUBLIC_ORIGIN: "https://example.com",
-        MEDIA_ROOT: "/tmp/media",
-        MEDIA_STORAGE_DURABLE: "true",
-      }),
-    ),
+    mediaRoot(loadConfig({ NODE_ENV: "test", MEDIA_ROOT: tmpdir() })),
+    { code: "MEDIA_UNAVAILABLE" },
   );
   assert.throws(() =>
     loadConfig({
@@ -70,7 +86,12 @@ test("image normalization strips metadata and rejects unsafe bytes, MIME, dimens
   );
   const root = await mkdtemp(join(tmpdir(), "efb-path-test-"));
   try {
-    await symlink(root, root + "-link");
+    // Directory junctions do not require Windows Developer Mode/admin rights.
+    await symlink(
+      root,
+      root + "-link",
+      process.platform === "win32" ? "junction" : "dir",
+    );
     await assert.rejects(
       mediaRoot(
         loadConfig({
