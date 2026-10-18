@@ -107,7 +107,12 @@
       "source": "src/components/home/AboutSection.tsx",
       "fields": {
         "heading": "first h2",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "AboutSection credential label",
+        "eyebrow_secondary": "AboutSection credential English label",
+        "group_heading": "AboutSection pillars heading",
+        "highlights": "engineeringPillars[] (title,subtitle,description,icon)",
+        "statistics": "stats animation target numbers and visible labels/suffixes"
       },
       "image_source": "src/data/siteConfig.ts: BUSINESS_CONFIG.aboutSectionImage"
     },
@@ -288,7 +293,66 @@
         "heading": "হোম অ্যাপ্লায়েন্স মেরামতে পেশাদারিত্ব, সততা ও আধুনিক কারিগরি দক্ষতা",
         "body": "ভারী এসি, রেফ্রিজারেটর বা ওয়াশিং মেশিন দোকানে বয়ে নেওয়ার দুর্ভোগ এবং অপ্রয়োজনীয় মাদারবোর্ড পরিবর্তনের অযৌক্তিক ব্যয়—উভয় সমস্যার সুনির্দিষ্ট ও স্থায়ী সমাধানে ElectroFix BD ঢাকার ঘরে ঘরে নির্ভরযোগ্য সেবা নিশ্চিত করছে। আমাদের অভিজ্ঞ কারিগরি দল সততা, সঠিক ডায়াগনসিস এবং আধুনিক টুলস ব্যবহারের মাধ্যমে আপনার মূলবান গৃহস্থালি যন্ত্রপাতির আয়ু বৃদ্ধি করতে অঙ্গীকারবদ্ধ।",
         "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "পরিচিতি ও প্রযুক্তিগত সক্ষমতা",
+        "eyebrow_secondary": "ABOUT ELECTROFIX BD",
+        "group_heading": "আমাদের কর্মপদ্ধতি ও সেবা নিশ্চয়তা",
+        "highlights": [
+          {
+            "id": "about-pillar-chip",
+            "icon": "cpu",
+            "title": "চিপ-লেভেল ইলেকট্রনিক্স ল্যাব",
+            "subtitle": "মাদারবোর্ড ফেলে না দিয়ে মাইক্রো-রিপেয়ার",
+            "description": "আধুনিক ইনভার্টার এসি ও স্মার্ট রেফ্রিজারেটরের মাদারবোর্ড নষ্ট হলে পুরো সার্কিট পরিবর্তন না করে আমাদের উন্নত ল্যাবে মাইক্রো-কম্পোনেন্ট লেভেলে মেরামত করে ৭০% পর্যন্ত গ্রাহকের খরচ সাশ্রয় করি।"
+          },
+          {
+            "id": "about-pillar-onsite",
+            "icon": "map-pin",
+            "title": "সরাসরি অন-সাইট হোম সার্ভিস",
+            "subtitle": "ঢাকার প্রতিটি এলাকায় দ্রুত উপস্থিতি",
+            "description": "মিরপুর, উত্তরা, গুলশান, বনানী, ধানমন্ডি, মোহাম্মদপুর, বসুন্ধরা সহ ঢাকা শহরের যেকোনো প্রান্তে আপনার বাসা বা অফিসে সরাসরি নির্ধারিত সময়ে টেকনিক্যাল টুলসসহ পৌঁছে যাই।"
+          },
+          {
+            "id": "about-pillar-transparent",
+            "icon": "settings",
+            "title": "স্বচ্ছ ডায়াগনসিস ও যৌক্তিক বিল",
+            "subtitle": "কোনো অপ্রকাশিত বা লুকানো চার্জ নেই",
+            "description": "অ্যাপ্লায়েন্সের মূল সমস্যা ও সম্ভাব্য সমাধান কাজ শুরুর পূর্বেই গ্রাহকের সামনে স্পষ্ট তুলে ধরা হয়। অনুমোদিত যৌক্তিক খরচের বাইরে কোনো অতিরিক্ত চার্জ দাবি করা হয় না।"
+          },
+          {
+            "id": "about-pillar-warranty",
+            "icon": "shield-check",
+            "title": "৩০ দিনের লিখিত সার্ভিস ওয়ারেন্টি",
+            "subtitle": "জেনুইন পার্টস ও দায়বদ্ধতা",
+            "description": "প্রতিটি সফল মেরামতের পর লিখিত সার্ভিস রসিদ ও ৩০ দিনের কার্যকারিতা ওয়ারেন্টি প্রদান করা হয়। ওয়ারেন্টি চলাকালীন একই ত্রুটি দেখা দিলে সম্পূর্ণ বিনামূল্যে অন-কল সাপোর্ট দেওয়া হয়।"
+          }
+        ],
+        "statistics": [
+          {
+            "id": "about-stat-experience",
+            "value": 10,
+            "suffix": "+",
+            "label": "বছরের টেকনিক্যাল অভিজ্ঞতা"
+          },
+          {
+            "id": "about-stat-services",
+            "value": 15000,
+            "suffix": "+",
+            "label": "সফল অ্যাপ্লায়েন্স সার্ভিস"
+          },
+          {
+            "id": "about-stat-parts",
+            "value": 100,
+            "suffix": "%",
+            "label": "জেনুইন স্পেয়ার পার্টস নিশ্চয়তা"
+          },
+          {
+            "id": "about-stat-warranty",
+            "value": 30,
+            "suffix": "দিন",
+            "label": "লিখিত সার্ভিস ওয়ারেন্টি"
+          }
+        ]
       },
       {
         "id": "legacy-home-emergency",
