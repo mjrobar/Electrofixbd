@@ -9,6 +9,18 @@ const schema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   PUBLIC_ORIGIN: z.string().url().optional(),
   DATABASE_URL: z.string().optional(),
+  MEDIA_ROOT: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.string().startsWith("/").optional(),
+  ),
+  MEDIA_STORAGE_DURABLE: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
+  REVIEW_ABUSE_SECRET: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.string().min(32).optional(),
+  ),
   ADMIN_USERNAME: z.string().optional(),
   ADMIN_PASSWORD_HASH: z.string().optional(),
   ADMIN_SESSION_SECRET: z.string().optional(),
@@ -31,6 +43,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
       `Invalid environment configuration: ${result.error.issues.map((issue) => issue.path.join(".")).join(", ")}`,
     );
   const config = result.data;
+  if (env.VERCEL && config.MEDIA_ROOT)
+    throw new Error(
+      "Local media uploads are unavailable on ephemeral Vercel storage.",
+    );
   if (config.PUBLIC_ORIGIN) {
     const url = new URL(config.PUBLIC_ORIGIN);
     if (

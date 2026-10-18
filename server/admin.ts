@@ -1,3 +1,4 @@
+import { createAdminMediaRouter } from "./media-storage";
 import { databaseSecurityReady } from "./security";
 import { route } from "./admin-utils";
 import pg from "pg";
@@ -42,6 +43,7 @@ export function createAdminRouter(config: Config, database?: pg.Pool) {
       ),
     );
     router.use(createContentImportRouter(pool, config.ADMIN_SESSION_SECRET!));
+    router.use(createAdminMediaRouter(pool, config));
     router.use(createAdminContentRouter(pool));
     router.use(createAdminSiteControlsRouter(pool));
     router.use(createHistoryRouter(pool));

@@ -2,11 +2,13 @@
 // Run with TEST_DATABASE_URL pointing to a disposable local cluster and PLAYWRIGHT_MODULE
 // pointing to an installed Playwright index.mjs. Build the client first. Every mutation is in a new random test DB.
 import assert from "node:assert/strict";
-import { mkdir } from "node:fs/promises";
+import sharp from "sharp";
+import { tmpdir } from "node:os";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import { createServer } from "node:http";
-import { scryptSync } from "node:crypto";
+import { scryptSync, randomUUID } from "node:crypto";
 import { createDisposable } from "./helpers/disposable-postgres.ts";
 import { startServer } from "../server/node.ts";
 import { createStore } from "../server/store.ts";
@@ -22,6 +24,7 @@ const resource = await createDisposable();
 const store = createStore(
   loadConfig({ NODE_ENV: "test", DATABASE_URL: resource.url }),
 );
+const mediaRoot = await mkdtemp(path.join(tmpdir(), "efb-ui-media-test-"));
 let app, browser;
 try {
   await store.createBooking({
@@ -48,12 +51,29 @@ try {
     DATABASE_URL: resource.url,
     PUBLIC_ORIGIN: root,
     TRUST_PROXY: "false",
+    MEDIA_ROOT: mediaRoot,
+    MEDIA_STORAGE_DURABLE: "true",
     ADMIN_USERNAME: "test-admin",
     ADMIN_PASSWORD_HASH:
       "local-test-salt:" +
       scryptSync("test-password", "local-test-salt", 64).toString("hex"),
     ADMIN_SESSION_SECRET: "disposable-browser-session-secret-12345678",
   });
+  const intake = await fetch(root + "/api/reviews", {
+    method: "POST",
+    headers: { Origin: root, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      submission_key: randomUUID(),
+      customer_name: "Pending browser reviewer",
+      address: "Mirpur, Dhaka",
+      service_id: "srv-ac-repair",
+      review: "A durable pending browser review.",
+      rating: 5,
+      consent: true,
+    }),
+  });
+  assert.equal(intake.status, 201);
+  const reference = (await intake.json()).reference;
   browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_EXECUTABLE || "/usr/bin/chromium",
     headless: true,
@@ -210,6 +230,97 @@ try {
   await works.getByRole("button", { name: "Search / refresh" }).click();
   await works.getByRole("heading", { name: /^works \(/ }).waitFor();
   await shots("content");
+  // Dynamic category selector, generated URL slug and secure device upload.
+  await works.getByRole("button", { name: "Add new", exact: true }).click();
+  await works.getByLabel("Project title").fill("এসি ব্রাউজার প্রকল্প");
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll("label")).some(
+      (l) =>
+        l.textContent.startsWith("URL slug") &&
+        /^item-[a-f0-9]{12}/.test(l.querySelector("input")?.value || ""),
+    ),
+  );
+  assert.match(
+    await works.getByLabel("URL slug").inputValue(),
+    /^item-[a-f0-9]{12}$/,
+  );
+  await works.getByLabel("Service Category").selectOption("srv-ac-repair");
+  await works
+    .getByLabel("Description", { exact: true })
+    .fill("Browser upload and category test.");
+  const uploadBytes = await sharp({
+    create: { width: 40, height: 20, channels: 3, background: "#004179" },
+  })
+    .png()
+    .toBuffer();
+  await works
+    .getByLabel("Upload from device")
+    .setInputFiles({
+      name: "device.png",
+      mimeType: "image/png",
+      buffer: uploadBytes,
+    });
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll("label"))
+      .find((l) => l.textContent.startsWith("Image or video URL"))
+      ?.querySelector("input")
+      ?.value.startsWith("/api/media/"),
+  );
+  await works.getByAltText("Uploaded image preview").waitFor();
+  await shots("work-upload");
+  await works.getByRole("button", { name: "Save draft", exact: true }).click();
+  await works.getByRole("heading", { name: /^works \(/ }).waitFor();
+  await page.getByRole("button", { name: "testimonials", exact: true }).click();
+  const testimonials = page.getByRole("region", {
+    name: "testimonials management",
+  });
+  await testimonials
+    .getByRole("button", { name: "Pending Review", exact: true })
+    .click();
+  let customer = testimonials
+    .locator("article")
+    .filter({
+      has: page.getByRole("heading", {
+        name: "Pending browser reviewer",
+        exact: true,
+      }),
+    });
+  await customer.waitFor();
+  await customer
+    .getByRole("button", { name: "Edit draft", exact: true })
+    .click();
+  await testimonials
+    .getByLabel("City / area (optional, public after approval)")
+    .fill("Dhaka");
+  await testimonials
+    .getByRole("button", { name: "Preview draft", exact: true })
+    .click();
+  await shots("pending-review");
+  await testimonials
+    .getByRole("button", { name: "Save draft", exact: true })
+    .click();
+  await customer.getByRole("button", { name: "Publish", exact: true }).click();
+  await page.waitForFunction(
+    async (id) =>
+      (await (await fetch("/api/testimonials")).json()).testimonials.some(
+        (t) => t.id === id && t.address === "Dhaka",
+      ),
+    reference,
+  );
+  await testimonials.getByLabel("Publication").selectOption("published");
+  await testimonials
+    .getByRole("button", { name: "Search / refresh", exact: true })
+    .click();
+  await customer
+    .getByRole("button", { name: "Unpublish", exact: true })
+    .click();
+  await page.waitForFunction(
+    async (id) =>
+      !(await (await fetch("/api/testimonials")).json()).testimonials.some(
+        (t) => t.id === id,
+      ),
+    reference,
+  );
   await nav("Bookings");
   await page.getByRole("heading", { name: "Manage bookings" }).waitFor();
   await page.getByLabel("Search bookings").fill("Issue 11 browser customer");
@@ -259,11 +370,12 @@ try {
   await page.getByLabel("Username").waitFor();
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: create/draft/publish, multiline fields, previews, version restore, archive recovery, failed-load recovery, session revocation and six admin views at 375/768/1440.",
+    "PASS: create/draft/publish, multiline fields, previews, version restore, archive recovery, failed-load recovery, session revocation, dynamic category selectors, automatic slugs, device upload, pending review edit/publish/unpublish and eight admin views at 375/768/1440.",
   );
 } finally {
   await browser?.close();
   await app?.close();
   await store.close();
   await resource.close();
+  await rm(mediaRoot, { recursive: true, force: true });
 }

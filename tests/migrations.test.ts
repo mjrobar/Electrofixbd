@@ -79,7 +79,7 @@ async function snapshot(client: pg.Client) {
     // Newly-added optional fields are compared separately; every original
     // column and row remains in this JSON snapshot, including nulls and IDs.
     const rows = await client.query(
-      `SELECT to_jsonb(t) - 'media_url' - 'media_type' - 'is_published' - 'revision' - 'admin_draft' - 'archived_at' - 'admin_notes' AS row FROM public.${table} t ORDER BY id`,
+      `SELECT to_jsonb(t) - 'media_url' - 'media_type' - 'is_published' - 'revision' - 'admin_draft' - 'archived_at' - 'admin_notes' ${table === "works" ? " - 'service_id'" : table === "testimonials" ? " - 'service_id' - 'address' - 'submission_source' - 'moderation_status' - 'consent_at' - 'submission_key' - 'submission_digest'" : ""} AS row FROM public.${table} t ORDER BY id`,
     );
     result[table] = rows.rows;
   }
@@ -97,7 +97,7 @@ test(
           (await db.query("SELECT count(*) FROM schema_migrations")).rows[0]
             .count,
         ),
-        4,
+        5,
       );
       for (const table of [
         "services",
@@ -222,7 +222,7 @@ test(
       assert.deepEqual(
         (
           await db.query(
-            "SELECT to_jsonb(t) - 'revision' - 'admin_draft' - 'archived_at' AS row FROM works t",
+            "SELECT to_jsonb(t) - 'revision' - 'admin_draft' - 'archived_at' - 'service_id' AS row FROM works t",
           )
         ).rows.map((r) => r.row),
         JSON.parse(JSON.stringify(originalWorks)),
@@ -230,14 +230,14 @@ test(
       assert.deepEqual(
         (
           await db.query(
-            "SELECT to_jsonb(t) - 'revision' - 'admin_draft' - 'archived_at' AS row FROM testimonials t",
+            "SELECT to_jsonb(t) - 'revision' - 'admin_draft' - 'archived_at' - 'service_id' - 'address' - 'submission_source' - 'moderation_status' - 'consent_at' - 'submission_key' - 'submission_digest' AS row FROM testimonials t",
           )
         ).rows.map((r) => r.row),
         JSON.parse(JSON.stringify(originalTestimonials)),
       );
       const afterDefaults = (
         await db.query(
-          "SELECT table_name,column_name,column_default,is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('services','bookings','contact_messages','works','testimonials') AND column_name NOT IN ('revision','admin_draft','archived_at','admin_notes') ORDER BY table_name,column_name",
+          "SELECT table_name,column_name,column_default,is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('services','bookings','contact_messages','works','testimonials') AND column_name NOT IN ('revision','admin_draft','archived_at','admin_notes') AND NOT(table_name='works' AND column_name='service_id') AND NOT(table_name='testimonials' AND column_name IN ('service_id','address','submission_source','moderation_status','consent_at','submission_key','submission_digest')) ORDER BY table_name,column_name",
         )
       ).rows;
       assert.deepEqual(afterDefaults, defaults);
@@ -380,7 +380,7 @@ test(
           (await db.query("SELECT count(*) FROM schema_migrations")).rows[0]
             .count,
         ),
-        4,
+        5,
       );
       assert.equal(
         Number(

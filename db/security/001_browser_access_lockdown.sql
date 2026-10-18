@@ -6,14 +6,14 @@ BEGIN
  IF runtime IN ('anon','authenticated','service_role','postgres','PUBLIC') OR NOT EXISTS(
   SELECT 1 FROM pg_roles WHERE rolname=runtime AND rolcanlogin AND NOT rolsuper AND NOT rolbypassrls AND NOT rolcreaterole AND NOT rolcreatedb AND NOT rolreplication
  ) THEN RAISE EXCEPTION 'Dedicated non-superuser runtime role required'; END IF;
- IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('bookings','contact_messages','services','works','testimonials','site_content','admin_sessions','content_history','admin_audit') AND pg_has_role(runtime,c.relowner,'MEMBER')) THEN RAISE EXCEPTION 'Runtime must not own tables or be a member of their owner roles'; END IF;
+ IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('bookings','contact_messages','services','works','testimonials','site_content','admin_sessions','content_history','admin_audit','media_assets','review_quotas') AND pg_has_role(runtime,c.relowner,'MEMBER')) THEN RAISE EXCEPTION 'Runtime must not own tables or be a member of their owner roles'; END IF;
  FOREACH r IN ARRAY ARRAY['anon','authenticated'] LOOP
   IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname=r) AND pg_has_role(r,runtime,'MEMBER') THEN
    RAISE EXCEPTION 'Browser role must not inherit runtime role';
   END IF;
  END LOOP;
  EXECUTE format('GRANT USAGE ON SCHEMA public TO %I',runtime);
- FOREACH t IN ARRAY ARRAY['services','works','testimonials','bookings','contact_messages','site_content','admin_sessions','content_history','admin_audit','schema_migrations'] LOOP
+ FOREACH t IN ARRAY ARRAY['services','works','testimonials','bookings','contact_messages','site_content','admin_sessions','content_history','admin_audit','media_assets','review_quotas','schema_migrations'] LOOP
   EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY',t);
   FOR p IN SELECT policyname FROM pg_policies WHERE schemaname='public' AND tablename=t LOOP
    EXECUTE format('DROP POLICY %I ON public.%I',p.policyname,t);
@@ -57,7 +57,7 @@ DO $$ DECLARE v record; r text; BEGIN
   JOIN pg_rewrite rw ON rw.ev_class=c.oid JOIN pg_depend d ON d.objid=rw.oid
   JOIN pg_class base ON base.oid=d.refobjid JOIN pg_namespace bn ON bn.oid=base.relnamespace
   WHERE c.relkind IN ('v','m') AND n.nspname='public' AND bn.nspname='public'
-  AND base.relname IN ('bookings','contact_messages','services','works','testimonials','site_content','admin_sessions','content_history','admin_audit')
+  AND base.relname IN ('bookings','contact_messages','services','works','testimonials','site_content','admin_sessions','content_history','admin_audit','media_assets','review_quotas')
  LOOP
   EXECUTE format('REVOKE ALL ON %I.%I FROM PUBLIC',v.nspname,v.relname);
   FOREACH r IN ARRAY ARRAY['anon','authenticated'] LOOP

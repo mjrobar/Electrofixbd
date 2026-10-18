@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import ImageUpload from "./ImageUpload";
 import SiteControlsEditor from "./SiteControlsEditor";
 import { SERVICES_DATA } from "../data/servicesData";
 import {
@@ -17,7 +18,7 @@ const fields: Record<
   {
     key: string;
     label: string;
-    type?: "textarea" | "list" | "boolean" | "number" | "select";
+    type?: "textarea" | "list" | "boolean" | "number" | "select" | "category";
     required?: boolean;
   }[]
 > = {
@@ -52,8 +53,7 @@ const fields: Record<
   works: [
     { key: "title", label: "Project title", required: true },
     { key: "slug", label: "URL slug", required: true },
-    { key: "service_type", label: "Service type", required: true },
-    { key: "category", label: "Category", required: true },
+    { key: "service_id", label: "Service Category", type: "category" },
     {
       key: "description",
       label: "Description",
@@ -68,7 +68,8 @@ const fields: Record<
   testimonials: [
     { key: "customer_name", label: "Customer name", required: true },
     { key: "review", label: "Review", type: "textarea", required: true },
-    { key: "service_type", label: "Service type", required: true },
+    { key: "service_id", label: "Service Category", type: "category" },
+    { key: "address", label: "City / area (optional, public after approval)" },
     { key: "rating", label: "Rating (1–5)", type: "number" },
     { key: "avatar_url", label: "Avatar URL" },
     { key: "media_url", label: "Optional image/video URL" },
@@ -91,6 +92,7 @@ const empty: Record<Kind, RecordValue> = {
     title: "",
     slug: "",
     service_type: "",
+    service_id: null,
     category: "",
     description: "",
     media_url: "",
@@ -100,8 +102,10 @@ const empty: Record<Kind, RecordValue> = {
   },
   testimonials: {
     customer_name: "",
+    address: "",
     review: "",
     service_type: "",
+    service_id: null,
     rating: 5,
     avatar_url: "",
     media_url: "",
@@ -119,7 +123,8 @@ export default function ContentEditor() {
         <h2 className="text-xl font-bold">Website Content Studio</h2>
         <p className="mt-1 text-sm text-slate-500">
           Save drafts, preview and publish approved content. Media uses public
-          HTTPS URLs; files are not uploaded here.
+          HTTPS URLs or secure device uploads. Customer reviews require
+          approval.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {(["services", "works", "testimonials"] as const).map((k) => (
@@ -164,7 +169,49 @@ function ContentModule({
     [q, setQ] = useState(""),
     [filter, setFilter] = useState("all"),
     [offset, setOffset] = useState(0),
-    [total, setTotal] = useState(0);
+    [total, setTotal] = useState(0),
+    [categories, setCategories] = useState<Row[]>([]),
+    [categoryError, setCategoryError] = useState(""),
+    [customSlug, setCustomSlug] = useState(false);
+  useEffect(() => {
+    if (kind === "services") return;
+    adminRequest("/service-categories")
+      .then((result) => setCategories(result.items))
+      .catch((e) => setCategoryError(e.message));
+  }, [kind]);
+  const proposalTitle = String(editing?.name ?? editing?.title ?? "");
+  useEffect(() => {
+    if (
+      !editing ||
+      editing.id ||
+      kind === "testimonials" ||
+      customSlug ||
+      !proposalTitle.trim()
+    )
+      return;
+    let active = true;
+    const timer = setTimeout(() => {
+      adminRequest(
+        "/slug-proposal?kind=" +
+          kind +
+          "&title=" +
+          encodeURIComponent(proposalTitle),
+      )
+        .then((result) => {
+          if (active)
+            setEditing((current) =>
+              current ? { ...current, slug: result.slug } : current,
+            );
+        })
+        .catch((e) => {
+          if (active) setError(e.message);
+        });
+    }, 250);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [proposalTitle, editing?.id, customSlug, kind]);
   useUnsavedChanges(editing !== null);
   const endpoint = "/content/" + kind;
   useEffect(() => {
@@ -197,22 +244,28 @@ function ContentModule({
     // Legacy test rows are incomplete. The public site currently hydrates
     // missing fields from the approved static service catalogue. Show the
     // same fallback while editing; saving a draft persists only on approval.
-    const original = kind === "services"
-      ? SERVICES_DATA.find((service) => service.slug === data.slug)
-      : undefined;
-    const fieldsFromOriginal = original ? {
-      short_description: original.shortDescription,
-      full_description: original.fullDescription,
-      common_problems: original.commonProblems,
-      service_process: original.serviceProcess,
-      cover_image: original.coverImage,
-    } : null;
+    const original =
+      kind === "services"
+        ? SERVICES_DATA.find((service) => service.slug === data.slug)
+        : undefined;
+    const fieldsFromOriginal = original
+      ? {
+          short_description: original.shortDescription,
+          full_description: original.fullDescription,
+          common_problems: original.commonProblems,
+          service_process: original.serviceProcess,
+          cover_image: original.coverImage,
+        }
+      : null;
     const hydrated = { ...item, ...data };
     if (fieldsFromOriginal && !item.admin_draft) {
       for (const [key, value] of Object.entries(fieldsFromOriginal)) {
         const current = hydrated[key];
-        if (current == null || current === "" ||
-            (Array.isArray(current) && current.length === 0)) {
+        if (
+          current == null ||
+          current === "" ||
+          (Array.isArray(current) && current.length === 0)
+        ) {
           hydrated[key] = value;
         }
       }
@@ -239,6 +292,11 @@ function ContentModule({
             : (editing[f.key] ?? empty[kind][f.key]),
         ]),
       );
+      if (kind !== "services") {
+        // Preserve historical labels until explicitly mapped; backend derives new labels.
+        data.service_type = editing.service_type ?? "";
+        if (kind === "works") data.category = editing.category ?? "";
+      }
       const result = await adminRequest(
         endpoint +
           (editing.id ? "/" + encodeURIComponent(String(editing.id)) : ""),
@@ -282,7 +340,7 @@ function ContentModule({
   }
   return (
     <section className="space-y-4" aria-label={kind + " management"}>
-      <Feedback error={error} notice={notice} />
+      <Feedback error={error || categoryError} notice={notice} />
       <form
         className={ui.card + " flex flex-wrap items-end gap-3"}
         onSubmit={(e) => {
@@ -306,11 +364,32 @@ function ContentModule({
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            {["all", "published", "draft", "archived"].map((v) => (
-              <option key={v}>{v}</option>
+            {[
+              "all",
+              ...(kind === "testimonials" ? ["pending"] : []),
+              "published",
+              "draft",
+              "archived",
+            ].map((v) => (
+              <option key={v} value={v}>
+                {v === "pending" ? "Pending Review" : v}
+              </option>
             ))}
           </select>
         </label>
+        {kind === "testimonials" && (
+          <button
+            type="button"
+            disabled={busy || editing !== null}
+            className={ui.button}
+            onClick={() => {
+              setFilter("pending");
+              void load(0, "pending");
+            }}
+          >
+            Pending Review
+          </button>
+        )}
         <button disabled={busy || editing !== null} className={ui.button}>
           Search / refresh
         </button>
@@ -319,6 +398,7 @@ function ContentModule({
           type="button"
           className={ui.primary}
           onClick={() => {
+            setCustomSlug(false);
             setEditing({ ...empty[kind] });
             setPreview(false);
           }}
@@ -336,7 +416,7 @@ function ContentModule({
             {fields[kind]
               .filter((f) => !["is_active", "is_published"].includes(f.key))
               .map((f) => (
-                <label
+                <div
                   key={f.key}
                   className={
                     "text-sm font-semibold " +
@@ -345,66 +425,166 @@ function ContentModule({
                       : "")
                   }
                 >
-                  {f.label}
-                  {f.type === "boolean" ? (
-                    <input
-                      className="ml-3"
-                      type="checkbox"
-                      checked={Boolean(editing[f.key])}
-                      onChange={(e) =>
-                        setEditing({ ...editing, [f.key]: e.target.checked })
-                      }
-                    />
-                  ) : f.type === "select" ? (
-                    <select
-                      className={ui.field}
-                      value={String(editing[f.key] ?? "")}
-                      onChange={(e) =>
-                        setEditing({
-                          ...editing,
-                          [f.key]: e.target.value || null,
-                        })
-                      }
+                  <label className="block">
+                    {f.label}
+                    {f.type === "boolean" ? (
+                      <input
+                        className="ml-3"
+                        type="checkbox"
+                        checked={Boolean(editing[f.key])}
+                        onChange={(e) =>
+                          setEditing({ ...editing, [f.key]: e.target.checked })
+                        }
+                      />
+                    ) : f.type === "category" ? (
+                      <>
+                        <select
+                          className={ui.field}
+                          value={String(editing.service_id ?? "")}
+                          required={!editing.id || Boolean(editing.service_id)}
+                          disabled={Boolean(categoryError)}
+                          onChange={(e) =>
+                            setEditing({
+                              ...editing,
+                              service_id: e.target.value || null,
+                            })
+                          }
+                        >
+                          <option value="">
+                            {editing.id && !editing.service_id
+                              ? "Legacy: " +
+                                String(editing.service_type || editing.category)
+                              : "Select an active service"}
+                          </option>
+                          {Boolean(editing.service_id) &&
+                            !categories.some(
+                              (c) => c.id === editing.service_id,
+                            ) && (
+                              <option
+                                value={String(editing.service_id)}
+                                disabled
+                              >
+                                Inactive category — select an active service
+                              </option>
+                            )}
+                          {categories.map((c) => (
+                            <option key={String(c.id)} value={String(c.id)}>
+                              {String(c.name)}
+                            </option>
+                          ))}
+                        </select>
+                        {editing.id && !editing.service_id && (
+                          <span className="text-xs text-slate-500">
+                            Historical text is retained until a service is
+                            selected.
+                          </span>
+                        )}
+                      </>
+                    ) : f.type === "select" ? (
+                      <select
+                        className={ui.field}
+                        value={String(editing[f.key] ?? "")}
+                        onChange={(e) =>
+                          setEditing({
+                            ...editing,
+                            [f.key]: e.target.value || null,
+                          })
+                        }
+                      >
+                        <option value="">Not specified</option>
+                        <option value="image">Image</option>
+                        <option value="video">Video</option>
+                      </select>
+                    ) : ["textarea", "list"].includes(f.type || "") ? (
+                      <textarea
+                        required={f.required}
+                        className={ui.field}
+                        rows={4}
+                        value={
+                          Array.isArray(editing[f.key])
+                            ? (editing[f.key] as string[]).join("\n")
+                            : String(editing[f.key] ?? "")
+                        }
+                        onChange={(e) =>
+                          setEditing({ ...editing, [f.key]: e.target.value })
+                        }
+                      />
+                    ) : (
+                      <input
+                        required={f.required}
+                        readOnly={f.key === "slug" && Boolean(editing.id)}
+                        className={ui.field}
+                        type={f.type === "number" ? "number" : "text"}
+                        min={1}
+                        max={f.type === "number" ? 5 : undefined}
+                        value={String(editing[f.key] ?? "")}
+                        onChange={(e) => {
+                          if (f.key === "slug") setCustomSlug(true);
+                          const titleChanged =
+                            ["name", "title"].includes(f.key) &&
+                            !editing.id &&
+                            !customSlug;
+                          setEditing({
+                            ...editing,
+                            [f.key]:
+                              f.type === "number"
+                                ? Number(e.target.value)
+                                : e.target.value,
+                            ...(titleChanged ? { slug: "" } : {}),
+                          });
+                        }}
+                      />
+                    )}
+                  </label>
+                  {f.key === "slug" && !editing.id && (
+                    <button
+                      type="button"
+                      className={ui.button + " mt-2"}
+                      disabled={busy || !proposalTitle.trim()}
+                      onClick={async () => {
+                        try {
+                          const result = await adminRequest(
+                            "/slug-proposal?kind=" +
+                              kind +
+                              "&title=" +
+                              encodeURIComponent(proposalTitle),
+                          );
+                          setEditing((current) =>
+                            current
+                              ? { ...current, slug: result.slug }
+                              : current,
+                          );
+                          setCustomSlug(false);
+                        } catch (e) {
+                          setError((e as Error).message);
+                        }
+                      }}
                     >
-                      <option value="">Not specified</option>
-                      <option value="image">Image</option>
-                      <option value="video">Video</option>
-                    </select>
-                  ) : ["textarea", "list"].includes(f.type || "") ? (
-                    <textarea
-                      required={f.required}
-                      className={ui.field}
-                      rows={4}
-                      value={
-                        Array.isArray(editing[f.key])
-                          ? (editing[f.key] as string[]).join("\n")
-                          : String(editing[f.key] ?? "")
-                      }
-                      onChange={(e) =>
-                        setEditing({ ...editing, [f.key]: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <input
-                      required={f.required}
-                      readOnly={f.key === "slug" && Boolean(editing.id)}
-                      className={ui.field}
-                      type={f.type === "number" ? "number" : "text"}
-                      min={1}
-                      max={f.type === "number" ? 5 : undefined}
-                      value={String(editing[f.key] ?? "")}
-                      onChange={(e) =>
-                        setEditing({
-                          ...editing,
-                          [f.key]:
-                            f.type === "number"
-                              ? Number(e.target.value)
-                              : e.target.value,
-                        })
+                      Suggest available slug
+                    </button>
+                  )}
+                  {["cover_image", "media_url", "avatar_url"].includes(
+                    f.key,
+                  ) && (
+                    <ImageUpload
+                      disabled={busy}
+                      onBusy={setBusy}
+                      onUpload={(url) =>
+                        setEditing((current) =>
+                          current
+                            ? {
+                                ...current,
+                                [f.key]: url,
+                                ...(f.key === "media_url"
+                                  ? { media_type: "image" }
+                                  : {}),
+                              }
+                            : current,
+                        )
                       }
                     />
                   )}
-                </label>
+                </div>
               ))}
           </fieldset>
           <p className="text-xs text-slate-500">
@@ -461,6 +641,11 @@ function ContentModule({
                   {String(item.name ?? item.title ?? item.customer_name)}
                 </h4>
                 <p className="text-sm text-slate-500">
+                  {item.submission_source === "customer" &&
+                  item.moderation_status === "pending" &&
+                  !item.archived_at
+                    ? "Pending Review · "
+                    : ""}
                   {item.archived_at
                     ? "Archived"
                     : item.is_active || item.is_published

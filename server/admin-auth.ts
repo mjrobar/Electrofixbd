@@ -47,7 +47,12 @@ export function createAdminAuth(config: Config, pool: pg.Pool | null) {
     }),
   );
   router.use((req, res, next) => {
-    const limit = req.path === "/login" ? 8192 : 2 * 1024 * 1024;
+    const upload = req.path === "/media" && req.method === "POST";
+    const limit = upload
+      ? 5 * 1024 * 1024
+      : req.path === "/login"
+        ? 8192
+        : 2 * 1024 * 1024;
     const charset = req
       .get("content-type")
       ?.match(/charset\s*=\s*"?([^;"\s]+)/i)?.[1]
@@ -63,11 +68,11 @@ export function createAdminAuth(config: Config, pool: pg.Pool | null) {
       return res.status(403).json({ error: "Forbidden." });
     if (
       ["POST", "PATCH", "PUT", "DELETE"].includes(req.method) &&
-      (!req.is("application/json") ||
+      ((!upload && !req.is("application/json")) ||
         Boolean(charset && !["utf8", "utf-8"].includes(charset)))
     )
       return res.status(415).json({ error: "Send UTF-8 application/json." });
-    if (req.body !== undefined) {
+    if (!upload && req.body !== undefined) {
       try {
         if (typeof req.body === "string") req.body = JSON.parse(req.body);
         if (Buffer.byteLength(JSON.stringify(req.body)) > limit)
