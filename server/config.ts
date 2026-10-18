@@ -1,4 +1,5 @@
 import { validProxy } from "./proxy";
+import { isAbsolute } from "node:path";
 import { z } from "zod";
 
 const schema = z.object({
@@ -11,7 +12,7 @@ const schema = z.object({
   DATABASE_URL: z.string().optional(),
   MEDIA_ROOT: z.preprocess(
     (v) => (v === "" ? undefined : v),
-    z.string().startsWith("/").optional(),
+    z.string().refine((value) => isAbsolute(value), "MEDIA_ROOT must be an absolute path.").optional(),
   ),
   MEDIA_STORAGE_DURABLE: z
     .enum(["true", "false"])
