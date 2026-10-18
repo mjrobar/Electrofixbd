@@ -1,3 +1,5 @@
+import { validateCategory, proposeSlug } from "./content-categories";
+import { assertMediaReferences } from "./media-storage";
 import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import type pg from "pg";
@@ -35,8 +37,9 @@ export const contentSchemas = {
       .string()
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
       .max(100),
-    service_type: text.min(1).max(150),
-    category: text.min(1).max(100),
+    service_type: text.max(150).default(""),
+    service_id: text.max(150).nullish(),
+    category: text.max(150).default(""),
     description: text.min(1).max(5000),
     media_url: mediaUrl.refine((v) => Boolean(v), "Media URL required."),
     media_type: z.enum(["image", "video"]),
@@ -45,8 +48,10 @@ export const contentSchemas = {
   }),
   testimonials: z.object({
     customer_name: text.min(2).max(150),
+    address: text.max(150).default(""),
     review: text.min(1).max(5000),
-    service_type: text.min(1).max(150),
+    service_type: text.max(150).default(""),
+    service_id: text.max(150).nullish(),
     rating: z.number().int().min(1).max(5),
     avatar_url: mediaUrl.nullish(),
     media_url: mediaUrl.nullish(),
@@ -70,6 +75,7 @@ export const columns: Record<Kind, string[]> = {
     "title",
     "slug",
     "service_type",
+    "service_id",
     "category",
     "description",
     "media_url",
@@ -79,8 +85,10 @@ export const columns: Record<Kind, string[]> = {
   ],
   testimonials: [
     "customer_name",
+    "address",
     "review",
     "service_type",
+    "service_id",
     "rating",
     "avatar_url",
     "media_url",
@@ -128,6 +136,33 @@ async function locked(
 export function createAdminContentRouter(pool: pg.Pool) {
   const router = Router();
   router.get(
+    "/service-categories",
+    route(async (_req, res) => {
+      res.json({
+        items: (
+          await pool.query(
+            "SELECT id,slug,name FROM public.services WHERE is_active IS TRUE AND archived_at IS NULL ORDER BY name,id",
+          )
+        ).rows,
+      });
+    }),
+  );
+  router.get(
+    "/slug-proposal",
+    route(async (req, res) => {
+      const input = parse(
+        z
+          .object({
+            kind: z.enum(["services", "works"]),
+            title: text.min(1).max(200),
+          })
+          .strict(),
+        req.query,
+      );
+      res.json({ slug: await proposeSlug(pool, input.kind, input.title) });
+    }),
+  );
+  router.get(
     "/content/:kind",
     route(async (req, res) => {
       const kind = req.params.kind;
@@ -135,9 +170,21 @@ export function createAdminContentRouter(pool: pg.Pool) {
         throw new ApiError(404, "UNKNOWN_MODULE", "Unknown content module.");
       const query = parse(listQuery, req.query),
         pub = publication(kind);
-      if (!["all", "published", "draft", "archived"].includes(query.status))
+      if (
+        ![
+          "all",
+          "published",
+          "draft",
+          "archived",
+          ...(kind === "testimonials" ? ["pending"] : []),
+        ].includes(query.status)
+      )
         throw new ApiError(400, "INVALID_STATUS", "Unknown content filter.");
-      const where = `($1='archived' AND archived_at IS NOT NULL OR $1<>'archived' AND archived_at IS NULL) AND ($1 NOT IN ('published','draft') OR $1='published' AND ${pub} IS TRUE OR $1='draft' AND (${pub} IS NOT TRUE OR admin_draft IS NOT NULL)) AND to_jsonb(t)::text ILIKE $2`;
+      const pending =
+        kind === "testimonials"
+          ? " AND ($1<>'pending' OR submission_source='customer' AND moderation_status='pending' AND is_published IS NOT TRUE)"
+          : "";
+      const where = `($1='archived' AND archived_at IS NOT NULL OR $1<>'archived' AND archived_at IS NULL) AND ($1 NOT IN ('published','draft') OR $1='published' AND ${pub} IS TRUE OR $1='draft' AND (${pub} IS NOT TRUE OR admin_draft IS NOT NULL)) AND to_jsonb(t)::text ILIKE $2${pending}`;
       const params = [query.status, searchPattern(query.q)];
       const total = await pool.query(
         `SELECT count(*)::int AS total FROM public.${kind} t WHERE ${where}`,
@@ -160,15 +207,37 @@ export function createAdminContentRouter(pool: pg.Pool) {
       const kind = req.params.kind;
       if (!isKind(kind))
         throw new ApiError(404, "UNKNOWN_MODULE", "Unknown content module.");
-      const data = content(kind, req.body),
+      const body = { ...req.body };
+      if (kind !== "testimonials" && !body.slug)
+        body.slug = await proposeSlug(
+          pool,
+          kind,
+          body.name || body.title || "",
+        );
+      const data = content(kind, body),
         pub = publication(kind);
       data[pub] = false;
-      const id = kind === "services" ? "srv-" + data.slug : randomUUID();
       try {
-        const result = await pool.query(
-          `INSERT INTO public.${kind}(id,${columns[kind].join(",")},admin_draft) VALUES(${Array.from({ length: columns[kind].length + 2 }, (_, i) => "$" + (i + 1)).join(",")}) RETURNING *`,
-          [id, ...values(kind, data), JSON.stringify(data)],
-        );
+        const result = await transaction(pool, async (db) => {
+          if (kind !== "testimonials" && !req.body.slug) {
+            await db.query(
+              "SELECT pg_advisory_xact_lock(hashtextextended($1,2))",
+              [kind],
+            );
+            data.slug = await proposeSlug(
+              db,
+              kind,
+              String(data.name || data.title),
+            );
+          }
+          const id = kind === "services" ? "srv-" + data.slug : randomUUID();
+          await validateCategory(db, kind, data);
+          await assertMediaReferences(db, data);
+          return db.query(
+            `INSERT INTO public.${kind}(id,${columns[kind].join(",")},admin_draft) VALUES(${Array.from({ length: columns[kind].length + 2 }, (_, i) => "$" + (i + 1)).join(",")}) RETURNING *`,
+            [id, ...values(kind, data), JSON.stringify(data)],
+          );
+        });
         res.status(201).json({ item: result.rows[0] });
       } catch (error) {
         if ((error as { code: string }).code === "23505")
@@ -202,6 +271,8 @@ export function createAdminContentRouter(pool: pg.Pool) {
             "ARCHIVED",
             "Restore archived content before editing.",
           );
+        await validateCategory(db, kind, data, current);
+        await assertMediaReferences(db, data, current);
         if (kind !== "testimonials" && data.slug !== current.slug)
           throw new ApiError(
             409,
@@ -251,6 +322,8 @@ export function createAdminContentRouter(pool: pg.Pool) {
               current.admin_draft ??
                 Object.fromEntries(columns[kind].map((c) => [c, current[c]])),
             );
+            await validateCategory(db, kind, data, current);
+            await assertMediaReferences(db, data, current);
             data[pub] = true;
             if (kind !== "testimonials" && data.slug !== current.slug)
               throw new ApiError(
@@ -261,7 +334,7 @@ export function createAdminContentRouter(pool: pg.Pool) {
             const set = columns[kind].map((c, i) => `${c}=$${i + 1}`).join(",");
             return (
               await db.query(
-                `UPDATE public.${kind} SET ${set},admin_draft=NULL${kind === "services" ? ",updated_at=now()" : ""} WHERE id=$${columns[kind].length + 1} RETURNING *`,
+                `UPDATE public.${kind} SET ${set},admin_draft=NULL${kind === "testimonials" ? ",moderation_status=CASE WHEN submission_source='customer' THEN 'reviewed' ELSE moderation_status END" : ""}${kind === "services" ? ",updated_at=now()" : ""} WHERE id=$${columns[kind].length + 1} RETURNING *`,
                 [...values(kind, data), id],
               )
             ).rows[0];

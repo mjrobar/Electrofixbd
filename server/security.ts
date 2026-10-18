@@ -9,6 +9,8 @@ const tables = [
   "admin_sessions",
   "content_history",
   "admin_audit",
+  "media_assets",
+  "review_quotas",
 ];
 export async function databaseSecurityReady(db: Pick<pg.Pool, "query">) {
   try {
@@ -17,7 +19,7 @@ export async function databaseSecurityReady(db: Pick<pg.Pool, "query">) {
     );
     if (role.rows[0]?.privileged) return false;
     const guard = await db.query(
-      "SELECT count(*)=9 AND bool_and(c.relrowsecurity) AS locked FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname=ANY($1)",
+      "SELECT count(*)=11 AND bool_and(c.relrowsecurity) AS locked FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname=ANY($1)",
       [tables],
     );
     if (!guard.rows[0]?.locked) return false;

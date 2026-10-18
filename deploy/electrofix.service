@@ -18,6 +18,9 @@ PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
 ReadOnlyPaths=/srv/electrofix
+# Persistent systemd-managed volume, included in coordinated media/PG backups.
+StateDirectory=electrofix
+ReadWritePaths=/var/lib/electrofix
 UMask=0077
 
 [Install]

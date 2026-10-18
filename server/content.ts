@@ -41,7 +41,7 @@ export function createContentRepository(
     listWorks: async (query) =>
       (
         await read<WorkRecord>(
-          `SELECT id,title,slug,service_type,category,description,media_url,
+          `SELECT id,title,slug,service_type,service_id,category,description,media_url,
       media_type,is_featured,is_published,created_at FROM public.works WHERE is_published IS TRUE AND archived_at IS NULL
       AND ($1::text IS NULL OR category=$1) AND ($2::boolean IS NULL OR is_featured=$2)
       ORDER BY created_at DESC,id DESC LIMIT $3 OFFSET $4`,
@@ -59,7 +59,7 @@ export function createContentRepository(
     listTestimonials: async (page) =>
       (
         await read<TestimonialRecord>(
-          `SELECT id,customer_name,review,service_type,rating,
+          `SELECT id,customer_name,review,service_type,service_id,address,rating,
       avatar_url,media_url,media_type,is_published,created_at FROM public.testimonials
       WHERE is_published IS TRUE AND archived_at IS NULL ORDER BY created_at DESC,id DESC LIMIT $1 OFFSET $2`,
           [page.limit, page.offset],

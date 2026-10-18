@@ -12,7 +12,8 @@
     "deploymentEnabled": {
       "main": true,
       "*": false,
-      "feat/issue-11-production-admin": false
+      "feat/issue-11-production-admin": false,
+      "feat/issue-16-reviews-media-categories": false
     }
   }
 }

@@ -72,6 +72,8 @@ export function Preview({ data }: { data: Row }) {
               "archived_at",
               "created_at",
               "updated_at",
+              "submission_digest",
+              "submission_key",
             ].includes(key) &&
             value !== null &&
             value !== "",
@@ -83,6 +85,15 @@ export function Preview({ data }: { data: Row }) {
             </dt>
             <dd className="mt-1 whitespace-pre-wrap text-sm">
               {Array.isArray(value) ? value.join("\n") : String(value)}
+              {["cover_image", "media_url", "avatar_url"].includes(key) &&
+                typeof value === "string" &&
+                /^\/api\/media\/[a-f0-9-]{36}$/.test(value) && (
+                  <img
+                    src={"/api/admin/media/" + value.split("/").pop() + "/blob"}
+                    alt="Uploaded image"
+                    className="mt-2 max-h-48 max-w-full rounded border border-[#DCE3E8]"
+                  />
+                )}
             </dd>
           </div>
         ))}
