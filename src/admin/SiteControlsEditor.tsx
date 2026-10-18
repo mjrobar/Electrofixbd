@@ -66,6 +66,9 @@ const fields: Record<
     { key: "heading", label: "Heading" },
     { key: "body", label: "Body", multiline: true },
     { key: "image_url", label: "Image URL" },
+    { key: "eyebrow", label: "Section credential / eyebrow" },
+    { key: "eyebrow_secondary", label: "Secondary eyebrow" },
+    { key: "group_heading", label: "Highlight group heading" },
   ],
 };
 const defaults: Record<Key, Row> = {
@@ -111,6 +114,11 @@ const defaults: Record<Key, Row> = {
     heading: "",
     body: "",
     image_url: "",
+    eyebrow: "",
+    eyebrow_secondary: "",
+    group_heading: "",
+    highlights: [],
+    statistics: [],
     is_active: true,
   },
 };
@@ -266,6 +274,29 @@ function ModuleEditor({
         i === index ? { ...row, [field]: value } : row,
       ),
     );
+  }
+  function changeNested(index: number, field: "highlights" | "statistics", itemIndex: number, property: string, value: string) {
+    setDirty(true);
+    setData(prev => (prev as Row[]).map((row, i) => {
+      if (i !== index) return row;
+      const nested = Array.isArray(row[field]) ? [...row[field] as Row[]] : [];
+      nested[itemIndex] = {...nested[itemIndex], [property]: property === "value" ? (Number(value) || 0) : value};
+      return {...row, [field]: nested};
+    }));
+  }
+  function addNested(index: number, field: "highlights" | "statistics") {
+    setDirty(true);
+    setData(prev => (prev as Row[]).map((row, i) => i !== index ? row : {
+      ...row, [field]: [...(Array.isArray(row[field]) ? row[field] as Row[] : []),
+        field === "highlights" ? {id:crypto.randomUUID(),icon:"none",title:"",subtitle:"",description:""} :
+          {id:crypto.randomUUID(),value:0,suffix:"",label:""}],
+    }));
+  }
+  function removeNested(index: number, field: "highlights" | "statistics", child: number) {
+    setDirty(true);
+    setData(prev => (prev as Row[]).map((row, i) => i !== index ? row : {
+      ...row, [field]: (Array.isArray(row[field]) ? row[field] as Row[] : []).filter((_,j)=>j!==child),
+    }));
   }
   function move(index: number, delta: number) {
     setData((prev) => {
@@ -490,6 +521,27 @@ function ModuleEditor({
                       />
                     )}
                   </label>
+                ))}
+                {key === "page_sections" && (["highlights","statistics"] as const).map((field) => (
+                  <div key={field} className="col-span-full space-y-2 rounded-md border border-slate-200 p-3">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-sm capitalize">{field}</strong>
+                      <button type="button" className="text-xs font-bold text-[#004179]" onClick={()=>addNested(i,field)}>Add {field === "highlights" ? "highlight" : "statistic"}</button>
+                    </div>
+                    {(Array.isArray(item[field]) ? item[field] as Row[] : []).map((child,j)=>(
+                      <div key={String(child.id ?? j)} className="grid gap-2 rounded-md border border-slate-200 p-3 sm:grid-cols-2">
+                        {(field === "highlights" ? ["icon","title","subtitle","description"] : ["value","suffix","label"]).map(prop=>(
+                          <label key={prop} className="text-xs font-medium capitalize">
+                            {prop}
+                            {prop === "icon" ? <select className="mt-1 w-full border p-2" value={String(child.icon ?? "none")} onChange={e=>changeNested(i,field,j,prop,e.target.value)}>
+                              {["none","cpu","map-pin","settings","shield-check"].map(icon=><option key={icon} value={icon}>{icon}</option>)}
+                            </select> : <input className="mt-1 w-full border p-2" type={prop === "value" ? "number" : "text"} value={String(child[prop] ?? "")} onChange={e=>changeNested(i,field,j,prop,e.target.value)}/>}
+                          </label>
+                        ))}
+                        <button type="button" className="text-xs text-red-700" onClick={()=>removeNested(i,field,j)}>Remove {field === "highlights" ? "highlight" : "statistic"}</button>
+                      </div>
+                    ))}
+                  </div>
                 ))}
                 {key === "hero_slides" && (
                   <label className="col-span-full flex gap-2 text-xs">
