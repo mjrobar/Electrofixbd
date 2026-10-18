@@ -30,15 +30,25 @@ function PublicApp() {
         if (!response.ok) throw new Error('Services API unavailable');
         const payload = await response.json();
         if (!Array.isArray(payload.services)) throw new Error('Unexpected services response');
-        const mapped: Service[] = payload.services.map((service: any) => ({
-          id: service.id, slug: service.slug, name: service.name,
-          shortDescription: service.short_description,
-          fullDescription: service.full_description,
-          commonProblems: Array.isArray(service.common_problems) ? service.common_problems : [],
-          serviceProcess: Array.isArray(service.service_process) ? service.service_process : [],
-          coverImage: service.cover_image || '',
-          isActive: true,
-        }));
+        // Local/test databases may contain legacy rows with incomplete editorial fields.
+        // Prefer every published API value; use the approved static content only for
+        // blank fields of the same existing service (never replace its database ID).
+        const mapped: Service[] = payload.services.map((service: any) => {
+          const fallback = SERVICES_DATA.find((item) => item.slug === service.slug);
+          const textOrFallback = (value: unknown, original: string | undefined) =>
+            typeof value === 'string' && value.trim() ? value : (original ?? '');
+          const listOrFallback = (value: unknown, original: string[] | undefined) =>
+            Array.isArray(value) && value.length ? value : (original ?? []);
+          return {
+            id: service.id, slug: service.slug, name: service.name,
+            shortDescription: textOrFallback(service.short_description, fallback?.shortDescription),
+            fullDescription: textOrFallback(service.full_description, fallback?.fullDescription),
+            commonProblems: listOrFallback(service.common_problems, fallback?.commonProblems),
+            serviceProcess: listOrFallback(service.service_process, fallback?.serviceProcess),
+            coverImage: textOrFallback(service.cover_image, fallback?.coverImage),
+            isActive: true,
+          };
+        });
         if (!controller.signal.aborted && mapped.length > 0) setServices(mapped);
       } catch (error) {
         if (!controller.signal.aborted) console.error('Public services could not be loaded:', error);
