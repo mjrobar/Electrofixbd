@@ -347,7 +347,17 @@ export function buildFullPreview(backup: Backup) {
     },
   };
 }
-export async function readFullPreview(db: Pick<pg.Pool, "query">) {
+export async function readFullPreview(
+  db: Pick<pg.Pool, "query">,
+  migrationLedger = "public.schema_migrations",
+) {
+  if (
+    ![
+      "public.schema_migrations",
+      "supabase_migrations.schema_migrations",
+    ].includes(migrationLedger)
+  )
+    throw Error("Unsupported migration ledger source.");
   const rows: Record<string, any[]> = {};
   const lossless_rows: Record<string, string[]> = {};
   let bytes = 0;
@@ -356,7 +366,7 @@ export async function readFullPreview(db: Pick<pg.Pool, "query">) {
     rows[table] = [];
     lossless_rows[table] = [];
     await db.query(
-      `DECLARE ${cursor} NO SCROLL CURSOR FOR SELECT row_to_json(t)::text AS row_json FROM public.${table} t`,
+      `DECLARE ${cursor} NO SCROLL CURSOR FOR SELECT row_to_json(t)::text AS row_json FROM ${table === "schema_migrations" ? migrationLedger : "public." + table} t`,
     );
     try {
       for (;;) {
@@ -384,6 +394,8 @@ export async function readFullPreview(db: Pick<pg.Pool, "query">) {
     lossless_rows[table].sort();
   }
   const schema: Record<string, unknown> = {};
+  if (migrationLedger !== "public.schema_migrations")
+    schema.migration_ledger_source = migrationLedger;
   schema.columns = (
     await db.query(
       "SELECT table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema='public' AND table_name=ANY($1) ORDER BY table_name,ordinal_position",

@@ -6,6 +6,11 @@ import { resolve } from "node:path";
 import catalog from "../server/full-content-catalog.json";
 import { backupTables, readFullPreview } from "../server/full-content-import";
 import { digest } from "../server/content-import";
+import {
+  expectedMigrations,
+  inspectMigrationLedgers,
+} from "./lib/migration-ledger";
+import { inspectAcceptanceSchema } from "./lib/acceptance-schema";
 export function assertSecondaryTarget(env: NodeJS.ProcessEnv) {
   if (env.SECONDARY_PROJECT_NAME !== "Electrofixbd.Test Project")
     throw Error("Confirm exact Secondary project name.");
@@ -42,7 +47,11 @@ export function assertSecondaryTarget(env: NodeJS.ProcessEnv) {
     );
   return url;
 }
-export async function secondaryReport(pool: pg.Pool, verify = false) {
+export async function secondaryReport(
+  pool: pg.Pool,
+  verify = false,
+  includeBackup = false,
+) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
@@ -52,7 +61,15 @@ export async function secondaryReport(pool: pg.Pool, verify = false) {
         [backupTables],
       )
     ).rows.map((r) => r.tablename);
-    const missing = backupTables.filter((t) => !present.includes(t));
+    const missing = backupTables.filter(
+      (t) => t !== "schema_migrations" && !present.includes(t),
+    );
+    const artifacts = await expectedMigrations();
+    const migration_validation = await inspectMigrationLedgers(
+      client,
+      artifacts,
+    );
+    const schema_validation = await inspectAcceptanceSchema(client);
     const result: any = {
       mode: verify ? "field-verification" : "read-only-preflight",
       expected: {
@@ -71,25 +88,27 @@ export async function secondaryReport(pool: pg.Pool, verify = false) {
       source_ref: catalog.source_ref,
       missing_tables: missing,
       counts: {},
-      migrations: present.includes("schema_migrations")
-        ? (
-            await client.query(
-              "SELECT name,checksum FROM schema_migrations ORDER BY name",
-            )
-          ).rows
-        : [],
+      migration_validation,
+      schema_validation,
+      compatible:
+        !missing.length &&
+        migration_validation.valid &&
+        schema_validation.valid,
+      migrations: migration_validation.ledgers.flatMap((l) => l.entries),
     };
     for (const table of present)
       result.counts[table] = Number(
         (await client.query(`SELECT count(*) AS total FROM public.${table}`))
           .rows[0].total,
       );
-    if (verify) {
-      if (missing.length)
-        throw Error(
-          "Migration prerequisites missing. No migration will be run.",
-        );
-      const preview = await readFullPreview(client);
+    for (const ledger of migration_validation.ledgers)
+      result.counts[ledger.source] = ledger.entries.length;
+    if ((verify || includeBackup) && result.compatible) {
+      const preview = await readFullPreview(
+        client,
+        migration_validation.selected!,
+      );
+      if (includeBackup) result.preview = preview;
       result.totals = preview.totals;
       result.entries = preview.entries.map((e) => ({
         kind: e.kind,
@@ -115,6 +134,10 @@ if (
 ) {
   const target = assertSecondaryTarget(process.env),
     output = process.argv[2];
+  if (process.argv.slice(3).some((arg) => arg !== "--verify"))
+    throw Error(
+      "Only optional --verify is supported; this tool cannot migrate or import.",
+    );
   if (!output || output.startsWith("--"))
     throw Error("Pass a new private output filename.");
   const pool = new pg.Pool({
@@ -140,9 +163,22 @@ if (
         output,
         mode: report.mode,
         missing_tables: report.missing_tables,
+        compatible: report.compatible,
+        migration_ledger: report.migration_validation.selected,
+        provenance_verified: report.migration_validation.provenance_verified,
+        validation_errors: [
+          ...report.migration_validation.errors,
+          ...report.schema_validation.errors,
+        ],
+        warnings: report.migration_validation.warnings,
         complete_draft_match: report.complete_draft_match ?? null,
       }),
     );
+    if (
+      !report.compatible ||
+      (process.argv.includes("--verify") && !report.complete_draft_match)
+    )
+      process.exitCode = 1;
   } finally {
     await pool.end();
   }

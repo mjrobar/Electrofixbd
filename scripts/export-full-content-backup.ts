@@ -1,8 +1,10 @@
 // Explicit approved Secondary target only; no DATABASE_URL fallback and no writes.
 import pg from "pg";
 import { writeFile } from "node:fs/promises";
-import { assertSecondaryTarget } from "./secondary-content-acceptance";
-import { fullPreview } from "../server/full-content-import";
+import {
+  assertSecondaryTarget,
+  secondaryReport,
+} from "./secondary-content-acceptance";
 const target = assertSecondaryTarget(process.env),
   output = process.argv[2];
 if (!output) throw Error("Pass a new private backup filename.");
@@ -14,7 +16,12 @@ const pool = new pg.Pool({
   options: "-c default_transaction_read_only=on",
 });
 try {
-  const preview = await fullPreview(pool);
+  const report = await secondaryReport(pool, false, true);
+  if (!report.compatible)
+    throw Error(
+      "Secondary schema/migration validation failed. Run the read-only preflight and review its report; no backup approval is issued.",
+    );
+  const preview = report.preview;
   await writeFile(output, JSON.stringify(preview, null, 2) + "\n", {
     flag: "wx",
     mode: 0o600,

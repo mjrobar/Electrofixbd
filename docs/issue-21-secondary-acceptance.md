@@ -1,6 +1,6 @@
 # Issue 21 Secondary Supabase review and Windows acceptance
 
-**Status: prepared, not executed.** No localhost PostgreSQL database was created for this task. No Supabase database was connected, migrated, imported or modified. Primary remains untouched. The owner will review Migration 006, then explicitly authorize applying it to **Electrofixbd.Test Project**. Import/publication and any test writes require subsequent explicit authorization. Code/mock tests do not prove PostgreSQL readiness.
+**Current Secondary status:** the owner reports migrations 001–006 are already applied through Supabase's migration system, with `supabase_migrations.schema_migrations` present and no `public.schema_migrations`. Do not create a public ledger, adopt/repair history or rerun migrations to satisfy this preflight. Codex has not connected to either project or independently verified this database state. Primary remains untouched; no new database operation is authorized by this tooling fix. Import/publication and test writes still require separate explicit approval.
 
 ## Exact review artifacts
 
@@ -42,37 +42,38 @@ Do not set `TEST_DATABASE_URL`. Do not run `tests/admin-ui.check.mjs`, database 
    ```powershell
    Get-FileHash db/migrations/006_full_cms_inventory.sql -Algorithm SHA256
    ```
-   Git must preserve the committed SQL bytes (LF). Do not edit migration checksums to bypass CRLF/content drift. Compare historical 001–005 bytes/ledger and resolve discrepancies by review.
+   Git must preserve the committed SQL bytes (LF). Do not edit migration checksums to bypass CRLF/content drift. Compare committed 001–006 bytes/actual ledger and resolve discrepancies by review.
 2. Set the explicit Secondary variables above. Run read-only preflight, writing into a private directory outside the repository:
    ```powershell
    node --import tsx scripts/secondary-content-acceptance.ts C:\PrivateBackups\issue21-before.json
    ```
-   The script sets read-only transactions, reports schema/table counts and migration checksums. It cannot migrate/import. Confirm exactly 001–005 already applied with matching checksums. Stop on any mismatch, missing prerequisite, unexpected table or unknown privilege. This preflight is not yet run.
+   The script uses one read-only repeatable-read transaction. It detects `public.schema_migrations` and/or `supabase_migrations.schema_migrations` without creating either; both must validate if both exist. All committed migration versions 001–006 must be accounted for, without unknown/duplicate/out-of-order identities. Native checksums are mandatory. Supabase names may match the numbered filename or its unnumbered stem; timestamp versions can also be identified by exact stored SQL provenance. Short numeric versions can identify older ledgers. Timestamp-only rows without names or source evidence cannot be guessed from a row count.
+
+   Stored checksums are compared where available. Supabase `statements` are compared to committed SQL using a token digest that ignores outer formatting/comments but preserves quoted values and dollar-quoted function bodies (only CRLF/LF is normalized). Statement splitting/final delimiters are accommodated; available but mismatched SQL is an error, never silently ignored. Empty/absent historical SQL is reported as unavailable, with `provenance_verified:false` and an explicit owner-review warning, not an invented checksum. SQL version identity alone does not prove historical source equivalence.
+
+   Application tables are checked independently: core column/key/FK compatibility, 004–006 column types, CMS/source identity keys, validated CMS/moderation constraints and enabled invoker revision/history triggers. `missing_tables` concerns actual application tables; absence of the native ledger is not a missing application table. `migration_validation`, `schema_validation` and the top-level `compatible` field report the separate checks. A missing/invalid ledger, schema mismatch or incomplete `--verify` produces exit code 1 after writing the report. Permission/inspection errors fail without falling back to another ledger. No automatic repair/import occurs.
+
+   Exact PowerShell rerun command from the updated checkout, using the same previously verified Secondary environment variables and an existing private backup directory:
+   ```powershell
+   node --import tsx .\scripts\secondary-content-acceptance.ts "C:\PrivateBackups\issue21-preflight-$(Get-Date -Format yyyyMMdd-HHmmss).json"
+   ```
+   A fresh filename avoids overwriting prior evidence. This default preflight reads metadata, history and counts only. The optional `--verify` compares content read-only; it never imports. The read-only backup helper also uses the validated physical ledger and records its fully qualified source rather than requiring a synthetic public ledger. Stop and review any failure; do not run migrations or ledger repair to force a passing report.
 3. Arrange a maintenance window and stop acceptance writes. Obtain a full native custom-format database backup with a suitable PostgreSQL client version. Set `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` to the verified Secondary operator connection locally; set `PGSSLMODE=verify-full` and a trusted `PGSSLROOTCERT` where needed. Never print credentials. Example commands (not run here):
    ```powershell
-   pg_dump --format=custom --file=C:\PrivateBackups\secondary-before-006.dump
+   pg_dump --format=custom --file=C:\PrivateBackups\secondary-before-import.dump
    if ($LASTEXITCODE -ne 0) { throw 'Backup failed; stop.' }
-   pg_restore --list C:\PrivateBackups\secondary-before-006.dump > C:\PrivateBackups\secondary-before-006.list.txt
+   pg_restore --list C:\PrivateBackups\secondary-before-import.dump > C:\PrivateBackups\secondary-before-import.list.txt
    if ($LASTEXITCODE -ne 0) { throw 'Backup inspection failed; stop.' }
-   Get-FileHash C:\PrivateBackups\secondary-before-006.dump -Algorithm SHA256
+   Get-FileHash C:\PrivateBackups\secondary-before-import.dump -Algorithm SHA256
    ```
    Retain ownership/ACL information. Supabase may restrict managed schemas; inspect the archive scope and document exclusions, dashboard backup availability and the separate role/grants recovery plan. Archive-list verification does not prove restore; a separately authorized restore rehearsal is required before production approval. Do not restore into either real project during this task.
 4. Copy the entire durable media directory with coordinated DB snapshot timing to encrypted private backup storage, preserving a file manifest and hashes. Retain original configuration/role names privately. Restrict Windows ACLs to the operator (POSIX `0600` alone is not Windows protection). Keep backup/digests and manifest in separate protected storage. Never upload customer/session backups to GitHub.
 
-## Applying 006 (only after explicit owner approval)
+## Already applied migrations: no replay
 
-The owner must approve the exact SQL hash and Secondary target. Approval for code/SQL review does not authorize execution. Do not run this procedure now.
+For this Secondary project, 001–006 are already applied via Supabase according to owner verification. **Do not run `scripts/migrate.ts`, `supabase db push`, migration repair/adoption, CREATE/INSERT into a ledger, or Migration 006 again.** The portable migration runner remains unchanged and expects its own native ledger; this fix provides read-only recognition of the actual managed ledger, not conversion between migration systems. A migration-ledger naming difference is not evidence that the schema is missing.
 
-With reviewed 001–005 already present, pause writes, retain backup, and temporarily set `MIGRATION_DATABASE_URL` to the explicit Secondary migration credential. The existing runner applies pending numbered SQL in a transaction, validates old checksums, and records the ledger:
-
-```powershell
-$env:MIGRATION_DATABASE_URL = $env:SECONDARY_DATABASE_URL
-node --import tsx scripts/migrate.ts
-if ($LASTEXITCODE -ne 0) { throw 'Migration failed; stop and inspect.' }
-Remove-Item Env:MIGRATION_DATABASE_URL
-```
-
-Do not use `--adopt-existing`. If anything other than 006 is pending, stop for review. For stricter operator separation, put a migration-role Secondary URL in `MIGRATION_DATABASE_URL`; never use a browser key. Review/apply optional runtime grants separately if the deployed runtime role cannot access the new tables/ledger. Do not automatically run the broad ACL lockdown script. Inspect migration ledger, schema, RLS/privileges, triggers and unchanged protected customer counts after success. Keep import disabled.
+Use the read-only preflight above to inspect actual schema and source evidence. Any unknown version, checksum/SQL mismatch or actual schema gap requires owner review of the report and applied artifacts. Additional runtime grants or schema changes remain separate approval decisions; do not automatically run ACL scripts. Preserve the existing native/media backup plan for any subsequently approved operation.
 
 ## Full import (separate explicit approval)
 
@@ -102,8 +103,8 @@ Do not use `--adopt-existing`. If anything other than 006 is pending, stop for r
 ## Complete acceptance checklist (all DB/write items pending approval)
 
 - [ ] Verify Secondary project ref/host/user, absence of Primary credentials, TLS, runtime least privilege and owner-approved backup/SQL hashes.
-- [ ] Confirm immutable ledger 001–005, full native backup scope, protected media backup, encrypted storage and separately authorized restore rehearsal.
-- [ ] Apply reviewed 006 only; verify all new columns/tables/defaults/constraints/history trigger and browser-role denials. Bookings/Contact/Reviews/private media remain inaccessible to anon/authenticated SQL roles.
+- [ ] Confirm validated actual ledger 001–006, full native backup scope, protected media backup, encrypted storage and separately authorized restore rehearsal.
+- [ ] Verify the already-applied 006 columns/tables/defaults/constraints/history trigger and browser-role denials; do not replay 006. Bookings/Contact/Reviews/private media remain inaccessible to anon/authenticated SQL roles.
 - [ ] Exact preview counts/958 mapped values and all behavior exclusions reviewed against pinned source **and independent original AI Studio source**. Do not mark original reconciliation complete based on repository hashes alone.
 - [ ] Compare every field from TSV: Bangla/Unicode, whitespace, IDs, URLs, icons, localized captions, numeric/boolean values, null/absent semantics, array/nested order, all CTA hints/flags and home composition. No invented email/logo/address or fabricated booking URL.
 - [ ] Download lossless full backup, perform approved draft import; verify every eligible DB draft → Admin editor → export → source-shaped/render-ready API value. Protected real customer rows are byte/field equivalent before/after.
