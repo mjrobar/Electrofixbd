@@ -26,6 +26,8 @@ import {
   Sparkles,
   Star,
   Wrench,
+  Moon,
+  Sun,
   X,
 } from "lucide-react";
 
@@ -118,6 +120,15 @@ export default function AdminApp() {
     if (next !== panel && canLeaveAdmin()) setPanel(next);
   }
   const [drawer, setDrawer] = useState(false);
+  const [bdClock, setBdClock] = useState("");
+  const [darkMode, setDarkMode] = useState(() => { try { return window.localStorage.getItem("efb-admin-theme") === "dark"; } catch { return false; } });
+  useEffect(() => {
+    const updateClock = () => setBdClock(new Intl.DateTimeFormat("en-BD", { timeZone: "Asia/Dhaka", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(new Date()));
+    updateClock();
+    const timer = window.setInterval(updateClock, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  useEffect(() => { try { window.localStorage.setItem("efb-admin-theme", darkMode ? "dark" : "light"); } catch { /* unavailable storage */ } }, [darkMode]);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -289,7 +300,7 @@ export default function AdminApp() {
     );
   const active = tabs.find((t) => t.key === panel)!;
   return (
-    <div className="efb-admin min-h-screen bg-[#F6F8FA] text-slate-900">
+    <div className={"efb-admin min-h-screen bg-[#F6F8FA] text-slate-900" + (darkMode ? " efb-admin-dark" : "")}>
       <div className="lg:flex">
         <aside
           className={`fixed inset-y-0 left-0 z-40 w-[270px] transform border-r border-slate-200 bg-[#11243A] text-slate-100 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${drawer ? "translate-x-0" : "-translate-x-full"}`}
@@ -380,7 +391,9 @@ export default function AdminApp() {
                 <div className="font-bold tracking-tight">{active.label}</div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div aria-label="Bangladesh time" title="Bangladesh time (Asia/Dhaka)" className="hidden rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold tabular-nums text-slate-700 sm:block"><span className="mr-2 text-slate-400">BDT</span>{bdClock}</div>
+              <button type="button" onClick={() => setDarkMode(v => !v)} aria-label={darkMode ? "Use light mode" : "Use dark mode"} title={darkMode ? "Light mode" : "Dark mode"} className="rounded-xl border border-slate-200 p-2.5 text-slate-600 hover:bg-slate-50">{darkMode ? <Sun size={18} /> : <Moon size={18} />}</button>
               <button
                 onClick={refreshView}
                 aria-label="Refresh dashboard"
