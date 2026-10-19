@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import type pg from "pg";
+import verifiedIdentities from "./verified-migration-identities.json";
 export type LedgerSource =
   "public.schema_migrations" | "supabase_migrations.schema_migrations";
 export const ledgerSources: LedgerSource[] = [
@@ -156,10 +157,41 @@ export function validateLedger(
       }
     }
     const byEvidence = expected.find((m) => storedEvidence === m.sql_evidence);
+    const reviewedIdentity = verifiedIdentities.find(
+      (m) =>
+        m.source === source &&
+        m.recorded_version === version &&
+        m.recorded_name === row.name,
+    );
+    const reviewedArtifact =
+      reviewedIdentity &&
+      expected.find((m) => m.name === reviewedIdentity.local_name);
+    const statementHash =
+      Array.isArray(row.statements) &&
+      row.statements.length > 0 &&
+      row.statements.every((s: unknown) => typeof s === "string")
+        ? hash(
+            JSON.stringify(
+              row.statements.map((s: string) => s.replace(/\r\n/g, "\n")),
+            ),
+          )
+        : null;
+    if (
+      reviewedIdentity &&
+      (!reviewedArtifact ||
+        reviewedArtifact.sha256 !== reviewedIdentity.local_sha256 ||
+        statementHash !== reviewedIdentity.stored_statements_sha256)
+    ) {
+      errors.push(
+        `Reviewed identity mapping rejected: ${version}/${row.name}; both the pinned local SQL and original stored statements are required unchanged. See ${reviewedIdentity.review}`,
+      );
+      return { identity: version, status: "reviewed-evidence-mismatch" };
+    }
     const artifact =
       source === "public.schema_migrations"
         ? expected.find((m) => row.name === m.name)
-        : (byName ??
+        : (reviewedArtifact ??
+          byName ??
           byEvidence ??
           expected.find((m) => m.version === shortVersion));
     const identity = String(row.version ?? row.name ?? "unknown");
@@ -168,7 +200,7 @@ export function validateLedger(
       (source.startsWith("supabase_") &&
         (!/^\d{1,3}$|^\d{14}$/.test(version) ||
           (shortVersion !== null && shortVersion !== artifact.version) ||
-          (name && !byName && !byEvidence)))
+          (name && !byName && !byEvidence && !reviewedArtifact)))
     ) {
       errors.push(`Unknown or conflicting migration identity: ${identity}`);
       return { identity, status: "invalid-identity" };
@@ -193,8 +225,11 @@ export function validateLedger(
     } else if (source === "public.schema_migrations")
       errors.push(`Missing native checksum: ${artifact.name}`);
     if (statementsAvailable) {
-      statements =
-        storedEvidence === artifact.sql_evidence ? "verified" : "mismatch";
+      statements = reviewedArtifact
+        ? "verified-historical-variant"
+        : storedEvidence === artifact.sql_evidence
+          ? "verified"
+          : "mismatch";
       if (statements === "mismatch")
         errors.push(`Stored SQL provenance mismatch: ${artifact.name}`);
     }
@@ -208,6 +243,13 @@ export function validateLedger(
       expected_sha256: artifact.sha256,
       checksum,
       statements,
+      ...(reviewedIdentity
+        ? {
+            identity_mapping: reviewedIdentity.id,
+            stored_statements_sha256: statementHash,
+            comparison_review: reviewedIdentity.review,
+          }
+        : {}),
     };
   });
   const ordered = [...versions].sort(

@@ -155,6 +155,27 @@ export async function inspectAcceptanceSchema(db: Pick<pg.Pool, "query">) {
           `Incompatible schema: public.${table}.${column} must be ${type}.`,
         );
     }
+  // Migration 003's identity equivalence also depends on its real defaults and
+  // nullability, independently of the stored SQL evidence.
+  for (const [column, expectedDefault] of Object.entries({
+    key: null,
+    draft: "'[]'::jsonb",
+    published: "'[]'::jsonb",
+    revision: "0",
+    updated_at: "now()",
+  })) {
+    const actual = columns.find(
+      (c) => c.table_name === "site_content" && c.column_name === column,
+    );
+    if (
+      !actual ||
+      actual.is_nullable !== "NO" ||
+      actual.column_default !== expectedDefault
+    )
+      errors.push(
+        `Incompatible schema: public.site_content.${column} nullability/default differs from Migration 003.`,
+      );
+  }
   const constraints = (
     await db.query(
       `SELECT t.relname AS table_name,c.contype,c.convalidated,c.condeferrable,pg_get_constraintdef(c.oid) AS definition,
@@ -163,6 +184,21 @@ export async function inspectAcceptanceSchema(db: Pick<pg.Pool, "query">) {
       [Object.keys(acceptanceColumns)],
     )
   ).rows;
+  const siteKeyCheck =
+    "CHECK((key=ANY(ARRAY['hero_slides'::text,'faqs'::text,'business_settings'::text,'page_sections'::text])))";
+  if (
+    !constraints.some(
+      (c) =>
+        c.table_name === "site_content" &&
+        c.contype === "c" &&
+        c.convalidated &&
+        JSON.stringify(c.columns) === JSON.stringify(["key"]) &&
+        c.definition.replace(/\s+/g, "") === siteKeyCheck,
+    )
+  )
+    errors.push(
+      "Incompatible schema: public.site_content requires Migration 003's exact validated four-key constraint.",
+    );
   for (const [table, cols] of Object.entries(keys))
     if (
       !constraints.some(
@@ -259,6 +295,6 @@ export async function inspectAcceptanceSchema(db: Pick<pg.Pool, "query">) {
     valid: !errors.length,
     errors,
     checked:
-      "core compatibility plus 004–006 column types, keys, source identity uniqueness, CMS/moderation constraints and revision triggers",
+      "core compatibility, 003 site-content defaults/nullability/four-key constraint, plus 004–006 column types, keys, source identity uniqueness, CMS/moderation constraints and revision triggers",
   };
 }

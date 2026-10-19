@@ -11,6 +11,7 @@ import {
 import { acceptanceColumns } from "../scripts/lib/acceptance-schema";
 import { secondaryReport } from "../scripts/secondary-content-acceptance";
 import { backupTables } from "../server/full-content-import";
+import historical003 from "./fixtures/provenance/site-content-20261017052646.json";
 const artifacts = await expectedMigrations();
 const sql = await Promise.all(
   artifacts.map((a) =>
@@ -33,6 +34,7 @@ function fixture(
     missingTable?: string;
     badTrigger?: boolean;
     permissionError?: boolean;
+    siteContentDrift?: "default" | "nullable" | "keys";
   } = {},
 ) {
   const ledgers = options.ledgers ?? { [supabase]: managed() },
@@ -105,7 +107,7 @@ function fixture(
         column_name: column,
         udt_name: type,
         is_nullable: "YES",
-        column_default: null,
+        column_default: null as string | null,
         is_identity: "NO",
         is_generated: "NEVER",
       })),
@@ -115,6 +117,18 @@ function fixture(
         c.table_name + "." + c.column_name !== options.missingColumn &&
         c.table_name !== options.missingTable,
     );
+  for (const c of columns.filter((c) => c.table_name === "site_content")) {
+    Object.assign(
+      c,
+      historical003.columns.find(
+        (original) => original.column_name === c.column_name,
+      ),
+    );
+    if (c.column_name === "draft" && options.siteContentDrift === "default")
+      c.column_default = "'{}'::jsonb";
+    if (c.column_name === "revision" && options.siteContentDrift === "nullable")
+      c.is_nullable = "YES";
+  }
   const pk: Record<string, string[]> = {
     site_content: ["key"],
     admin_sessions: ["token_hash"],
@@ -137,6 +151,15 @@ function fixture(
   });
   const constraints = Object.keys(acceptanceColumns).map((t) =>
     constraint(t, "p", pk[t] ?? ["id"]),
+  );
+  constraints.push(
+    constraint(
+      "site_content",
+      "c",
+      ["key"],
+      historical003.constraints.find((c) => c.type === "c")!.definition +
+        (options.siteContentDrift === "keys" ? " OR true" : ""),
+    ),
   );
   for (const t of ["services", "works"])
     constraints.push(constraint(t, "u", ["slug"]));
@@ -393,4 +416,112 @@ test("Read-only verification and backup read the actual managed history and reta
     ),
   );
   assert.equal(report.complete_draft_match, false); // No content import was simulated or performed.
+});
+
+function historicallyRecorded() {
+  const versions = [
+    "20261016090000",
+    "20261016100000",
+    "20261017052646",
+    "20261017100000",
+    "20261018090000",
+    "20261019000006",
+  ];
+  const rows = managed().map((row, i) => ({ ...row, version: versions[i] }));
+  rows[2] = structuredClone(historical003.migration);
+  return rows;
+}
+test("Actual Secondary 003 is accepted only by its reviewed version/name and both pinned source hashes", async () => {
+  const rows = historicallyRecorded();
+  assert.notEqual(
+    statementEvidence(rows[2].statements),
+    artifacts[2].sql_evidence,
+    "Regression reproduces opaque DO-body formatting mismatch.",
+  );
+  const applied = rows[2].statements[0];
+  const originalBody = applied.match(/DO \$\$([\s\S]*?)\$\$;/)![1];
+  const localBody = sql[2].match(/DO \$\$([\s\S]*?)\$\$;/)![1];
+  assert.equal(
+    sqlEvidence(originalBody),
+    sqlEvidence(localBody),
+    "Reviewed PL/pgSQL tokens retain the same conditions, roles and revokes.",
+  );
+  assert.equal(
+    sqlEvidence(applied.replace(originalBody, "REVIEWED_BODY")),
+    sqlEvidence(sql[2].replace(localBody, "REVIEWED_BODY")),
+    "All outer SQL statements, defaults, seeds, conflict action and PUBLIC revoke match.",
+  );
+  const report = await secondaryReport(
+    fixture({ ledgers: { [supabase]: rows } }).pool,
+  );
+  assert.equal(report.compatible, true);
+  assert.equal(report.migration_validation.provenance_verified, true);
+  const mapped = report.migrations.find(
+    (m: any) => m.identity === "20261017052646",
+  );
+  assert.equal(mapped.name, "003_site_content.sql");
+  assert.equal(mapped.statements, "verified-historical-variant");
+  assert.equal(
+    mapped.identity_mapping,
+    "secondary-site-content-003-20261017052646-v1",
+  );
+  assert.equal(
+    mapped.stored_statements_sha256,
+    "a4ff51b5ca4185452bd10ba92200bc81d7fd29c57d7cd7ae823d96fcdbe711e1",
+  );
+});
+test("Reviewed 003 mapping never accepts missing/changed SQL, copied identity or a changed canonical migration", () => {
+  const reject = (change: (row: any) => void) => {
+    const rows = historicallyRecorded();
+    change(rows[2]);
+    assert.equal(validateLedger(supabase, rows, artifacts).valid, false);
+  };
+  reject((row) => delete row.statements);
+  reject((row) => (row.statements = []));
+  reject((row) => (row.statements = ["SELECT 1;"]));
+  reject(
+    (row) =>
+      (row.statements[0] = row.statements[0].replace(
+        "REVOKE ALL ON public.site_content FROM anon",
+        "GRANT SELECT ON public.site_content TO anon",
+      )),
+  );
+  reject(
+    (row) =>
+      (row.statements[0] = row.statements[0].replace(
+        "'{}'::jsonb",
+        "'[]'::jsonb",
+      )),
+  );
+  reject((row) => (row.statements[0] += " DELETE FROM public.bookings;"));
+  reject((row) => (row.name = "unreviewed_alias"));
+  reject((row) => (row.version = "20261017052647"));
+  const local = structuredClone(artifacts);
+  local[2].sha256 = "0".repeat(64);
+  assert.equal(
+    validateLedger(supabase, historicallyRecorded(), local).valid,
+    false,
+  );
+  const checksum = historicallyRecorded().map((r) => ({
+    ...r,
+    checksum: "0".repeat(64),
+  }));
+  assert.equal(validateLedger(supabase, checksum, artifacts).valid, false);
+  const crlf = historicallyRecorded();
+  crlf[2].statements = crlf[2].statements.map((s) => s.replace(/\n/g, "\r\n"));
+  assert.equal(validateLedger(supabase, crlf, artifacts).valid, true);
+});
+test("Verified 003 SQL provenance cannot conceal actual default, nullability or key-constraint drift", async () => {
+  for (const siteContentDrift of ["default", "nullable", "keys"] as const) {
+    const report = await secondaryReport(
+      fixture({
+        ledgers: { [supabase]: historicallyRecorded() },
+        siteContentDrift,
+      }).pool,
+    );
+    assert.equal(report.migration_validation.provenance_verified, true);
+    assert.equal(report.schema_validation.valid, false);
+    assert.equal(report.compatible, false);
+    assert.match(report.schema_validation.errors.join(), /site_content/);
+  }
 });
