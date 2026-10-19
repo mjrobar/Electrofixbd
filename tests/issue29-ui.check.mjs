@@ -601,6 +601,13 @@ try {
     .waitFor();
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.getByRole("button", { name: "Previous", exact: true }).waitFor();
+  // The existing button is visible while the next-page request is loading.
+  // Wait for the completed transition before asserting its enabled state.
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll("button")].some(
+      (button) => button.textContent.trim() === "Previous" && !button.disabled,
+    ),
+  );
   assert.ok(
     !(await page
       .getByRole("button", { name: "Previous", exact: true })
