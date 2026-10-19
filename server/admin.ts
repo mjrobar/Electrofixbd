@@ -11,12 +11,13 @@ import { createAdminContentRouter } from "./admin-content";
 import { createAdminSiteControlsRouter } from "./site-controls";
 import { createHistoryRouter } from "./admin-history";
 import { createOperationsRouter } from "./admin-operations";
+import { createObservationRouter } from "./admin-observation";
 
 export function createAdminRouter(config: Config, database?: pg.Pool) {
   const enabled = Boolean(
     config.ADMIN_SESSION_SECRET &&
-    config.ADMIN_USERNAME &&
-    config.ADMIN_PASSWORD_HASH &&
+    (config.ADMIN_UPGRADE_ENABLED ||
+      (config.ADMIN_USERNAME && config.ADMIN_PASSWORD_HASH)) &&
     config.DATABASE_URL,
   );
   const pool = enabled
@@ -57,6 +58,7 @@ export function createAdminRouter(config: Config, database?: pg.Pool) {
     router.use(createAdminSiteControlsRouter(pool));
     router.use(createHistoryRouter(pool));
     router.use(createOperationsRouter(pool));
+    router.use(createObservationRouter(pool, config));
   }
   return Object.assign(router, {
     close: () =>

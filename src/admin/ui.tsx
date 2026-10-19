@@ -1,5 +1,21 @@
 import React, { useEffect, useState } from "react";
 export type Row = Record<string, unknown>;
+export class AdminRequestError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public code?: string,
+  ) {
+    super(message);
+  }
+}
+export function copyAdminText(value: string) {
+  return navigator.clipboard
+    ? navigator.clipboard.writeText(value)
+    : Promise.reject(
+        Error("Clipboard is unavailable in this browser context."),
+      );
+}
 export const ui = {
   card: "rounded-lg border border-[#DCE3E8] bg-white p-5 sm:p-6",
   button:
@@ -13,11 +29,13 @@ export async function adminRequest(
   path: string,
   method = "GET",
   data?: unknown,
+  signal?: AbortSignal,
 ) {
   const response = await fetch("/api/admin" + path, {
     method,
     credentials: "same-origin",
     cache: "no-store",
+    signal,
     headers: {
       ...(method !== "GET"
         ? { "X-Admin-Request": "1", "Content-Type": "application/json" }
@@ -29,7 +47,11 @@ export async function adminRequest(
   if (response.status === 401)
     window.dispatchEvent(new Event("admin-session-expired"));
   if (!response.ok)
-    throw Error(body.error || "Request failed. Reload and retry.");
+    throw new AdminRequestError(
+      body.error || "Request failed. Reload and retry.",
+      response.status,
+      body.code,
+    );
   return body;
 }
 export function Feedback({
@@ -209,6 +231,22 @@ export function HistoryPanel({
 }
 
 const pendingEdits = new Set<string>();
+export const hasUnsavedAdminChanges = () => pendingEdits.size > 0;
+export function adminInteractionActive() {
+  return (
+    hasUnsavedAdminChanges() ||
+    Boolean(
+      document.querySelector(
+        'dialog[open], [aria-modal="true"], [data-admin-busy="true"], [data-admin-editing="true"]',
+      ),
+    ) ||
+    Boolean(
+      document.activeElement?.matches(
+        "input,textarea,select,[contenteditable=true]",
+      ),
+    )
+  );
+}
 export function canLeaveAdmin() {
   return (
     pendingEdits.size === 0 ||

@@ -23,3 +23,19 @@ export async function expectedMigrations() {
       }),
   );
 }
+export async function expectedOptionalMigrations() {
+  const name = "007_admin_upgrade.sql",
+    sql = await readFile(
+      new URL("../../db/optional/" + name, import.meta.url),
+      "utf8",
+    );
+  return [
+    {
+      name,
+      version: 7,
+      sha256: hash(sql.replace(/\r\n/g, "\n")),
+      crlf_sha256: hash(sql.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n")),
+      sql_evidence: sqlEvidence(sql),
+    },
+  ];
+}

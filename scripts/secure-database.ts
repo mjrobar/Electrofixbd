@@ -18,6 +18,10 @@ export const securityTables = [
   "cms_import_runs",
   "cms_publication_state",
   "schema_migrations",
+  "admin_owner",
+  "admin_account_tokens",
+  "admin_notification_state",
+  "admin_delivery_outbox",
 ];
 export async function securityPreview(db: Pick<pg.Pool, "query">) {
   const tables = await db.query(

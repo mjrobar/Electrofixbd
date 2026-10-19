@@ -24,7 +24,7 @@ export function createOperationsRouter(pool: pg.Pool) {
   router.get(
     "/overview",
     route(async (_req, res) => {
-      const [b, c, s, w, t, days, states, activity] = await Promise.all([
+      const [b, c, s, w, t, days, states, activity, today] = await Promise.all([
         pool.query(
           "SELECT count(*)::int AS total,count(*) FILTER(WHERE status='pending')::int AS pending FROM public.bookings",
         ),
@@ -49,6 +49,7 @@ export function createOperationsRouter(pool: pg.Pool) {
         pool.query(
           "SELECT entity,action,revision,created_at FROM public.admin_audit ORDER BY id DESC LIMIT 8",
         ),
+        pool.query("SELECT count(*)::int AS total FROM public.bookings WHERE (created_at AT TIME ZONE 'Asia/Dhaka')::date = (now() AT TIME ZONE 'Asia/Dhaka')::date"),
       ]);
       res.json({
         bookings: b.rows[0],
@@ -59,6 +60,7 @@ export function createOperationsRouter(pool: pg.Pool) {
         days: days.rows,
         statuses: states.rows,
         activity: activity.rows,
+        today_bookings: today.rows[0].total,
       });
     }),
   );

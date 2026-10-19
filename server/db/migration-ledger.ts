@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import type pg from "pg";
 import verifiedIdentities from "../../scripts/lib/verified-migration-identities.json";
+import optionalArtifacts from "./optional-migration-manifest.json";
 export type LedgerSource =
   "public.schema_migrations" | "supabase_migrations.schema_migrations";
 export const ledgerSources: LedgerSource[] = [
@@ -111,6 +112,14 @@ export function validateLedger(
   rows: Record<string, any>[],
   expected: MigrationArtifact[],
 ) {
+  // Optional upgrades are recognized only from reviewed source evidence. They
+  // never become prerequisites for the unchanged 001–006 CMS import workflow.
+  const recognized: MigrationArtifact[] = [
+    ...expected,
+    ...optionalArtifacts.filter(
+      (m) => !expected.some((e) => e.name === m.name),
+    ),
+  ];
   const errors: string[] = [],
     warnings: string[] = [],
     seen = new Set<number>();
@@ -118,7 +127,7 @@ export function validateLedger(
   const entries = rows.map((row) => {
     const name =
       typeof row.name === "string" ? row.name.replace(/\.sql$/, "") : "";
-    const byName = expected.find((m) =>
+    const byName = recognized.find((m) =>
       [m.name.slice(0, -4), m.name.slice(4, -4)].includes(name),
     );
     const version =
@@ -142,7 +151,9 @@ export function validateLedger(
         /* Invalid available evidence fails below, never falls back. */
       }
     }
-    const byEvidence = expected.find((m) => storedEvidence === m.sql_evidence);
+    const byEvidence = recognized.find(
+      (m) => storedEvidence === m.sql_evidence,
+    );
     const reviewedIdentity = verifiedIdentities.find(
       (m) =>
         m.source === source &&
@@ -151,7 +162,7 @@ export function validateLedger(
     );
     const reviewedArtifact =
       reviewedIdentity &&
-      expected.find((m) => m.name === reviewedIdentity.local_name);
+      recognized.find((m) => m.name === reviewedIdentity.local_name);
     const statementHash =
       Array.isArray(row.statements) &&
       row.statements.length > 0 &&
@@ -175,11 +186,11 @@ export function validateLedger(
     }
     const artifact =
       source === "public.schema_migrations"
-        ? expected.find((m) => row.name === m.name)
+        ? recognized.find((m) => row.name === m.name)
         : (reviewedArtifact ??
           byName ??
           byEvidence ??
-          expected.find((m) => m.version === shortVersion));
+          recognized.find((m) => m.version === shortVersion));
     const identity = String(row.version ?? row.name ?? "unknown");
     if (
       !artifact ||
@@ -283,14 +294,35 @@ export async function inspectMigrationLedgers(
     ).rows.map((r) => r.entry);
     ledgers.push(validateLedger(source, rows, expected));
   }
+  const disagreements =
+    ledgers.length > 1 &&
+    new Set(
+      ledgers.map((l) =>
+        JSON.stringify(
+          l.entries
+            .map((e) => ("name" in e ? e.name : undefined))
+            .filter(Boolean)
+            .sort(),
+        ),
+      ),
+    ).size > 1
+      ? [
+          "Available migration ledgers disagree about applied migration identities.",
+        ]
+      : [];
   return {
-    valid: !!ledgers.length && ledgers.every((l) => l.valid),
+    valid:
+      !!ledgers.length &&
+      !disagreements.length &&
+      ledgers.every((l) => l.valid),
     provenance_verified:
-      !!ledgers.length && ledgers.every((l) => l.provenance_verified),
+      !!ledgers.length &&
+      !disagreements.length &&
+      ledgers.every((l) => l.provenance_verified),
     selected: ledgers[0]?.source ?? null,
     ledgers,
     errors: ledgers.length
-      ? ledgers.flatMap((l) => l.errors)
+      ? [...ledgers.flatMap((l) => l.errors), ...disagreements]
       : [
           "No supported migration ledger exists; do not create or repair one automatically.",
         ],

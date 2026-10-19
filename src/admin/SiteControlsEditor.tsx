@@ -54,6 +54,8 @@ const fields: Record<
     { key: "facebook_url", label: "Facebook URL" },
     { key: "youtube_url", label: "YouTube URL" },
     { key: "logo_url", label: "Logo URL" },
+    { key: "favicon_url", label: "Favicon image URL" },
+    { key: "site_title", label: "Website document title" },
   ],
   page_sections: [
     { key: "id", label: "Unique ID" },

@@ -1,0 +1,9 @@
+[
+  {
+    "name": "007_admin_upgrade.sql",
+    "version": 7,
+    "sha256": "4b51a8b7f53a177c13d13b0b9f4fa1286f585ab0edbdd248556356523679d80a",
+    "crlf_sha256": "188abf8a5aba764e96a895e6726066becddc792d3af5c794d30371b22f42bc2b",
+    "sql_evidence": "25f39d111b204cda353f0c75a95868049d24dfb2750ad45a610d290faa3d2f8d"
+  }
+]

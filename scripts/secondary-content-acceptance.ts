@@ -11,6 +11,7 @@ import {
   inspectMigrationLedgers,
 } from "./lib/migration-ledger";
 import { inspectAcceptanceSchema } from "./lib/acceptance-schema";
+import { inspectAdminUpgradeSchema } from "../server/db/admin-upgrade-schema";
 export function assertSecondaryTarget(env: NodeJS.ProcessEnv) {
   if (env.SECONDARY_PROJECT_NAME !== "Electrofixbd.Test Project")
     throw Error("Confirm exact Secondary project name.");
@@ -70,6 +71,19 @@ export async function secondaryReport(
       artifacts,
     );
     const schema_validation = await inspectAcceptanceSchema(client);
+    const upgradeRecorded = migration_validation.ledgers.some((l) =>
+      l.entries.some((e) => "name" in e && e.name === "007_admin_upgrade.sql"),
+    );
+    const optional_upgrade = await inspectAdminUpgradeSchema(
+      client,
+      upgradeRecorded,
+    );
+    schema_validation.errors.push(...optional_upgrade.errors);
+    if (optional_upgrade.present && !upgradeRecorded)
+      schema_validation.errors.push(
+        "Optional Admin upgrade tables exist without verified 007 migration history.",
+      );
+    schema_validation.valid = !schema_validation.errors.length;
     const result: any = {
       mode: verify ? "field-verification" : "read-only-preflight",
       expected: {
@@ -90,6 +104,7 @@ export async function secondaryReport(
       counts: {},
       migration_validation,
       schema_validation,
+      optional_upgrade,
       compatible:
         !missing.length &&
         migration_validation.valid &&

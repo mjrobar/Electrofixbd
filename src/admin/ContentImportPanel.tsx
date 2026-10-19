@@ -217,7 +217,9 @@ export default function ContentImportPanel({
               {preview.coverage.behavior} code/design exclusions ·{" "}
               {preview.coverage.bindings} dynamic bindings
             </p>
-            <p className="mt-2">Source: {preview.catalog.source_ref}</p>
+            <p className="mt-2 break-all">
+              Source: {preview.catalog.source_ref}
+            </p>
           </div>
           {!preview.coverage.complete && (
             <div role="alert" className="text-sm text-red-700">

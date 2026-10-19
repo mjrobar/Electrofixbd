@@ -6,6 +6,7 @@ import {
 } from "./migration-ledger";
 import { ApiError } from "../errors";
 import { digest } from "../content-import";
+import { inspectAdminUpgradeSchema } from "./admin-upgrade-schema";
 export async function importMigrationHistory(db: Pick<pg.Pool, "query">) {
   let validation: Awaited<ReturnType<typeof inspectMigrationLedgers>>;
   try {
@@ -32,6 +33,19 @@ export async function importMigrationHistory(db: Pick<pg.Pool, "query">) {
       "MIGRATION_PROVENANCE_UNVERIFIED",
       "Historical SQL/checksum provenance is incomplete. Review the read-only preflight before approving an import or rollback.",
     );
+  if (
+    validation.ledgers.some((l) =>
+      l.entries.some((e) => "name" in e && e.name === "007_admin_upgrade.sql"),
+    )
+  ) {
+    const schema = await inspectAdminUpgradeSchema(db, true);
+    if (!schema.compatible)
+      throw new ApiError(
+        409,
+        "ADMIN_UPGRADE_SCHEMA_INVALID",
+        "Recorded optional Migration 007 does not match its required private schema. Review the read-only preflight; no repair was attempted.",
+      );
+  }
   return {
     source: validation.selected,
     history_digest: digest(validation),

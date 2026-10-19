@@ -1,174 +1,327 @@
-import React, { useEffect, useState } from "react";
-import "./admin.css";
-import OperationsPanel from "./OperationsPanel";
-import SecurityPanel from "./SecurityPanel";
-import { canLeaveAdmin } from "./ui";
-import Analytics from "./Analytics";
-import ContentEditor from "./ContentEditor";
+import React, { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
-  Activity,
-  ArrowRight,
   Bell,
-  CalendarDays,
   Check,
-  ChevronRight,
-  CircleHelp,
   ClipboardList,
   FileText,
   LayoutDashboard,
   LogOut,
   Menu,
   MessageSquare,
-  Monitor,
+  Moon,
   RefreshCw,
-  ShieldCheck,
-  Smartphone,
-  Sparkles,
-  Star,
+  Settings,
+  Sun,
   Wrench,
   X,
 } from "lucide-react";
-
+import "./admin.css";
+import OperationsPanel from "./OperationsPanel";
+import Dashboard from "./Dashboard";
+import AdminDialog from "./AdminDialog";
+import RecoveryPanel, {
+  recoveryActionFromLocation,
+  type RecoveryAction,
+} from "./RecoveryPanel";
+import {
+  adminInteractionActive,
+  adminRequest,
+  canLeaveAdmin,
+  Feedback,
+  ui,
+  type Row,
+} from "./ui";
+import {
+  bookingAlerts,
+  fetchBookingFeed,
+  createAdminPoller,
+  readCheckpoint,
+  type BookingFeed,
+} from "./live-data";
+import { bdDate } from "./operations-model";
+const ContentEditor = lazy(() => import("./ContentEditor"));
+const SettingsPanel = lazy(() => import("./SettingsPanel"));
 type Panel = "overview" | "bookings" | "contacts" | "content" | "settings";
-type Booking = {
-  booking_number: string;
-  customer_name: string;
-  phone: string;
-  address: string;
-  service_name: string;
-  status: string;
-  notes?: string;
-  created_at: string;
-};
-type Contact = {
-  id: string;
-  name: string;
-  phone: string;
-  message: string;
-  status: string;
-  created_at: string;
-};
-type Overview = {
-  bookings: { total: number; pending: number };
-  contacts: { total: number; unread: number };
-  services: number;
-  works: number;
-  testimonials: number;
-  days?: { day: string; bookings: number }[];
-  statuses?: { status: string; total: number }[];
-};
-const tabs: {
-  key: Panel;
-  label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-}[] = [
-  { key: "overview", label: "Overview", icon: LayoutDashboard },
-  { key: "bookings", label: "Bookings", icon: ClipboardList },
-  { key: "contacts", label: "Messages", icon: MessageSquare },
-  { key: "content", label: "Website Content", icon: FileText },
-  { key: "settings", label: "Settings", icon: ShieldCheck },
-];
-const styles = {
-  card: "rounded-2xl border border-slate-200/80 bg-white shadow-sm",
-  button:
-    "rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 transition-colors disabled:opacity-50",
-  field:
-    "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100",
-};
-async function request(path: string, init?: RequestInit) {
-  const resp = await fetch("/api/admin" + path, {
-    credentials: "same-origin",
-    cache: "no-store",
-    ...init,
-    headers: {
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
-      ...(init?.method && init.method !== "GET"
-        ? { "X-Admin-Request": "1" }
-        : {}),
-      ...init?.headers,
-    },
-  });
-  const body = await resp.json().catch(() => ({}));
-  if (resp.status === 401)
-    window.dispatchEvent(new Event("admin-session-expired"));
-  if (!resp.ok) throw new Error(body.error || "Unable to complete request.");
-  return body;
-}
-const formatDate = (s: string) =>
-  new Date(s).toLocaleDateString("en-BD", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-const statusColor = (status: string) =>
-  status === "completed" || status === "replied"
-    ? "bg-emerald-50 text-emerald-700"
-    : status === "pending" || status === "new"
-      ? "bg-amber-50 text-amber-700"
-      : "bg-indigo-50 text-indigo-700";
-export default function AdminApp() {
-  const [checking, setChecking] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [panel, setPanel] = useState<Panel>("overview");
-  function navigate(next: Panel) {
-    if (next !== panel && canLeaveAdmin()) setPanel(next);
-  }
-  const [drawer, setDrawer] = useState(false);
-  const [overview, setOverview] = useState<Overview | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshVersion, setRefreshVersion] = useState(0);
-  function refreshView() {
-    if (canLeaveAdmin()) {
-      setRefreshVersion((v) => v + 1);
-      void load();
-    }
-  }
-  useEffect(() => {
-    request("/me")
-      .then(() => setAuthenticated(true))
-      .catch(() => setAuthenticated(false))
-      .finally(() => setChecking(false));
-  }, []);
-  async function load() {
-    setRefreshing(true);
-    setError("");
+const tabs = [
+  { key: "overview", label: "Overview", Icon: LayoutDashboard },
+  { key: "bookings", label: "Bookings", Icon: ClipboardList },
+  { key: "contacts", label: "Messages", Icon: MessageSquare },
+  { key: "content", label: "Website Content", Icon: FileText },
+  { key: "settings", label: "Settings", Icon: Settings },
+] as const;
+const storage = {
+  remove(key: string) {
     try {
-      const [a, b, c] = await Promise.all([
-        request("/overview"),
-        request("/bookings"),
-        request("/contacts"),
+      window.localStorage.removeItem(key);
+    } catch {
+      /* optional storage */
+    }
+  },
+  get(key: string) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  set(key: string, value: string) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      /* Storage is optional; never business persistence. */
+    }
+  },
+};
+function BangladeshClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return (
+    <time
+      className="efb-bd-clock"
+      dateTime={now.toISOString()}
+      aria-label="Bangladesh time (Asia/Dhaka)"
+    >
+      <span className="efb-clock-dot" aria-hidden="true" />
+      BDT{" "}
+      <strong>
+        {new Intl.DateTimeFormat("en-BD", {
+          timeZone: "Asia/Dhaka",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        }).format(now)}
+      </strong>
+      <span className="efb-clock-date">
+        {new Intl.DateTimeFormat("en-BD", {
+          timeZone: "Asia/Dhaka",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }).format(now)}
+      </span>
+    </time>
+  );
+}
+export default function AdminApp() {
+  const [checking, setChecking] = useState(true),
+    [authenticated, setAuthenticated] = useState(false),
+    [username, setUsername] = useState(""),
+    [password, setPassword] = useState(""),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(""),
+    [panel, setPanel] = useState<Panel>("overview"),
+    [menu, setMenu] = useState(false),
+    [notifications, setNotifications] = useState(false),
+    [overview, setOverview] = useState<Row | null>(null),
+    [bookings, setBookings] = useState<Row[]>([]),
+    [refreshing, setRefreshing] = useState(false),
+    [refreshVersion, setRefreshVersion] = useState(0),
+    [dark, setDark] = useState(() => storage.get("efb-admin-theme") === "dark"),
+    [feed, setFeed] = useState<BookingFeed | null>(null),
+    [liveState, setLiveState] = useState("Connecting…"),
+    [toast, setToast] = useState(""),
+    [permission, setPermission] = useState(() =>
+      "Notification" in window ? Notification.permission : "unavailable",
+    ),
+    [recovering, setRecovering] = useState(false),
+    [action, setAction] = useState<RecoveryAction | null>(
+      recoveryActionFromLocation,
+    );
+  const inFlight = useRef(false),
+    mainAbort = useRef<AbortController | null>(null),
+    checkpoint = useRef(readCheckpoint(storage.get("efb-admin-alerts-v1"))),
+    lastChange = useRef<string | null>(null),
+    poll = useRef<(() => Promise<void>) | null>(null);
+  useEffect(() => {
+    storage.set("efb-admin-theme", dark ? "dark" : "light");
+  }, [dark]);
+  useEffect(() => {
+    if (action)
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search,
+      );
+  }, [action]);
+  function clearSession() {
+    mainAbort.current?.abort();
+    setAuthenticated(false);
+    setOverview(null);
+    setBookings([]);
+    setFeed(null);
+    setNotifications(false);
+    lastChange.current = null;
+  }
+  useEffect(() => {
+    const abort = new AbortController();
+    void adminRequest("/me", "GET", undefined, abort.signal)
+      .then(() => {
+        if (!abort.signal.aborted) setAuthenticated(true);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!abort.signal.aborted) setChecking(false);
+      });
+    const expired = () => clearSession();
+    window.addEventListener("admin-session-expired", expired);
+    return () => {
+      abort.abort();
+      window.removeEventListener("admin-session-expired", expired);
+    };
+  }, []);
+  async function load(silent = false, signal = mainAbort.current?.signal) {
+    if (inFlight.current || signal?.aborted) return;
+    inFlight.current = true;
+    if (!silent) {
+      setRefreshing(true);
+      setError("");
+    }
+    try {
+      const [a, b] = await Promise.all([
+        adminRequest("/overview", "GET", undefined, signal),
+        adminRequest("/bookings", "GET", undefined, signal),
       ]);
-      setOverview(a);
-      setBookings(b.items);
-      setContacts(c.items);
+      if (!signal?.aborted) {
+        setOverview(a);
+        setBookings(b.items);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unable to load dashboard.");
+      if (!signal?.aborted) {
+        if (!silent) setError((e as Error).message);
+        else setLiveState("Update failed · manual refresh available");
+      }
     } finally {
-      setRefreshing(false);
+      inFlight.current = false;
+      if (!signal?.aborted) setRefreshing(false);
     }
   }
   useEffect(() => {
-    if (authenticated) void load();
+    if (!authenticated) return;
+    const abort = new AbortController();
+    mainAbort.current = abort;
+    const poller = createAdminPoller({
+      allowed: () => {
+        if (document.visibilityState !== "visible") {
+          setLiveState("Tab hidden · updates paused");
+          return false;
+        }
+        if (!navigator.onLine) {
+          setLiveState("Offline · updates paused");
+          return false;
+        }
+        if (adminInteractionActive()) {
+          setLiveState("Editing or dialog open · updates paused");
+          return false;
+        }
+        return !inFlight.current;
+      },
+      task: async (signal) => {
+        const data = await fetchBookingFeed(
+          (path) => adminRequest(path, "GET", undefined, signal),
+          storage.get("efb-admin-bookings-seen"),
+          () => storage.remove("efb-admin-bookings-seen"),
+        );
+        if (signal.aborted || abort.signal.aborted) return;
+        const delta = bookingAlerts(checkpoint.current, data);
+        checkpoint.current = delta.checkpoint;
+        storage.set("efb-admin-alerts-v1", JSON.stringify(delta.checkpoint));
+        setFeed(data);
+        setLiveState("Updated " + bdDate(data.server_time) + " · BDT");
+        if (delta.count) {
+          setToast(
+            delta.count === 1
+              ? "A new booking has arrived."
+              : `${delta.count} new bookings have arrived.`,
+          );
+          if (
+            "Notification" in window &&
+            navigator.onLine &&
+            document.visibilityState === "visible" &&
+            window.isSecureContext &&
+            Notification.permission === "granted"
+          ) {
+            try {
+              new Notification("ElectroFix BD · new booking", {
+                body:
+                  delta.count === 1
+                    ? delta.fresh[0]?.booking_number ||
+                      "A new service request is available in Admin."
+                    : `${delta.count} new requests. Open Admin to review.`,
+                tag: "efb-admin-new-booking",
+              });
+            } catch {
+              /* In-app notice remains available. */
+            }
+          }
+        }
+        if (lastChange.current !== data.change_token) {
+          lastChange.current = data.change_token;
+          await load(true, signal);
+          if (!signal.aborted)
+            window.dispatchEvent(new Event("admin-data-updated"));
+        }
+      },
+      onError: () =>
+        setLiveState(
+          navigator.onLine
+            ? "Update failed · retrying when safe"
+            : "Offline · updates paused",
+        ),
+    });
+    poll.current = poller.tick;
+    void load(false, abort.signal).then(() => poller.tick());
+    const resume = () => {
+      if (!navigator.onLine) setLiveState("Offline · updates paused");
+      else if (document.visibilityState !== "visible")
+        setLiveState("Tab hidden · updates paused");
+      else {
+        setLiveState("Waiting for a safe refresh…");
+        void poller.tick();
+      }
+    };
+    const storageChange = (e: StorageEvent) => {
+      if (e.key === "efb-admin-alerts-v1")
+        checkpoint.current = readCheckpoint(e.newValue);
+    };
+    const saved = () => {
+      lastChange.current = null;
+    };
+    for (const event of ["online", "offline", "focus"])
+      window.addEventListener(event, resume);
+    document.addEventListener("visibilitychange", resume);
+    window.addEventListener("storage", storageChange);
+    window.addEventListener("admin-operation-saved", saved);
+    return () => {
+      abort.abort();
+      poller.stop();
+      poll.current = null;
+      for (const event of ["online", "offline", "focus"])
+        window.removeEventListener(event, resume);
+      document.removeEventListener("visibilitychange", resume);
+      window.removeEventListener("storage", storageChange);
+      window.removeEventListener("admin-operation-saved", saved);
+    };
   }, [authenticated]);
+  function navigate(next: Panel) {
+    if (next !== panel && canLeaveAdmin()) {
+      setPanel(next);
+      setMenu(false);
+    }
+  }
   async function login(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      await request("/login", {
-        method: "POST",
-        body: JSON.stringify({ username, password }),
-      });
+      await adminRequest("/login", "POST", { username, password });
       setPassword("");
       setAuthenticated(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Login failed.");
+      setError((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -176,415 +329,353 @@ export default function AdminApp() {
   async function logout() {
     if (!canLeaveAdmin()) return;
     try {
-      await request("/logout", { method: "POST", body: "{}" });
-      setAuthenticated(false);
-      setOverview(null);
-      setBookings([]);
-      setContacts([]);
+      await adminRequest("/logout", "POST", {});
+      clearSession();
     } catch (e) {
       setError((e as Error).message);
     }
   }
-  useEffect(() => {
-    const expire = () => {
-      setAuthenticated(false);
-      setOverview(null);
-      setBookings([]);
-      setContacts([]);
-    };
-    window.addEventListener("admin-session-expired", expire);
-    return () => window.removeEventListener("admin-session-expired", expire);
-  }, []);
+  function manualRefresh() {
+    if (!canLeaveAdmin()) return;
+    lastChange.current = null;
+    if (panel === "content" || panel === "settings")
+      setRefreshVersion((v) => v + 1);
+    void load().then(() => {
+      window.dispatchEvent(new Event("admin-data-updated"));
+      void poll.current?.();
+    });
+  }
+  const className = "efb-admin" + (dark ? " efb-admin-dark" : "");
   if (checking)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
-        <RefreshCw className="mr-2 animate-spin" size={18} />
-        Loading admin portal...
+      <div className={className + " efb-login-shell"}>
+        <p role="status">Loading owner workspace…</p>
       </div>
     );
-  if (!authenticated)
+  if (!authenticated || action)
     return (
-      <div className="efb-admin relative flex min-h-screen items-center justify-center overflow-hidden bg-[#090f23] px-5 py-12 text-slate-900">
-        <div className="pointer-events-none absolute -top-36 -left-28 h-[450px] w-[450px] rounded-full bg-[#004179]/25 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-36 -right-28 h-[450px] w-[450px] rounded-full bg-sky-500/20 blur-3xl" />
-        <div className="relative w-full max-w-md rounded-[30px] border border-white/20 bg-white p-7 shadow-2xl sm:p-10">
-          <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
-            <Wrench size={25} />
+      <div className={className + " efb-login-shell"}>
+        <div className="efb-login-card">
+          <div className="efb-login-mark">
+            <Wrench size={24} />
           </div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[.22em] text-indigo-600">
-            ElectroFix BD / Control Center
-          </p>
-          <h1 className="text-3xl font-extrabold tracking-tight">
-            Welcome back.
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            Sign in to manage your business, customers and content from one
-            place.
-          </p>
-          <form onSubmit={login} className="mt-8 space-y-4">
-            <label className="block text-sm font-semibold">
-              Username
-              <input
-                required
-                autoComplete="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className={styles.field + " mt-2"}
-                placeholder="Admin username"
-              />
-            </label>
-            <label className="block text-sm font-semibold">
-              Password
-              <input
-                required
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={styles.field + " mt-2"}
-                placeholder="Enter your password"
-              />
-            </label>
-            {error && (
-              <p
-                role="alert"
-                className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700"
-              >
-                {error}
+          <p className="efb-eyebrow">ElectroFix BD / Owner workspace</p>
+          {recovering || action ? (
+            <RecoveryPanel
+              action={action}
+              onBack={() => {
+                if (canLeaveAdmin()) {
+                  setRecovering(false);
+                  setAction(null);
+                  clearSession();
+                }
+              }}
+            />
+          ) : (
+            <>
+              <h1>Welcome back.</h1>
+              <p className="efb-muted">
+                Sign in to manage your business and website.
               </p>
-            )}
-            <button
-              type="submit"
-              disabled={busy}
-              className={styles.button + " mt-2 w-full py-3.5"}
-            >
-              {busy ? "Signing in..." : "Secure sign in →"}
-            </button>
-          </form>
-          <p className="mt-7 flex items-center gap-2 text-xs text-slate-500">
-            <ShieldCheck size={15} className="text-emerald-600" /> Protected
-            administrative access
-          </p>
+              <form className="space-y-4 mt-6" onSubmit={login}>
+                <label className="block">
+                  Username
+                  <input
+                    required
+                    maxLength={150}
+                    autoComplete="username"
+                    className={ui.field}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                </label>
+                <label className="block">
+                  Password
+                  <input
+                    required
+                    type="password"
+                    maxLength={1024}
+                    autoComplete="current-password"
+                    className={ui.field}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </label>
+                <Feedback error={error} />
+                <button className={ui.primary + " w-full"} disabled={busy}>
+                  {busy ? "Signing in…" : "Secure sign in"}
+                </button>
+              </form>
+              <button
+                className="efb-text-button mt-4"
+                onClick={() => setRecovering(true)}
+              >
+                Forgot password?
+              </button>
+              <p className="efb-muted mt-6">
+                Protected access for one trusted owner.
+              </p>
+            </>
+          )}
         </div>
       </div>
     );
   const active = tabs.find((t) => t.key === panel)!;
-  return (
-    <div className="efb-admin min-h-screen bg-[#F6F8FA] text-slate-900">
-      <div className="lg:flex">
-        <aside
-          className={`fixed inset-y-0 left-0 z-40 w-[270px] transform border-r border-slate-200 bg-[#11243A] text-slate-100 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${drawer ? "translate-x-0" : "-translate-x-full"}`}
+  const navigation = (
+    <nav aria-label="Admin workspace" className="efb-sidebar-nav">
+      {tabs.map(({ key, label, Icon }) => (
+        <button
+          key={key}
+          aria-current={panel === key ? "page" : undefined}
+          onClick={() => navigate(key)}
         >
-          <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-[#004179] p-2.5">
-                <Wrench size={20} />
-              </div>
-              <div>
-                <strong className="block text-base leading-5">
-                  ElectroFix BD
-                </strong>
-                <span className="text-xs text-indigo-200">
-                  Business control center
-                </span>
-              </div>
-            </div>
+          <Icon size={19} />
+          {label}
+          {key === "bookings" && Boolean(feed?.unread) && (
+            <span className="efb-nav-count" aria-hidden="true">
+              {Math.min(feed!.unread, 999)}
+            </span>
+          )}
+        </button>
+      ))}
+    </nav>
+  );
+  return (
+    <div className={className + " efb-admin-shell"}>
+      <aside className="efb-sidebar">
+        <div className="efb-sidebar-brand">
+          <Wrench size={23} />
+          <div>
+            <strong>ElectroFix BD</strong>
+            <small>Owner workspace</small>
+          </div>
+        </div>
+        {navigation}
+        <div className="efb-sidebar-bottom">
+          <p>Secure business workspace</p>
+          <button onClick={() => void logout()}>
+            <LogOut size={18} /> Sign out
+          </button>
+        </div>
+      </aside>
+      <div className="efb-main-column">
+        <header className="efb-topbar">
+          <div className="flex items-center gap-2 min-w-0">
             <button
-              className="lg:hidden"
-              onClick={() => setDrawer(false)}
-              aria-label="Close menu"
+              className="efb-icon-button lg:hidden"
+              aria-label="Open menu"
+              onClick={() => setMenu(true)}
             >
-              <X size={20} />
+              <Menu size={21} />
+            </button>
+            <div className="min-w-0">
+              <p className="efb-muted text-xs">Workspace</p>
+              <strong className="block truncate">{active.label}</strong>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              className="efb-icon-button"
+              aria-label={dark ? "Use light mode" : "Use dark mode"}
+              title={dark ? "Light mode" : "Dark mode"}
+              onClick={() => setDark((v) => !v)}
+            >
+              {dark ? <Sun size={19} /> : <Moon size={19} />}
+            </button>
+            <button
+              className="efb-icon-button relative"
+              aria-label={
+                "Booking notifications" +
+                (feed ? `, ${feed.unread} unread` : "")
+              }
+              onClick={() => setNotifications(true)}
+            >
+              <Bell size={19} />
+              {Boolean(feed?.unread) && (
+                <span className="efb-notification-dot" />
+              )}
+            </button>
+            <button
+              className="efb-icon-button"
+              aria-label="Refresh dashboard"
+              disabled={refreshing}
+              onClick={manualRefresh}
+            >
+              <RefreshCw
+                size={19}
+                className={refreshing ? "animate-spin" : ""}
+              />
             </button>
           </div>
-          <div className="px-4 pt-7">
-            <span className="px-3 text-[10px] font-bold uppercase tracking-[.25em] text-slate-400">
-              Workspace
-            </span>
-            <nav className="mt-3 space-y-1.5">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => {
-                    navigate(tab.key);
-                    setDrawer(false);
-                  }}
-                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${panel === tab.key ? "bg-[#004179] text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
-                >
-                  <tab.icon size={18} />
-                  {tab.label}
-                  {panel === tab.key && (
-                    <ChevronRight size={15} className="ml-auto" />
-                  )}
-                </button>
-              ))}
-            </nav>
+        </header>
+        <main className="efb-main">
+          <div className="efb-workspace-meta">
+            <BangladeshClock />
+            <p className="efb-live-status">{liveState} · 20s refresh</p>
           </div>
-          <div className="absolute bottom-5 left-4 right-4">
-            <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300">
-                <Activity size={15} /> Administrator online
-              </div>
-              <p className="mt-1 text-xs leading-5 text-slate-400">
-                Secure business workspace
+          <div className="efb-page-heading">
+            <div>
+              <p className="efb-eyebrow">Business control center</p>
+              <h1>
+                {panel === "overview" ? "Business overview" : active.label}
+              </h1>
+              <p className="efb-muted">
+                {panel === "overview"
+                  ? "A clear view of your day, in Bangladesh time."
+                  : panel === "bookings"
+                    ? "Review requests and keep every next step clear."
+                    : panel === "contacts"
+                      ? "A focused inbox for customer follow-ups."
+                      : panel === "settings"
+                        ? "Account security, branding and approved integrations."
+                        : "Review drafts and publish changes deliberately."}
               </p>
             </div>
-            <button
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/10"
-              onClick={() => void logout()}
-            >
-              <LogOut size={18} /> Sign out
-            </button>
           </div>
-        </aside>
-        {drawer && (
-          <button
-            aria-label="Dismiss menu"
-            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-            onClick={() => setDrawer(false)}
-          />
-        )}
-        <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 flex h-18 items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-8">
-            <div className="flex items-center gap-3">
+          <Feedback error={error} />
+          {toast && (
+            <div className="efb-booking-toast" role="status">
+              <Bell size={18} />
+              <span>{toast}</span>
               <button
-                className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
-                onClick={() => setDrawer(true)}
-                aria-label="Open menu"
-              >
-                <Menu />
-              </button>
-              <div>
-                <div className="text-xs text-slate-400">
-                  Workspace / {active.label}
-                </div>
-                <div className="font-bold tracking-tight">{active.label}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={refreshView}
-                aria-label="Refresh dashboard"
-                disabled={refreshing}
-                className="rounded-xl border border-slate-200 p-2.5 text-slate-600 hover:bg-slate-50"
-              >
-                <RefreshCw
-                  size={18}
-                  className={refreshing ? "animate-spin" : ""}
-                />
-              </button>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-sm font-bold text-indigo-700">
-                AD
-              </div>
-            </div>
-          </header>
-          <main className="mx-auto max-w-7xl px-4 py-7 pb-28 sm:px-8 sm:py-10 lg:pb-10">
-            {error && (
-              <div
-                role="alert"
-                className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
-              >
-                {error}
-              </div>
-            )}
-            <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[.2em] text-indigo-600">
-                  ElectroFix BD / Admin
-                </p>
-                <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-                  {panel === "overview" ? "Business overview" : active.label}
-                </h1>
-                <p className="mt-2 text-sm text-slate-500">
-                  {panel === "overview"
-                    ? "Here’s your business at a glance."
-                    : "Stay in control from desktop or mobile."}
-                </p>
-              </div>
-              <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-500">
-                {new Date().toLocaleDateString("en-BD", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </div>
-            </div>
-            {panel === "overview" && (
-              <>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  {[
-                    {
-                      label: "Total bookings",
-                      value: overview?.bookings.total,
-                      meta:
-                        (overview?.bookings.pending || 0) + " awaiting action",
-                      icon: ClipboardList,
-                      theme: "bg-indigo-100 text-indigo-600",
-                    },
-                    {
-                      label: "Customer messages",
-                      value: overview?.contacts.total,
-                      meta:
-                        (overview?.contacts.unread || 0) + " unread messages",
-                      icon: MessageSquare,
-                      theme: "bg-amber-100 text-amber-600",
-                    },
-                    {
-                      label: "Active services",
-                      value: overview?.services,
-                      meta: "Services available",
-                      icon: Wrench,
-                      theme: "bg-emerald-100 text-emerald-600",
-                    },
-                    {
-                      label: "Portfolio & reviews",
-                      value:
-                        (overview?.works || 0) + (overview?.testimonials || 0),
-                      meta: "Works and testimonials",
-                      icon: Star,
-                      theme: "bg-sky-100 text-sky-600",
-                    },
-                  ].map((card) => (
-                    <div
-                      key={card.label}
-                      className={styles.card + " p-5 sm:p-6"}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-slate-500">
-                          {card.label}
-                        </span>
-                        <div className={"rounded-xl p-2.5 " + card.theme}>
-                          <card.icon size={20} />
-                        </div>
-                      </div>
-                      <div className="mt-4 text-3xl font-black tracking-tight">
-                        {card.value ?? "—"}
-                      </div>
-                      <p className="mt-2 text-xs text-slate-500">{card.meta}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-                  <section className={styles.card + " overflow-hidden"}>
-                    <div className="flex items-center justify-between border-b border-slate-100 p-5 sm:p-6">
-                      <div>
-                        <h2 className="text-lg font-bold">Recent bookings</h2>
-                        <p className="mt-1 text-xs text-slate-500">
-                          Latest customer requests
-                        </p>
-                      </div>
-                      <button
-                        className="text-sm font-semibold text-indigo-600"
-                        onClick={() => navigate("bookings")}
-                      >
-                        View all <ArrowRight className="inline" size={15} />
-                      </button>
-                    </div>
-                    <div className="divide-y divide-slate-100">
-                      {bookings.slice(0, 5).map((b) => (
-                        <div
-                          key={b.booking_number}
-                          className="flex items-center justify-between gap-3 p-4 sm:px-6"
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-bold">
-                              {b.customer_name}
-                            </p>
-                            <p className="mt-1 truncate text-xs text-slate-500">
-                              {b.service_name} • {b.booking_number}
-                            </p>
-                          </div>
-                          <span
-                            className={
-                              "rounded-full px-3 py-1 text-xs font-bold capitalize " +
-                              statusColor(b.status)
-                            }
-                          >
-                            {b.status.replaceAll("_", " ")}
-                          </span>
-                        </div>
-                      ))}
-                      {!bookings.length && (
-                        <p className="p-6 text-sm text-slate-500">
-                          No bookings yet.
-                        </p>
-                      )}
-                    </div>
-                  </section>
-                  <section className={styles.card + " p-6"}>
-                    <div className="mb-5 inline-flex rounded-xl bg-indigo-100 p-3 text-indigo-600">
-                      <Sparkles size={22} />
-                    </div>
-                    <h2 className="text-xl font-extrabold">
-                      Your command center
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-500">
-                      Track customer requests and keep your operations moving.
-                      Save and publish reviewed content, restore earlier
-                      versions and manage customer requests from this workspace.
-                    </p>
-                    <button
-                      onClick={() => navigate("contacts")}
-                      className={styles.button + " mt-6 w-full"}
-                    >
-                      Open customer inbox{" "}
-                      <ArrowRight className="ml-1 inline" size={16} />
-                    </button>
-                  </section>
-                </div>
-                <Analytics
-                  days={overview?.days}
-                  statuses={overview?.statuses}
-                />
-              </>
-            )}
-            {panel === "bookings" && (
-              <OperationsPanel
-                key={"bookings" + refreshVersion}
-                kind="bookings"
-              />
-            )}
-            {panel === "contacts" && (
-              <OperationsPanel
-                key={"contacts" + refreshVersion}
-                kind="contacts"
-              />
-            )}
-            {panel === "content" && <ContentEditor key={refreshVersion} />}
-            {panel === "settings" && (
-              <SecurityPanel
-                key={refreshVersion}
-                onLogout={() => {
-                  setAuthenticated(false);
-                  setOverview(null);
-                  setBookings([]);
-                  setContacts([]);
+                className="efb-text-button"
+                onClick={() => {
+                  navigate("bookings");
+                  setToast("");
                 }}
-              />
-            )}
-          </main>
-        </div>
-      </div>
-      <div className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t border-slate-200 bg-white/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-lg backdrop-blur lg:hidden">
-        {tabs.slice(0, 4).map((t) => (
-          <button
-            key={t.key}
-            onClick={() => navigate(t.key)}
-            className={
-              "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold " +
-              (panel === t.key
-                ? "bg-indigo-50 text-indigo-700"
-                : "text-slate-500")
+              >
+                Review
+              </button>
+              <button
+                className="efb-icon-button"
+                aria-label="Dismiss booking notice"
+                onClick={() => setToast("")}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+          {panel === "overview" && (
+            <Dashboard
+              overview={overview}
+              bookings={bookings}
+              onBookings={() => navigate("bookings")}
+              onMessages={() => navigate("contacts")}
+            />
+          )}
+          {panel === "bookings" && (
+            <OperationsPanel key="bookings" kind="bookings" />
+          )}
+          {panel === "contacts" && (
+            <OperationsPanel key="contacts" kind="contacts" />
+          )}
+          <Suspense
+            fallback={
+              <p role="status" className="efb-muted">
+                Loading workspace…
+              </p>
             }
           >
-            <t.icon size={19} />
-            <span className="truncate">
-              {t.label === "Website Content" ? "Content" : t.label}
-            </span>
+            {panel === "content" && <ContentEditor key={refreshVersion} />}
+            {panel === "settings" && (
+              <SettingsPanel key={refreshVersion} onLogout={clearSession} />
+            )}
+          </Suspense>
+        </main>
+      </div>
+      <nav className="efb-mobile-nav" aria-label="Mobile admin navigation">
+        {tabs.map(({ key, label, Icon }) => (
+          <button
+            key={key}
+            aria-current={panel === key ? "page" : undefined}
+            onClick={() => navigate(key)}
+          >
+            <Icon size={19} />
+            <span>{key === "content" ? "Content" : label}</span>
           </button>
         ))}
-      </div>
+      </nav>
+      {menu && (
+        <AdminDialog title="Workspace" onClose={() => setMenu(false)}>
+          {navigation}
+          <button className={ui.button} onClick={() => void logout()}>
+            <LogOut size={18} />
+            Sign out
+          </button>
+        </AdminDialog>
+      )}
+      {notifications && (
+        <AdminDialog
+          title="Booking notifications"
+          onClose={() => setNotifications(false)}
+        >
+          <p className="efb-muted">
+            {feed?.unread ?? 0} unread · Read state:{" "}
+            {feed?.read_state === "shared-owner"
+              ? "shared across owner devices"
+              : "this browser until approved upgrade storage is enabled"}
+            .
+          </p>
+          <p className="efb-muted">
+            Alerts work while this Admin tab is open, online and safe to
+            refresh. Browser-closed delivery requires a separately reviewed Web
+            Push service.
+          </p>
+          <button
+            className={ui.button}
+            disabled={
+              permission === "granted" ||
+              permission === "denied" ||
+              permission === "unavailable" ||
+              !window.isSecureContext
+            }
+            onClick={async () => {
+              if ("Notification" in window && window.isSecureContext) {
+                try {
+                  setPermission(await Notification.requestPermission());
+                } catch {
+                  setPermission("unavailable");
+                }
+              }
+            }}
+          >
+            Enable browser notifications
+          </button>
+          <p className="efb-muted">
+            Browser permission: {permission}. HTTPS or localhost required;
+            browser/OS delivery is not guaranteed.
+          </p>
+          <div className="efb-notification-list">
+            {feed?.items.map((item) => (
+              <div key={item.booking_number}>
+                <strong>{item.booking_number}</strong>
+                <time>{bdDate(item.created_at)}</time>
+              </div>
+            ))}
+            {!feed?.items.length && <p>No booking notifications yet.</p>}
+          </div>
+          <button
+            className={ui.primary}
+            disabled={!feed?.latest_cursor}
+            onClick={async () => {
+              try {
+                const result = await adminRequest("/updates/seen", "POST", {
+                  cursor: feed!.latest_cursor,
+                });
+                storage.set("efb-admin-bookings-seen", feed!.latest_cursor!);
+                setFeed((prev) =>
+                  prev ? { ...prev, unread: result.unread } : prev,
+                );
+              } catch (e) {
+                setError((e as Error).message);
+              }
+            }}
+          >
+            <Check size={16} />
+            Mark current bookings seen
+          </button>
+        </AdminDialog>
+      )}
     </div>
   );
 }
