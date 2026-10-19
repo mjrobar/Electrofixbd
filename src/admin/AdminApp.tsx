@@ -51,6 +51,7 @@ type Contact = {
   created_at: string;
 };
 type Overview = {
+  today_bookings?: number;
   bookings: { total: number; pending: number };
   contacts: { total: number; unread: number };
   services: number;
@@ -444,8 +445,15 @@ export default function AdminApp() {
             </div>
             {panel === "overview" && (
               <>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                   {[
+                    {
+                      label: "Today’s bookings",
+                      value: overview?.today_bookings,
+                      meta: "Since midnight · Bangladesh time",
+                      icon: CalendarDays,
+                      theme: "bg-blue-100 text-blue-700",
+                    },
                     {
                       label: "Total bookings",
                       value: overview?.bookings.total,
