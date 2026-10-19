@@ -1,4 +1,5 @@
 import { createCustomerReviewsRouter } from "./customer-reviews";
+import { createPublicCmsRouter } from "./cms";
 import { configureProxy } from "./proxy";
 import { randomUUID } from "node:crypto";
 import express, { type RequestHandler } from "express";
@@ -321,6 +322,7 @@ export function createApp({ config, store }: { config: Config; store: Store }) {
     contentPool.on("error", () =>
       console.error("Site content idle database connection failed."),
     );
+    app.use("/api", createPublicCmsRouter(contentPool));
     app.use("/api", createCustomerReviewsRouter(contentPool, config));
     app.use("/api/site-content", createPublicSiteControlsRouter(contentPool));
   }

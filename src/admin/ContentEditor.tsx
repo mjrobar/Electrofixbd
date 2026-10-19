@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import CompleteCmsEditor from "./CompleteCmsEditor";
 import ImageUpload from "./ImageUpload";
 import SiteControlsEditor from "./SiteControlsEditor";
 import { SERVICES_DATA } from "../data/servicesData";
@@ -23,6 +24,7 @@ const fields: Record<
   }[]
 > = {
   services: [
+    { key: "sort_order", label: "Display order", type: "number" },
     { key: "slug", label: "URL slug", required: true },
     { key: "name", label: "Service title", required: true },
     {
@@ -51,6 +53,8 @@ const fields: Record<
     { key: "is_active", label: "Active", type: "boolean" },
   ],
   works: [
+    { key: "sort_order", label: "Display order", type: "number" },
+    { key: "display_date", label: "Original work caption / display date" },
     { key: "title", label: "Project title", required: true },
     { key: "slug", label: "URL slug", required: true },
     { key: "service_id", label: "Service Category", type: "category" },
@@ -66,6 +70,10 @@ const fields: Record<
     { key: "is_published", label: "Published", type: "boolean" },
   ],
   testimonials: [
+    { key: "sort_order", label: "Display order", type: "number" },
+    { key: "display_date", label: "Display date" },
+    { key: "display_time", label: "Display time" },
+    { key: "source_created_at", label: "Original source timestamp (ISO)" },
     { key: "customer_name", label: "Customer name", required: true },
     { key: "review", label: "Review", type: "textarea", required: true },
     { key: "service_id", label: "Service Category", type: "category" },
@@ -116,7 +124,9 @@ const empty: Record<Kind, RecordValue> = {
 export default function ContentEditor() {
   const [kind, setKind] = useState<Kind>("services"),
     [generation, setGeneration] = useState(0),
-    [dirty, setDirty] = useState(false);
+    [dirty, setDirty] = useState(false),
+    [cmsDirty, setCmsDirty] = useState(false),
+    [cmsBusy, setCmsBusy] = useState(false);
   return (
     <div className="space-y-5">
       <div className={ui.card}>
@@ -148,7 +158,8 @@ export default function ContentEditor() {
         </div>
       </div>
       <ContentModule key={kind + generation} kind={kind} onDirty={setDirty} />
-      <SiteControlsEditor />
+      <SiteControlsEditor externalBlocked={cmsDirty || cmsBusy} />
+      <CompleteCmsEditor onDirty={setCmsDirty} onBusy={setCmsBusy} />
     </div>
   );
 }
@@ -515,8 +526,8 @@ function ContentModule({
                         readOnly={f.key === "slug" && Boolean(editing.id)}
                         className={ui.field}
                         type={f.type === "number" ? "number" : "text"}
-                        min={1}
-                        max={f.type === "number" ? 5 : undefined}
+                        min={f.key === "rating" ? 1 : 0}
+                        max={f.key === "rating" ? 5 : undefined}
                         value={String(editing[f.key] ?? "")}
                         onChange={(e) => {
                           if (f.key === "slug") setCustomSlug(true);
@@ -563,9 +574,7 @@ function ContentModule({
                       Suggest available slug
                     </button>
                   )}
-                  {["cover_image", "media_url"].includes(
-                    f.key,
-                  ) && (
+                  {["cover_image", "media_url"].includes(f.key) && (
                     <ImageUpload
                       disabled={busy}
                       onBusy={setBusy}

@@ -29,13 +29,18 @@ export async function mediaRoot(config: Config) {
   const app = resolve(".");
   const within = (parent: string, child: string) => {
     const path = relative(parent, child);
-    return path === "" || (path !== ".." && !path.startsWith(".." + sep) && !isAbsolute(path));
+    return (
+      path === "" ||
+      (path !== ".." && !path.startsWith(".." + sep) && !isAbsolute(path))
+    );
   };
   if (
     root === parse(root).root ||
     within(root, app) ||
     within(app, root) ||
-    (config.NODE_ENV === "production" && process.platform !== "win32" && /^\/(tmp|var\/tmp)(\/|$)/.test(root))
+    (config.NODE_ENV === "production" &&
+      process.platform !== "win32" &&
+      /^\/(tmp|var\/tmp)(\/|$)/.test(root))
   )
     throw unavailable();
   await mkdir(root, { recursive: true, mode: 0o700 });
@@ -218,7 +223,7 @@ export async function serveImage(
   if (!admin) {
     const url = "/api/media/" + id;
     const visible = await pool.query(
-      `SELECT 1 WHERE EXISTS(SELECT 1 FROM public.services WHERE is_active IS TRUE AND archived_at IS NULL AND cover_image=$1) OR EXISTS(SELECT 1 FROM public.works WHERE is_published IS TRUE AND archived_at IS NULL AND media_url=$1) OR EXISTS(SELECT 1 FROM public.testimonials WHERE is_published IS TRUE AND archived_at IS NULL AND (avatar_url=$1 OR media_url=$1))`,
+      `SELECT 1 WHERE EXISTS(SELECT 1 FROM public.services WHERE is_active IS TRUE AND archived_at IS NULL AND cover_image=$1) OR EXISTS(SELECT 1 FROM public.works WHERE is_published IS TRUE AND archived_at IS NULL AND media_url=$1) OR EXISTS(SELECT 1 FROM public.testimonials WHERE is_published IS TRUE AND archived_at IS NULL AND (avatar_url=$1 OR media_url=$1)) OR EXISTS(SELECT 1 FROM public.site_content WHERE jsonb_path_exists(published, '$.**.image_url ? (@ == $url)', jsonb_build_object('url',$1::text)) OR jsonb_path_exists(published, '$.about_image_url ? (@ == $url)', jsonb_build_object('url',$1::text)) OR jsonb_path_exists(published, '$.logo_url ? (@ == $url)', jsonb_build_object('url',$1::text))) OR EXISTS(SELECT 1 FROM public.cms_documents WHERE publication_state='published' AND archived_at IS NULL AND jsonb_path_exists(published, '$.groups[*].items[*].fields[*] ? (@.kind == "media" && @.value == $url)', jsonb_build_object('url',$1::text)))`,
       [url],
     );
     if (!visible.rowCount)

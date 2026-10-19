@@ -1,0 +1,50 @@
+name: Windows regression (no database)
+
+on:
+  pull_request:
+    branches: [fix/windows-local-media-storage]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ""
+      MIGRATION_DATABASE_URL: ""
+      TEST_DATABASE_URL: ""
+      SECONDARY_DATABASE_URL: ""
+      SECURITY_DATABASE_URL: ""
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Confirm native Windows and database-free environment
+        run: |
+          if ($env:OS -ne 'Windows_NT') { throw 'Native Windows runner required.' }
+          foreach ($name in @('DATABASE_URL', 'MIGRATION_DATABASE_URL', 'TEST_DATABASE_URL', 'SECONDARY_DATABASE_URL', 'SECURITY_DATABASE_URL')) {
+            if ([Environment]::GetEnvironmentVariable($name)) { throw "Unexpected database configuration: $name" }
+          }
+          node --version
+          npm --version
+      - name: Clean locked install (strict peer dependencies)
+        run: npm ci --strict-peer-deps --no-audit --no-fund
+      - name: TypeScript lint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
+      - name: Non-destructive tests (database tests stay skipped)
+        run: npm test
+      - name: Node startup and routing (database unavailable)
+        run: npm run test:startup

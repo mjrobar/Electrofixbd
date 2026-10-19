@@ -49,18 +49,18 @@
         "subtitle": "slides[].titleBn",
         "description": "slides[].description",
         "image_url": "slides[].image",
-        "button_label": "slides[].primaryCta"
+        "button_label": "slides[].primaryCta",
+        "badge": "slides[].badge",
+        "primary_action": "slides[].primaryCta → booking callback",
+        "secondary_label": "slides[].secondaryCta",
+        "secondary_action": "slides[].isPhoneCall/isWhatsApp/isNavigateServices",
+        "secondary_url": "/services route only for navigate-services action",
+        "service_hint": "slides[].serviceHint",
+        "actions_configured": "true when original CTA behavior is mapped"
       },
-      "unmapped": [
-        "badge",
-        "secondaryCta",
-        "serviceHint",
-        "isPhoneCall",
-        "isWhatsApp",
-        "isNavigateServices"
-      ],
+      "unmapped": [],
       "missing": [
-        "button_url: booking callback has no URL; left blank"
+        "button_url: primary CTA uses application booking callback, not a web URL"
       ]
     },
     {
@@ -85,21 +85,21 @@
         "address": "BUSINESS_CONFIG.location (city only)",
         "hours": "BUSINESS_CONFIG.businessHours",
         "facebook_url": "BUSINESS_CONFIG.facebookUrl",
-        "youtube_url": "BUSINESS_CONFIG.youtubeUrl"
+        "youtube_url": "BUSINESS_CONFIG.youtubeUrl",
+        "short_name": "BUSINESS_CONFIG.shortName",
+        "tagline": "BUSINESS_CONFIG.tagline",
+        "phone_clean": "BUSINESS_CONFIG.phoneClean",
+        "phone_international": "BUSINESS_CONFIG.phoneInternational",
+        "service_coverage": "BUSINESS_CONFIG.serviceCoverage",
+        "experience": "BUSINESS_CONFIG.experience",
+        "circuit_board_specialty": "BUSINESS_CONFIG.circuitBoardSpecialty",
+        "about_image_url": "BUSINESS_CONFIG.aboutSectionImage"
       },
       "missing": [
         "email",
         "logo_url"
       ],
-      "unmapped": [
-        "shortName",
-        "tagline",
-        "phoneClean",
-        "phoneInternational",
-        "serviceCoverage",
-        "experience",
-        "circuitBoardSpecialty"
-      ]
+      "unmapped": []
     },
     {
       "module": "page_sections",
@@ -107,7 +107,12 @@
       "source": "src/components/home/AboutSection.tsx",
       "fields": {
         "heading": "first h2",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "AboutSection credential label",
+        "eyebrow_secondary": "AboutSection credential English label",
+        "group_heading": "AboutSection pillars heading",
+        "highlights": "engineeringPillars[] (title,subtitle,description,icon)",
+        "statistics": "stats animation target numbers and visible labels/suffixes"
       },
       "image_source": "src/data/siteConfig.ts: BUSINESS_CONFIG.aboutSectionImage"
     },
@@ -117,7 +122,13 @@
       "source": "src/components/home/EmergencyBanner.tsx",
       "fields": {
         "heading": "first h3",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "section badge text",
+        "eyebrow_secondary": "secondary badge (when authored)",
+        "group_heading": "section auxiliary heading/badge",
+        "description": "section supporting description",
+        "highlights": "source trust-highlight labels with icon IDs",
+        "actions": "source CTA labels and action semantics, no invented external URL"
       }
     },
     {
@@ -126,7 +137,13 @@
       "source": "src/components/home/FAQSection.tsx",
       "fields": {
         "heading": "first h2",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "section badge text",
+        "eyebrow_secondary": "secondary badge (when authored)",
+        "group_heading": "section auxiliary heading/badge",
+        "description": "section supporting description",
+        "highlights": "source trust-highlight labels with icon IDs",
+        "actions": "source CTA labels and action semantics, no invented external URL"
       }
     },
     {
@@ -135,7 +152,13 @@
       "source": "src/components/contact/ContactSection.tsx",
       "fields": {
         "heading": "first h1",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "section badge text",
+        "eyebrow_secondary": "secondary badge (when authored)",
+        "group_heading": "section auxiliary heading/badge",
+        "description": "section supporting description",
+        "highlights": "source trust-highlight labels with icon IDs",
+        "actions": "source CTA labels and action semantics, no invented external URL"
       }
     },
     {
@@ -144,7 +167,12 @@
       "source": "src/components/services/ServicesPageView.tsx",
       "fields": {
         "heading": "first h1",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "page badge",
+        "eyebrow_secondary": "secondary badge",
+        "description": "extra descriptive paragraph",
+        "image_url": "page hero background image",
+        "highlights": "ordered trust highlight labels and icon IDs"
       }
     },
     {
@@ -153,7 +181,12 @@
       "source": "src/components/works/OurWorksPageView.tsx",
       "fields": {
         "heading": "first h1",
-        "body": "first paragraph after heading"
+        "body": "first paragraph after heading",
+        "eyebrow": "page badge",
+        "eyebrow_secondary": "secondary badge",
+        "description": "extra descriptive paragraph",
+        "image_url": "page hero background image",
+        "highlights": "ordered trust highlight labels and icon IDs"
       }
     }
   ],
@@ -161,7 +194,7 @@
     "Snapshot of existing source text; no public files executed or changed.",
     "IDs and is_active=true are import metadata, not authored editorial content.",
     "Partial mapping: no invented URLs, email, logo or street address.",
-    "Only primary hero text/CTA label supported by current schema. Booking callbacks, badges, secondary CTAs and behavior remain owned by AI Studio.",
+    "Hero primary and secondary CTA labels/action types are retained. The original booking callback remains owned by the public frontend; imported action type must be handled by frontend integration.",
     "Page sections cover primary introductions, about, emergency and FAQ text only. Other nested cards, stats, navigation and footer text are outside the current schema."
   ],
   "data": {
@@ -173,7 +206,13 @@
         "description": "Reliable repair and servicing for AC, Refrigerator, Washing Machine, Microwave Oven & Dishwasher across all areas of Dhaka.",
         "image_url": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1600&q=80",
         "button_label": "Book a Service",
-        "is_active": true
+        "is_active": true,
+        "badge": "📍 ঢাকা – দ্রুত ও নির্ভরযোগ্য হোম সার্ভিস",
+        "secondary_label": "Call Now",
+        "secondary_action": "phone",
+        "service_hint": "AC Repair & Servicing",
+        "primary_action": "booking",
+        "actions_configured": true
       },
       {
         "id": "legacy-hero-2",
@@ -182,7 +221,13 @@
         "description": "Accurate fault diagnosis, master jet servicing, gas charging, and genuine parts replacement with 10+ years of practical field experience.",
         "image_url": "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=1600&q=80",
         "button_label": "Request a Service",
-        "is_active": true
+        "is_active": true,
+        "badge": "❄️ ইনভার্টার এসি ও রেফ্রিজারেটর স্পেশালিস্ট",
+        "secondary_label": "WhatsApp Us",
+        "secondary_action": "whatsapp",
+        "service_hint": "Refrigerator / Fridge Repair",
+        "primary_action": "booking",
+        "actions_configured": true
       },
       {
         "id": "legacy-hero-3",
@@ -191,7 +236,14 @@
         "description": "Electronic control board troubleshooting, micro-soldering, and inverter module recovery for compatible air conditioners and refrigerators.",
         "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80",
         "button_label": "Book Chip-Level Repair",
-        "is_active": true
+        "is_active": true,
+        "badge": "🛠️ সার্কিট বোর্ড রিপেয়ার – চিপ লেভেল কাজ",
+        "secondary_label": "Explore Services",
+        "secondary_action": "navigate",
+        "secondary_url": "/services",
+        "service_hint": "Circuit Board / Chip-Level Repair",
+        "primary_action": "booking",
+        "actions_configured": true
       }
     ],
     "faqs": [
@@ -251,7 +303,15 @@
       "address": "Dhaka, Bangladesh",
       "hours": "Open Everyday: 8:00 AM – 10:00 PM",
       "facebook_url": "https://www.facebook.com/jafransarder",
-      "youtube_url": "https://www.youtube.com/@ElectroFixBD-d9m"
+      "youtube_url": "https://www.youtube.com/@ElectroFixBD-d9m",
+      "short_name": "Electrofixbd",
+      "tagline": "Professional Home Appliance Repair & Servicing at Your Doorstep",
+      "service_coverage": "All areas of Dhaka — Home Service Available",
+      "experience": "10+ Years Experienced Technician",
+      "circuit_board_specialty": "Circuit Board Repair – Chip-Level Work",
+      "phone_clean": "01619487788",
+      "phone_international": "+8801619487788",
+      "about_image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80"
     },
     "page_sections": [
       {
@@ -261,7 +321,66 @@
         "heading": "হোম অ্যাপ্লায়েন্স মেরামতে পেশাদারিত্ব, সততা ও আধুনিক কারিগরি দক্ষতা",
         "body": "ভারী এসি, রেফ্রিজারেটর বা ওয়াশিং মেশিন দোকানে বয়ে নেওয়ার দুর্ভোগ এবং অপ্রয়োজনীয় মাদারবোর্ড পরিবর্তনের অযৌক্তিক ব্যয়—উভয় সমস্যার সুনির্দিষ্ট ও স্থায়ী সমাধানে ElectroFix BD ঢাকার ঘরে ঘরে নির্ভরযোগ্য সেবা নিশ্চিত করছে। আমাদের অভিজ্ঞ কারিগরি দল সততা, সঠিক ডায়াগনসিস এবং আধুনিক টুলস ব্যবহারের মাধ্যমে আপনার মূলবান গৃহস্থালি যন্ত্রপাতির আয়ু বৃদ্ধি করতে অঙ্গীকারবদ্ধ।",
         "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "পরিচিতি ও প্রযুক্তিগত সক্ষমতা",
+        "eyebrow_secondary": "ABOUT ELECTROFIX BD",
+        "group_heading": "আমাদের কর্মপদ্ধতি ও সেবা নিশ্চয়তা",
+        "highlights": [
+          {
+            "id": "about-pillar-chip",
+            "icon": "cpu",
+            "title": "চিপ-লেভেল ইলেকট্রনিক্স ল্যাব",
+            "subtitle": "মাদারবোর্ড ফেলে না দিয়ে মাইক্রো-রিপেয়ার",
+            "description": "আধুনিক ইনভার্টার এসি ও স্মার্ট রেফ্রিজারেটরের মাদারবোর্ড নষ্ট হলে পুরো সার্কিট পরিবর্তন না করে আমাদের উন্নত ল্যাবে মাইক্রো-কম্পোনেন্ট লেভেলে মেরামত করে ৭০% পর্যন্ত গ্রাহকের খরচ সাশ্রয় করি।"
+          },
+          {
+            "id": "about-pillar-onsite",
+            "icon": "map-pin",
+            "title": "সরাসরি অন-সাইট হোম সার্ভিস",
+            "subtitle": "ঢাকার প্রতিটি এলাকায় দ্রুত উপস্থিতি",
+            "description": "মিরপুর, উত্তরা, গুলশান, বনানী, ধানমন্ডি, মোহাম্মদপুর, বসুন্ধরা সহ ঢাকা শহরের যেকোনো প্রান্তে আপনার বাসা বা অফিসে সরাসরি নির্ধারিত সময়ে টেকনিক্যাল টুলসসহ পৌঁছে যাই।"
+          },
+          {
+            "id": "about-pillar-transparent",
+            "icon": "settings",
+            "title": "স্বচ্ছ ডায়াগনসিস ও যৌক্তিক বিল",
+            "subtitle": "কোনো অপ্রকাশিত বা লুকানো চার্জ নেই",
+            "description": "অ্যাপ্লায়েন্সের মূল সমস্যা ও সম্ভাব্য সমাধান কাজ শুরুর পূর্বেই গ্রাহকের সামনে স্পষ্ট তুলে ধরা হয়। অনুমোদিত যৌক্তিক খরচের বাইরে কোনো অতিরিক্ত চার্জ দাবি করা হয় না।"
+          },
+          {
+            "id": "about-pillar-warranty",
+            "icon": "shield-check",
+            "title": "৩০ দিনের লিখিত সার্ভিস ওয়ারেন্টি",
+            "subtitle": "জেনুইন পার্টস ও দায়বদ্ধতা",
+            "description": "প্রতিটি সফল মেরামতের পর লিখিত সার্ভিস রসিদ ও ৩০ দিনের কার্যকারিতা ওয়ারেন্টি প্রদান করা হয়। ওয়ারেন্টি চলাকালীন একই ত্রুটি দেখা দিলে সম্পূর্ণ বিনামূল্যে অন-কল সাপোর্ট দেওয়া হয়।"
+          }
+        ],
+        "statistics": [
+          {
+            "id": "about-stat-experience",
+            "value": 10,
+            "suffix": "+",
+            "label": "বছরের টেকনিক্যাল অভিজ্ঞতা"
+          },
+          {
+            "id": "about-stat-services",
+            "value": 15000,
+            "suffix": "+",
+            "label": "সফল অ্যাপ্লায়েন্স সার্ভিস"
+          },
+          {
+            "id": "about-stat-parts",
+            "value": 100,
+            "suffix": "%",
+            "label": "জেনুইন স্পেয়ার পার্টস নিশ্চয়তা"
+          },
+          {
+            "id": "about-stat-warranty",
+            "value": 30,
+            "suffix": "দিন",
+            "label": "লিখিত সার্ভিস ওয়ারেন্টি"
+          }
+        ]
       },
       {
         "id": "legacy-home-emergency",
@@ -269,7 +388,51 @@
         "section": "emergency",
         "heading": "জরুরি এসি, ফ্রিজ বা ওয়াশিং মেশিন মেরামতের প্রয়োজন?",
         "body": "ভারি অ্যাপ্লায়েন্স নিয়ে দোকানে যাওয়ার দরকার নেই। আমাদের অভিজ্ঞ টেকনিশিয়ান সরাসরি আপনার বাসায় পৌঁছে যাবেন।",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "সকাল ৮:০০ – রাত ১০:০০ • ঢাকা হোম সার্ভিস",
+        "highlights": [
+          {
+            "id": "emg-trust-1",
+            "icon": "check-circle",
+            "title": "কোনো হিডেন চার্জ নেই",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "emg-trust-2",
+            "icon": "shield-check",
+            "title": "৩০ দিনের রিপেয়ার ওয়ারেন্টি",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "emg-trust-3",
+            "icon": "check-circle",
+            "title": "জেনুইন স্পেয়ার পার্টস",
+            "subtitle": "",
+            "description": ""
+          }
+        ],
+        "actions": [
+          {
+            "id": "emg-book",
+            "label": "অনলাইন বুকিং করুন",
+            "action": "booking",
+            "url": ""
+          },
+          {
+            "id": "emg-call",
+            "label": "কল করুন: 01619-487788",
+            "action": "phone",
+            "url": ""
+          },
+          {
+            "id": "emg-wa",
+            "label": "WhatsApp চ্যাট",
+            "action": "whatsapp",
+            "url": ""
+          }
+        ]
       },
       {
         "id": "legacy-home-faq",
@@ -277,7 +440,24 @@
         "section": "faq",
         "heading": "সাধারণ জিজ্ঞাসা ও উত্তর (FAQ)",
         "body": "সার্ভিস বুকিং, টেকনিশিয়ান ভিজিট এবং অ্যাপ্লায়েন্স সম্পর্কিত সাধারণ প্রশ্নসমূহ।",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "Frequently Asked Questions",
+        "group_heading": "আপনার কি অন্য কোনো প্রশ্ন আছে?",
+        "description": "আমাদের টেকনিশিয়ানের সাথে সরাসরি কথা বলতে পারেন যেকোনো সময়।",
+        "actions": [
+          {
+            "id": "faq-call",
+            "label": "01619-487788",
+            "action": "phone",
+            "url": ""
+          },
+          {
+            "id": "faq-wa",
+            "label": "WhatsApp",
+            "action": "whatsapp",
+            "url": ""
+          }
+        ]
       },
       {
         "id": "legacy-contact-intro",
@@ -285,7 +465,35 @@
         "section": "intro",
         "heading": "যোগাযোগ ও অনুসন্ধান (Contact Us)",
         "body": "সরাসরি হটলাইন • দ্রুত হোয়াটসঅ্যাপ রিপ্লাই • অন-সাইট টেকনিশিয়ান সহায়তা",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "Page: Contact Us",
+        "eyebrow_secondary": "Get In Touch",
+        "group_heading": "📍 সমগ্র ঢাকা সিটি সরাসরি হোম সার্ভিস",
+        "description": "আপনার যেকোনো হোম অ্যাপ্লায়েন্স রিপেয়ারের প্রয়োজনে কল করুন, হোয়াটসঅ্যাপে মেসেজ দিন অথবা নিচের ফর্মটি পূরণ করে সরাসরি বার্তা পাঠান। আমাদের সাপোর্ট টিম দ্রুত আপনার সাথে যোগাযোগ করবে।",
+        "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80",
+        "highlights": [
+          {
+            "id": "contact-trust-call",
+            "icon": "check-circle",
+            "title": "তাৎক্ষণিক কল সহায়তা",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "contact-trust-hours",
+            "icon": "shield-check",
+            "title": "সকাল ৮:০০ – রাত ১০:০০ সক্রিয়",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "contact-trust-fee",
+            "icon": "wrench",
+            "title": "কোনো অগ্রিম বুকিং ফি নেই",
+            "subtitle": "",
+            "description": ""
+          }
+        ]
       },
       {
         "id": "legacy-services-intro",
@@ -293,7 +501,35 @@
         "section": "intro",
         "heading": "হোম অ্যাপ্লায়েন্স রিপেয়ার ও সার্ভিসিং",
         "body": "দক্ষ টেকনিশিয়ান • চিপ-লেভেল সার্কিট বোর্ড মেরামত • জেনুইন স্পেয়ার পার্টস",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "সার্ভিসসমূহ",
+        "eyebrow_secondary": "হোম কেয়ার ও রিপেয়ার সল্যুশন",
+        "group_heading": "📍 সমগ্র ঢাকা সিটি হোম সার্ভিস",
+        "description": "ইনভার্টার এসি, রেফ্রিজারেটর, ওয়াশিং মেশিন, মাইক্রোওভেন, ডিশওয়াশার ও সার্কিট বোর্ডের চিপ-লেভেল কাজের জন্য আমাদের নির্ভরযোগ্য সার্ভিস তালিকা থেকে আপনার কাঙ্ক্ষিত সেবাটি বেছে নিন।",
+        "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80",
+        "highlights": [
+          {
+            "id": "srv-1",
+            "icon": "check-circle",
+            "title": "৬+ স্পেশালাইজড সার্ভিস",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "srv-2",
+            "icon": "shield-check",
+            "title": "১০+ বছরের বাস্তব অভিজ্ঞতা",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "srv-3",
+            "icon": "wrench",
+            "title": "১০০% ডোরস্টেপ সার্ভিস",
+            "subtitle": "",
+            "description": ""
+          }
+        ]
       },
       {
         "id": "legacy-works-intro",
@@ -301,7 +537,34 @@
         "section": "intro",
         "heading": "আমাদের পূর্ববর্তী কাজের বাস্তব গ্যালারি",
         "body": "১০+ বছরের টেকনিক্যাল অভিজ্ঞতা • চিপ-লেভেল মেরামত • সফল বাস্তব কাজ",
-        "is_active": true
+        "is_active": true,
+        "eyebrow": "আমাদের কাজসমূহ",
+        "eyebrow_secondary": "বাস্তব কাজের পোর্টফোলিও",
+        "description": "ঢাকার বিভিন্ন এলাকায় আমাদের দক্ষ টেকনিশিয়ানদের সম্পন্নকৃত বাস্তব কাজের নমুনা ও সমাধান বিবরণ। প্রতিটি কাজের সাথে নিশ্চিত করা হয়েছে জেনুইন পার্টস ও ৩০ দিনের লিখিত সার্ভিস ওয়ারেন্টি।",
+        "image_url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1600&q=80",
+        "highlights": [
+          {
+            "id": "works-1",
+            "icon": "check-circle",
+            "title": "১০০% সমস্যার সমাধান নিশ্চয়তা",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "works-2",
+            "icon": "wrench",
+            "title": "অন-সাইট ডায়াগনসিস ও পার্টস পরিবর্তন",
+            "subtitle": "",
+            "description": ""
+          },
+          {
+            "id": "works-3",
+            "icon": "shield-check",
+            "title": "৩০ দিনের সার্ভিস নিশ্চয়তা",
+            "subtitle": "",
+            "description": ""
+          }
+        ]
       }
     ]
   }

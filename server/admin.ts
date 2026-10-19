@@ -1,4 +1,6 @@
 import { createAdminMediaRouter } from "./media-storage";
+import { createCmsRouter } from "./cms";
+import { createFullImportRouter } from "./full-content-import";
 import { databaseSecurityReady } from "./security";
 import { route } from "./admin-utils";
 import pg from "pg";
@@ -41,6 +43,13 @@ export function createAdminRouter(config: Config, database?: pg.Pool) {
           account_model: "single trusted owner",
         }),
       ),
+    );
+    router.use(createCmsRouter(pool));
+    router.use(
+      createFullImportRouter(pool, config.ADMIN_SESSION_SECRET!, {
+        enabled: config.CONTENT_IMPORT_ENABLED,
+        label: config.CONTENT_IMPORT_TARGET_LABEL || "Not approved",
+      }),
     );
     router.use(createContentImportRouter(pool, config.ADMIN_SESSION_SECRET!));
     router.use(createAdminMediaRouter(pool, config));

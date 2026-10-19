@@ -1,0 +1,14 @@
+[
+  {
+    "id": "secondary-site-content-003-20261017052646-v1",
+    "source": "supabase_migrations.schema_migrations",
+    "recorded_version": "20261017052646",
+    "recorded_name": "create_site_content_controls",
+    "local_name": "003_site_content.sql",
+    "local_sha256": "4af545e2729bb384613066e7f678e9d676a2bb5283f1ae02a78cd8bdb969f99f",
+    "stored_statements_sha256": "a4ff51b5ca4185452bd10ba92200bc81d7fd29c57d7cd7ae823d96fcdbe711e1",
+    "applied_sql_sha256": "dcafb6b3c9d9b12f6f0f9fca7a7821f1a005c916c8684d19559ff4e539b8a847",
+    "review": "docs/issue-21-migration-003-provenance.md",
+    "evidence": "tests/fixtures/provenance/site-content-20261017052646.json"
+  }
+]

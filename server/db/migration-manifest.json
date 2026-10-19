@@ -1,0 +1,44 @@
+[
+  {
+    "name": "001_backend_foundation.sql",
+    "version": 1,
+    "sha256": "827e1a821e6d15b8147e30bb02e5d06ea72b4084c09210e614936d9a3311e3ab",
+    "crlf_sha256": "9dca2cb60a48cd02e75500787c94cc8cfbc66784a8045d970a63d3678bb45f1b",
+    "sql_evidence": "20087c633a3d232958b93f18806958bd967dd3ef2f3829967e76f0b235a484f7"
+  },
+  {
+    "name": "002_content_tables.sql",
+    "version": 2,
+    "sha256": "90efebc65c01cdf613a12a71368d6534b1b64cb8cbf0ebde601c90b7038e8b30",
+    "crlf_sha256": "cf2d49bb6a200f38ca6346a0fcab349040975feb274dcf556bc855f778bc683f",
+    "sql_evidence": "100077680c69f012031959333a585bc241b2e28a8a6dd7137fdc2eaf48d61fbd"
+  },
+  {
+    "name": "003_site_content.sql",
+    "version": 3,
+    "sha256": "4af545e2729bb384613066e7f678e9d676a2bb5283f1ae02a78cd8bdb969f99f",
+    "crlf_sha256": "d5b559a8098e76223135759070628566d557d36a9a71b7ef17ef40b3862d4cd4",
+    "sql_evidence": "4bb6461ac0b61a6b85fc7c093af7764e1bbf7325e033f873f49fc66c3c2ff044"
+  },
+  {
+    "name": "004_admin_operations.sql",
+    "version": 4,
+    "sha256": "531e8dbb1bce2d931e37081a8e6bd2c9b3331dfef77975c2ec125f84eb6260f0",
+    "crlf_sha256": "b90c1c6c1563b93e918757acc4180f9c240110dd89f35ddfd1796eeb9bc67e12",
+    "sql_evidence": "5cde787eea382dbe1c33e9abb4af685d142e7bf12ea3cdc1d2921468ae72d059"
+  },
+  {
+    "name": "005_reviews_media_categories.sql",
+    "version": 5,
+    "sha256": "58fee5ca312d4aaa93582b001f043f4c9f8b03a1a82cb5e22d6c225c668d3e18",
+    "crlf_sha256": "a005fc148e7c7d5966a17745fbacc58410e876b1f4085e9a072f5ae79ba1731f",
+    "sql_evidence": "b7febfa77e37bb6f5c55e4aae666979cc5f89c3c9c499150d4a6d8d4f7b5ab7e"
+  },
+  {
+    "name": "006_full_cms_inventory.sql",
+    "version": 6,
+    "sha256": "45e01f793e3aa7cb730ffd35d4532bafd9d8568bd4b63750e81fe123318e8ff2",
+    "crlf_sha256": "493d8e7b2e69aae0f6b591f6edb3e58f9d952456830da30cddc230df0e77551c",
+    "sql_evidence": "4e74595a76e61848695144206d7d2ba803ed819dfc64da7e2ac8ed7dc8b0ddfd"
+  }
+]

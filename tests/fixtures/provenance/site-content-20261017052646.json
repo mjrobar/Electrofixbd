@@ -1,0 +1,86 @@
+{
+  "project_name": "Electrofixbd.Test Project",
+  "collected_on": "2026-10-19",
+  "collection_method": "SELECT only via explicitly identified Secondary account; no customer records",
+  "migration": {
+    "name": "create_site_content_controls",
+    "version": "20261017052646",
+    "statements": [
+      "CREATE TABLE IF NOT EXISTS public.site_content (key text PRIMARY KEY CHECK (key IN ('hero_slides','faqs','business_settings','page_sections')), draft jsonb NOT NULL DEFAULT '[]'::jsonb, published jsonb NOT NULL DEFAULT '[]'::jsonb, revision integer NOT NULL DEFAULT 0, updated_at timestamptz NOT NULL DEFAULT now()); INSERT INTO public.site_content (key,draft,published) VALUES ('hero_slides','[]'::jsonb,'[]'::jsonb), ('faqs','[]'::jsonb,'[]'::jsonb), ('business_settings','{}'::jsonb,'{}'::jsonb), ('page_sections','[]'::jsonb,'[]'::jsonb) ON CONFLICT (key) DO NOTHING; REVOKE ALL ON public.site_content FROM PUBLIC; DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN REVOKE ALL ON public.site_content FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN REVOKE ALL ON public.site_content FROM authenticated; END IF; END $$;"
+    ]
+  },
+  "columns": [
+    {
+      "column_name": "key",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "column_name": "draft",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "column_name": "published",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "column_name": "revision",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "column_name": "updated_at",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    }
+  ],
+  "constraints": [
+    {
+      "name": "site_content_key_check",
+      "type": "c",
+      "validated": true,
+      "definition": "CHECK ((key = ANY (ARRAY['hero_slides'::text, 'faqs'::text, 'business_settings'::text, 'page_sections'::text])))"
+    },
+    {
+      "name": "site_content_pkey",
+      "type": "p",
+      "validated": true,
+      "definition": "PRIMARY KEY (key)"
+    }
+  ],
+  "relation": {
+    "rls": false,
+    "force_rls": false
+  },
+  "browser_access": [
+    {
+      "role": "authenticated",
+      "any_table_access": false
+    },
+    {
+      "role": "anon",
+      "any_table_access": false
+    }
+  ],
+  "module_keys": [
+    "business_settings",
+    "faqs",
+    "hero_slides",
+    "page_sections"
+  ],
+  "triggers": [
+    {
+      "name": "efb_track",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER efb_track BEFORE UPDATE ON public.site_content FOR EACH ROW EXECUTE FUNCTION efb_track_change()",
+      "security_definer": false
+    }
+  ]
+}

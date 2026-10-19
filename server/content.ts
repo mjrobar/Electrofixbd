@@ -34,17 +34,17 @@ export function createContentRepository(
     listServices: (page) =>
       read<ServiceRecord>(
         `SELECT id,slug,name,short_description,full_description,
-      common_problems,service_process,cover_image FROM public.services WHERE is_active IS TRUE AND archived_at IS NULL
-      ORDER BY id LIMIT $1 OFFSET $2`,
+      common_problems,service_process,cover_image,sort_order FROM public.services WHERE is_active IS TRUE AND archived_at IS NULL
+      ORDER BY sort_order NULLS LAST,id LIMIT $1 OFFSET $2`,
         [page.limit, page.offset],
       ),
     listWorks: async (query) =>
       (
         await read<WorkRecord>(
           `SELECT id,title,slug,service_type,service_id,category,description,media_url,
-      media_type,is_featured,is_published,created_at FROM public.works WHERE is_published IS TRUE AND archived_at IS NULL
+      media_type,is_featured,is_published,created_at,legacy_source_id,display_date,sort_order FROM public.works WHERE is_published IS TRUE AND archived_at IS NULL
       AND ($1::text IS NULL OR category=$1) AND ($2::boolean IS NULL OR is_featured=$2)
-      ORDER BY created_at DESC,id DESC LIMIT $3 OFFSET $4`,
+      ORDER BY sort_order NULLS LAST,created_at DESC,id DESC LIMIT $3 OFFSET $4`,
           [
             query.category ?? null,
             query.featured ?? null,
@@ -60,8 +60,8 @@ export function createContentRepository(
       (
         await read<TestimonialRecord>(
           `SELECT id,customer_name,review,service_type,service_id,address,rating,
-      avatar_url,media_url,media_type,is_published,created_at FROM public.testimonials
-      WHERE is_published IS TRUE AND archived_at IS NULL ORDER BY created_at DESC,id DESC LIMIT $1 OFFSET $2`,
+      avatar_url,media_url,media_type,is_published,created_at,legacy_source_id,display_date,display_time,source_created_at,sort_order FROM public.testimonials
+      WHERE is_published IS TRUE AND archived_at IS NULL ORDER BY created_at DESC,sort_order NULLS LAST,id DESC LIMIT $1 OFFSET $2`,
           [page.limit, page.offset],
         )
       ).map((row) => ({

@@ -6,8 +6,14 @@ import { WORKS_DATA } from "../src/data/worksData";
 import { TESTIMONIALS_DATA } from "../src/data/testimonialsData";
 
 const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
-const works = readFileSync(new URL("../src/components/works/WorkGallery.tsx", import.meta.url), "utf8");
-const testimonials = readFileSync(new URL("../src/components/home/TestimonialsSection.tsx", import.meta.url), "utf8");
+const works = readFileSync(
+  new URL("../src/components/works/WorkGallery.tsx", import.meta.url),
+  "utf8",
+);
+const testimonials = readFileSync(
+  new URL("../src/components/home/TestimonialsSection.tsx", import.meta.url),
+  "utf8",
+);
 
 test("services baseline remains available at initial render", () => {
   assert.ok(SERVICES_DATA.length >= 6);
@@ -24,12 +30,18 @@ test("works initial render retains portfolio baseline", () => {
 test("testimonials initial render retains static reviews", () => {
   assert.ok(TESTIMONIALS_DATA.length >= 3);
   assert.match(testimonials, /TESTIMONIALS_DATA/);
-  assert.match(testimonials, /electrofix_user_feedbacks/);
+  assert.match(testimonials, /useState<Testimonial\[\]>\(TESTIMONIALS_DATA\)/);
+  assert.doesNotMatch(testimonials, /localStorage|FileReader/);
+  assert.match(testimonials, /fetch\('\/api\/reviews'/);
+  assert.doesNotMatch(testimonials, /setTestimonials\(\(prev\).*newFeedback/);
 });
 test("empty API responses cannot replace static service and works data", () => {
   assert.match(app, /mapped\.length > 0/);
   assert.match(works, /mapped\.length > 0/);
 });
 test("empty API responses cannot replace static testimonials", () => {
-  assert.match(testimonials, /records\.length > 0/);
+  assert.match(
+    testimonials,
+    /records\.length\s*\?\s*sortNewestFirst\(records\)\s*:\s*TESTIMONIALS_DATA/,
+  );
 });

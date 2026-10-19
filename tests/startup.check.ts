@@ -38,7 +38,9 @@ after(async () => {
 });
 let previousProcessBooking: string | undefined;
 for (const mode of ["development", "production"]) {
-  test(`${mode}: Node startup, frontend/API routing and graceful shutdown`, async (t) => {
+  const shutdown =
+    process.platform === "win32" ? "process termination" : "graceful shutdown";
+  test(`${mode}: Node startup, frontend/API routing and ${shutdown}`, async (t) => {
     const reservation = createServer();
     await new Promise<void>((resolve) =>
       reservation.listen(0, "127.0.0.1", resolve),
@@ -171,7 +173,14 @@ for (const mode of ["development", "production"]) {
     }
     child.kill("SIGTERM");
     const [code, signal] = await exited;
-    assert.equal(code, 0);
-    assert.equal(signal, null);
+    if (process.platform === "win32") {
+      // Windows child.kill(SIGTERM) force-terminates the process; it does not
+      // deliver a POSIX signal to Node's graceful-shutdown handler.
+      assert.equal(code, null);
+      assert.equal(signal, "SIGTERM");
+    } else {
+      assert.equal(code, 0);
+      assert.equal(signal, null);
+    }
   });
 }
