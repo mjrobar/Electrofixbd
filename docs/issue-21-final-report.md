@@ -2,6 +2,8 @@
 
 Consolidated Draft PR: [#28](https://github.com/mjrobar/Electrofixbd/pull/28).
 
+**Latest follow-up — Admin import ledger correction:** Preview, Backup, Apply, Rollback and Export now resolve and validate the actual ledger with the preflight's shared proof core. The production bundle embeds reviewed migration evidence; provenance checks remain strict, with no public ledger creation or SQL replay. Local validation: lint/build passed, **56 tests passed, 19 DB-dependent tests skipped, 0 failed**, plus two startup checks. See the [fix report, limitations and Windows update commands](pr-28-admin-import-ledger.md). No database connection or write was made for this correction; no frontend/design, migration SQL, package or lockfile changes. Earlier results below are retained as historical evidence, not the latest test totals.
+
 Review date: 19 October 2026 (Asia/Dhaka). Branch: `feat/issue-21-complete-cms`. Implementation starts at Draft PR #27 (`d8610dcdd87c6fcf6034ec08ca8122fce780627c`) and includes all preceding Issue 21 changes. The consolidated Draft PR targets `fix/windows-local-media-storage` (PR #20), so reviewers see the whole Issue 21 stack in one diff. Earlier Draft PRs #22–#27 are retained, not merged or closed.
 
 **Backend/Admin implementation and safe static/mock checks are complete for this handoff. Production readiness is not verified.** PostgreSQL execution, shared Secondary acceptance and independent original AI Studio/public CMS integration remain pending. No migration/import, real customer update, local PostgreSQL creation, Supabase connection, merge or deployment occurred in this task.

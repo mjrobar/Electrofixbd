@@ -1,3 +1,4 @@
+import { importMigrationHistory } from "./db/import-migration-history";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { Router } from "express";
 import type pg from "pg";
@@ -349,24 +350,35 @@ export function buildFullPreview(backup: Backup) {
 }
 export async function readFullPreview(
   db: Pick<pg.Pool, "query">,
-  migrationLedger = "public.schema_migrations",
+  requestedLedger?: string,
 ) {
-  if (
-    ![
-      "public.schema_migrations",
-      "supabase_migrations.schema_migrations",
-    ].includes(migrationLedger)
-  )
-    throw Error("Unsupported migration ledger source.");
+  const history = await importMigrationHistory(db);
+  const migrationLedger = history.source;
+  if (requestedLedger && requestedLedger !== migrationLedger)
+    throw new ApiError(
+      409,
+      "MIGRATION_LEDGER_CHANGED",
+      "The requested migration ledger is no longer the validated source. Run a fresh read-only preview.",
+    );
   const rows: Record<string, any[]> = {};
   const lossless_rows: Record<string, string[]> = {};
   let bytes = 0;
-  for (const table of backupTables) {
-    const cursor = "efb_backup_" + table;
+  const sources = [
+    ...backupTables.map((table) => ({
+      table: table as string,
+      relation:
+        table === "schema_migrations" ? migrationLedger : "public." + table,
+    })),
+    ...history.validation.ledgers
+      .filter((l) => l.source !== migrationLedger)
+      .map((l) => ({ table: l.source as string, relation: l.source })),
+  ];
+  for (const { table, relation } of sources) {
+    const cursor = "efb_backup_" + table.replaceAll(".", "_");
     rows[table] = [];
     lossless_rows[table] = [];
     await db.query(
-      `DECLARE ${cursor} NO SCROLL CURSOR FOR SELECT row_to_json(t)::text AS row_json FROM ${table === "schema_migrations" ? migrationLedger : "public." + table} t`,
+      `DECLARE ${cursor} NO SCROLL CURSOR FOR SELECT row_to_json(t)::text AS row_json FROM ${relation} t`,
     );
     try {
       for (;;) {
@@ -394,8 +406,8 @@ export async function readFullPreview(
     lossless_rows[table].sort();
   }
   const schema: Record<string, unknown> = {};
-  if (migrationLedger !== "public.schema_migrations")
-    schema.migration_ledger_source = migrationLedger;
+  schema.migration_ledger_source = migrationLedger;
+  schema.migration_history = history;
   schema.columns = (
     await db.query(
       "SELECT table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema='public' AND table_name=ANY($1) ORDER BY table_name,ordinal_position",
@@ -425,13 +437,20 @@ export async function readFullPreview(
       "SELECT pg_get_functiondef(p.oid) AS definition FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname='efb_track_change'",
     )
   ).rows;
-  return buildFullPreview({
-    format: "electrofix-application-backup-v2",
-    schema_version: 6,
-    rows,
-    schema,
-    lossless_rows,
-  });
+  return {
+    ...buildFullPreview({
+      format: "electrofix-application-backup-v2",
+      schema_version: 6,
+      rows,
+      schema,
+      lossless_rows,
+    }),
+    migration_ledger: {
+      source: history.source,
+      history_digest: history.history_digest,
+      provenance_verified: true,
+    },
+  };
 }
 export async function fullPreview(pool: pg.Pool) {
   const client = await pool.connect();
@@ -451,6 +470,7 @@ export async function applyFullImport(pool: pg.Pool, expected: string) {
   if (!coverageSummary().complete)
     throw new ImportConflict("Required source fields are unmapped.");
   return transaction(pool, async (db) => {
+    await db.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
     await db.query(
       "LOCK TABLE site_content,cms_documents,services,works,testimonials,cms_import_runs IN SHARE ROW EXCLUSIVE MODE",
     );
@@ -533,6 +553,10 @@ export async function applyFullImport(pool: pg.Pool, expected: string) {
     const id = randomUUID(),
       result = {
         run_id: id,
+        migration_ledger: {
+          source: preview.migration_ledger.source,
+          history_digest: preview.migration_ledger.history_digest,
+        },
         imported: imported.map((i) => i.kind + ":" + i.id),
         skipped: preview.entries
           .filter((i) => i.action === "skip")
@@ -561,9 +585,11 @@ export async function applyFullImport(pool: pg.Pool, expected: string) {
 }
 export async function rollbackFullImport(pool: pg.Pool, id: string) {
   return transaction(pool, async (db) => {
+    await db.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
     await db.query(
       "LOCK TABLE site_content,cms_documents,services,works,testimonials,cms_import_runs IN SHARE ROW EXCLUSIVE MODE",
     );
+    const history = await importMigrationHistory(db);
     const run = (
       await db.query("SELECT * FROM cms_import_runs WHERE id=$1 FOR UPDATE", [
         id,
@@ -571,6 +597,13 @@ export async function rollbackFullImport(pool: pg.Pool, id: string) {
     ).rows[0];
     if (!run) throw new ApiError(404, "RUN_NOT_FOUND", "Import run not found.");
     if (run.rolled_back_at) return { run_id: id, already_rolled_back: true };
+    if (
+      run.result?.migration_ledger?.source !== history.source ||
+      run.result?.migration_ledger?.history_digest !== history.history_digest
+    )
+      throw new ImportConflict(
+        "Migration history changed or this legacy run has no verified ledger binding. Preserve a backup and review explicit per-record history before rollback.",
+      );
     for (const target of run.before_content) {
       const key = target.kind === "site_content" ? "key" : "id";
       const row = (

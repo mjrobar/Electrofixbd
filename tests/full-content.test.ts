@@ -1,3 +1,4 @@
+import { nativeMigrationResponse } from "./helpers/migration-history";
 import { assertSecondaryTarget } from "../scripts/secondary-content-acceptance";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -275,6 +276,8 @@ test("backup retains exact PostgreSQL row JSON for microsecond timestamps and la
   const seen = new Set<string>();
   const database = {
     query: async (sql: string) => {
+      const migration = nativeMigrationResponse(sql);
+      if (migration) return migration;
       if (
         sql.startsWith("FETCH") &&
         sql.includes("efb_backup_bookings") &&
@@ -303,6 +306,8 @@ test("full importer transaction binds every source draft correctly without a dat
     async query(sql: string, values: any[] = []) {
       const parameters = [...sql.matchAll(/\$(\d+)/g)].map((m) => Number(m[1]));
       assert.equal(Math.max(0, ...parameters), values.length, sql);
+      const migration = nativeMigrationResponse(sql);
+      if (migration) return migration;
       if (
         sql.startsWith("INSERT INTO public.") ||
         sql.startsWith("INSERT INTO cms_documents") ||
