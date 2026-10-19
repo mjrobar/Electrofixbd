@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { CalendarClock, ClipboardList, Inbox, Search } from "lucide-react";
 import {
   canLeaveAdmin,
   useUnsavedChanges,
@@ -86,13 +87,17 @@ export default function OperationsPanel({
     }
   }
   return (
-    <section className={ui.card + " space-y-4"}>
-      <h2 className="text-lg font-bold">
-        {kind === "bookings" ? "Manage bookings" : "Customer inbox"}
-      </h2>
+    <section className={ui.card + " space-y-6 border-slate-200/80 p-4 shadow-sm sm:p-6"}>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-[#004179]">{kind === "bookings" ? <ClipboardList size={21} /> : <Inbox size={21} />}</span>
+          <div><h2 className="text-lg font-bold text-slate-900">{kind === "bookings" ? "Booking management" : "Customer messages"}</h2><p className="text-xs text-slate-500">{kind === "bookings" ? "Track and manage incoming service requests" : "Keep every customer enquiry organised"}</p></div>
+        </div>
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">{total} results</span>
+      </div>
       <Feedback error={error} notice={notice} />
       <form
-        className="flex flex-wrap items-end gap-3"
+        className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3 sm:p-4"
         onSubmit={(e) => {
           e.preventDefault();
           void load(0);
@@ -130,15 +135,15 @@ export default function OperationsPanel({
       {loaded &&
         items.map((item) => (
           <article
-            className="space-y-3 border-t border-[#DCE3E8] pt-4"
+            className="space-y-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5"
             key={String(item.booking_number ?? item.id)}
           >
-            <h3 className="break-words font-bold">
+            <div className="flex flex-wrap items-start justify-between gap-2"><h3 className="break-words font-bold text-slate-900">
               {String(item.customer_name ?? item.name)}
-            </h3>
+            </h3><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize text-slate-700">{String(item.status)}</span></div>
             <p className="break-words text-sm text-slate-500">
               {String(item.booking_number ?? "")} ·{" "}
-              {new Date(String(item.created_at)).toLocaleString()} ·{" "}
+              {new Date(String(item.created_at)).toLocaleString("en-BD", { timeZone: "Asia/Dhaka", dateStyle: "medium", timeStyle: "short" })} ·{" "}
               {String(item.status)}
             </p>
             <p className="text-sm">{String(item.service_name ?? "")}</p>
