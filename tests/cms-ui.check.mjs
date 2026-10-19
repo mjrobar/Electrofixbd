@@ -5,7 +5,7 @@ import sharp from "sharp";
 import { contentSchemas } from "../server/admin-content.ts";
 import { slugBase } from "../server/content-categories.ts";
 import express from "express";
-import { readFile, mkdir } from "node:fs/promises";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import { documentSchema } from "../server/cms-contract.ts";
@@ -286,6 +286,17 @@ try {
     return json({ error: "Unmocked API " + p }, 500);
   });
   await page.goto("http://127.0.0.1:" + server.address().port + "/admin");
+  if (process.env.ADMIN_UI_FONT_FILE) {
+    const bytes = await readFile(process.env.ADMIN_UI_FONT_FILE);
+    await page.evaluate(async (data) => {
+      const raw = atob(data),
+        bytes = Uint8Array.from(raw, (c) => c.charCodeAt(0)),
+        font = new FontFace("Inter", bytes, { weight: "100 900" });
+      await font.load();
+      document.fonts.add(font);
+    }, bytes.toString("base64"));
+  }
+  await page.evaluate(() => document.fonts.ready);
   await page
     .getByRole("button", { name: "Website Content", exact: true })
     .click();
@@ -308,6 +319,42 @@ try {
   assert.equal((await cms.textContent()).includes("[object Object]"), false);
   const output = path.resolve(process.env.ADMIN_UI_OUTPUT || "work/cms-ui");
   await mkdir(output, { recursive: true });
+  async function recordOverflow(width) {
+    if (
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth,
+      )
+    ) {
+      const overflow = await page.evaluate(() =>
+        Array.from(document.querySelectorAll("body *"))
+          .map((el) => ({ el, r: el.getBoundingClientRect() }))
+          .filter(
+            ({ el, r }) =>
+              r.width > 0 &&
+              (r.right > innerWidth + 1 || r.left < -1) &&
+              getComputedStyle(el).visibility !== "hidden",
+          )
+          .slice(-30)
+          .map(({ el, r }) => ({
+            tag: el.tagName,
+            class: el.className,
+            text: el.textContent?.slice(0, 140),
+            left: r.left,
+            right: r.right,
+            width: r.width,
+          })),
+      );
+      await writeFile(
+        path.join(output, "overflow-" + width + ".json"),
+        JSON.stringify(overflow, null, 2),
+      );
+      await page.screenshot({
+        path: path.join(output, "overflow-" + width + ".png"),
+        fullPage: true,
+      });
+      console.log("Overflow diagnostics:", JSON.stringify(overflow));
+    }
+  }
   for (const width of [375, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await cms.evaluate((el) => {
@@ -315,6 +362,7 @@ try {
       window.scrollBy(0, -90);
     });
     await page.waitForTimeout(400);
+    await recordOverflow(width);
     assert.ok(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -360,6 +408,7 @@ try {
       window.scrollBy(0, -90);
     });
     await page.waitForTimeout(400);
+    await recordOverflow(width);
     assert.ok(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
