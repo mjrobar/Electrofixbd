@@ -50,3 +50,18 @@
     min-height: 44px;
   }
 }
+
+
+/* Admin-only dark theme; all public frontend styles remain unchanged. */
+.efb-admin.efb-admin-dark { background: #0c1523 !important; color: #e8eef6; color-scheme: dark; }
+.efb-admin-dark :is(main, header, section, article, aside, nav, details, form) { color: inherit; }
+.efb-admin-dark :is(.bg-white, .bg-white\/95, .bg-\[\#F6F8FA\], .bg-slate-50, .bg-slate-50\/70, .bg-slate-50\/95) { background-color: #142236 !important; }
+.efb-admin-dark :is(.border-slate-100, .border-slate-200, .border-slate-200\/80, .border-\[\#DCE3E8\]) { border-color: #334155 !important; }
+.efb-admin-dark :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-slate-600) { color: #ecf2f9 !important; }
+.efb-admin-dark :is(.text-slate-500, .text-slate-400) { color: #bac6d5 !important; }
+.efb-admin-dark :is(input, textarea, select) { background-color: #101d2f; color: #f8fafc; border-color: #475569; }
+.efb-admin-dark :is(input, textarea)::placeholder { color: #a3b1c2; }
+.efb-admin-dark a { color: #9dccff; }
+@media (prefers-reduced-motion: reduce) {
+  .efb-admin *, .efb-admin *::before, .efb-admin *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
