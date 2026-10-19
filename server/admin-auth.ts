@@ -1,12 +1,20 @@
-import { createHmac, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { Router, json } from "express";
 import { rateLimit } from "express-rate-limit";
 import type pg from "pg";
 import type { Config } from "./config";
 import { route } from "./admin-utils";
-const derive = promisify(scrypt),
-  cookieName = "efb_admin_session";
+import {
+  credentialFingerprint,
+  readOwner,
+  validPasswordHash,
+  verifyOwnerPassword,
+} from "./admin-identity";
+import {
+  createAccountRouter,
+  createPublicRecoveryRouter,
+} from "./admin-account";
+const cookieName = "efb_admin_session";
 const cookieOptions = (production: boolean) => ({
   httpOnly: true,
   secure: production,
@@ -21,11 +29,20 @@ export function createAdminAuth(config: Config, pool: pg.Pool | null) {
   const secret = config.ADMIN_SESSION_SECRET || "",
     hash = config.ADMIN_PASSWORD_HASH || "",
     username = config.ADMIN_USERNAME || "";
-  const validHash = /^[a-zA-Z0-9_-]{8,128}:[a-fA-F0-9]{128}$/.test(hash);
-  const enabled = Boolean(pool && secret.length >= 32 && username && validHash);
-  const fingerprint = createHmac("sha256", secret)
-    .update(username + ":" + hash)
-    .digest("hex");
+  const validHash = validPasswordHash(hash);
+  const enabled = Boolean(
+    pool &&
+    secret.length >= 32 &&
+    (config.ADMIN_UPGRADE_ENABLED || (username && validHash)),
+  );
+  const sensitiveBodies = new Set([
+    "/login",
+    "/recovery/request",
+    "/recovery/complete",
+    "/account/password",
+    "/account/email",
+    "/account/verify-email",
+  ]);
   const tokenHash = (token: string) =>
     createHmac("sha256", secret).update(token).digest("hex");
   const cookie = (header: string) =>
@@ -50,7 +67,7 @@ export function createAdminAuth(config: Config, pool: pg.Pool | null) {
     const upload = req.path === "/media" && req.method === "POST";
     const limit = upload
       ? 5 * 1024 * 1024
-      : req.path === "/login"
+      : sensitiveBodies.has(req.path)
         ? 8192
         : 2 * 1024 * 1024;
     const charset = req
@@ -86,10 +103,11 @@ export function createAdminAuth(config: Config, pool: pg.Pool | null) {
   const loginJson = json({ limit: "8kb" }),
     contentJson = json({ limit: "2mb" });
   router.use((req, res, next) =>
-    req.path === "/login"
+    sensitiveBodies.has(req.path)
       ? loginJson(req, res, next)
       : contentJson(req, res, next),
   );
+  router.use(createPublicRecoveryRouter(config, enabled ? pool : null));
   router.post(
     "/login",
     rateLimit({
@@ -109,13 +127,13 @@ export function createAdminAuth(config: Config, pool: pg.Pool | null) {
         password.length > 1024
       )
         return res.status(401).json({ error: "Invalid credentials." });
-      const [salt, expected] = hash.split(":");
-      const actual = (await derive(password, salt, 64)) as Buffer;
+      const owner = await readOwner(pool!, config);
       if (
-        !timingSafeEqual(actual, Buffer.from(expected, "hex")) ||
-        !equal(user, username)
+        !(await verifyOwnerPassword(password, owner.password_hash)) ||
+        !equal(user, owner.username)
       )
         return res.status(401).json({ error: "Invalid credentials." });
+      const fingerprint = credentialFingerprint(owner, config);
       const token = randomBytes(32).toString("hex");
       await pool!.query(
         "DELETE FROM public.admin_sessions WHERE expires_at<=now() OR last_seen_at<now()-interval '30 minutes' OR credential_version<>$1",
@@ -140,6 +158,10 @@ export function createAdminAuth(config: Config, pool: pg.Pool | null) {
       const token = cookie(req.headers.cookie || "");
       if (!enabled || !/^[a-f0-9]{64}$/.test(token))
         return res.status(401).json({ error: "Authentication required." });
+      const fingerprint = credentialFingerprint(
+        await readOwner(pool!, config),
+        config,
+      );
       const result = await pool!.query(
         "UPDATE public.admin_sessions SET last_seen_at=now() WHERE token_hash=$1 AND credential_version=$2 AND expires_at>now() AND last_seen_at>now()-interval '30 minutes' RETURNING token_hash",
         [tokenHash(token), fingerprint],
@@ -149,12 +171,14 @@ export function createAdminAuth(config: Config, pool: pg.Pool | null) {
           .status(401)
           .json({ error: "Session expired. Please sign in again." });
       res.locals.sessionHash = tokenHash(token);
+      res.locals.credentialVersion = fingerprint;
       next();
     }),
   );
   router.get("/me", (_req, res) =>
     res.json({ user: { name: "Administrator", role: "owner" } }),
   );
+  if (pool) router.use(createAccountRouter(config, pool));
   router.post(
     "/logout",
     route(async (_req, res) => {
@@ -183,6 +207,10 @@ export function createAdminAuth(config: Config, pool: pg.Pool | null) {
   router.get(
     "/sessions",
     route(async (_req, res) => {
+      const fingerprint = credentialFingerprint(
+        await readOwner(pool!, config),
+        config,
+      );
       const result = await pool!.query(
         "SELECT created_at,last_seen_at,expires_at,(token_hash=$1) AS current FROM public.admin_sessions WHERE credential_version=$2 AND expires_at>now() AND last_seen_at>now()-interval '30 minutes' ORDER BY created_at DESC LIMIT 100",
         [res.locals.sessionHash, fingerprint],

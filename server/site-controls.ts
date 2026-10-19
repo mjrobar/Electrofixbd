@@ -59,6 +59,8 @@ const businessSettings = z
     facebook_url: link.default(""),
     youtube_url: link.default(""),
     logo_url: link.default(""),
+    favicon_url: link.optional(),
+    site_title: z.string().trim().max(150).optional(),
     short_name: z.string().trim().max(100).default(""),
     tagline: z.string().trim().max(500).default(""),
     service_coverage: z.string().trim().max(500).default(""),
@@ -391,7 +393,9 @@ export async function assertSiteMediaReferences(
 ): Promise<void> {
   if (!value || typeof value !== "object") return;
   for (const [key, child] of Object.entries(value)) {
-    if (["image_url", "about_image_url", "logo_url"].includes(key))
+    if (
+      ["image_url", "about_image_url", "logo_url", "favicon_url"].includes(key)
+    )
       await assertMediaReferences(db, { media_url: child });
     else if (child && typeof child === "object")
       await assertSiteMediaReferences(db, child);

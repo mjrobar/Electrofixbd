@@ -14,7 +14,8 @@
       "*": false,
       "feat/issue-11-production-admin": false,
       "feat/issue-16-reviews-media-categories": false,
-      "feat/issue-21-complete-cms": false
+      "feat/issue-21-complete-cms": false,
+      "feat/issue-29-admin-upgrade": false
     }
   }
 }

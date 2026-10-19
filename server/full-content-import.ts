@@ -373,6 +373,35 @@ export async function readFullPreview(
       .filter((l) => l.source !== migrationLedger)
       .map((l) => ({ table: l.source as string, relation: l.source })),
   ];
+  // Add private upgrade tables only when they actually exist. Baseline 001–006
+  // databases keep the original complete backup and never require optional 007.
+  const upgradeTables = [
+    "admin_owner",
+    "admin_account_tokens",
+    "admin_notification_state",
+    "admin_delivery_outbox",
+  ];
+  const available = (
+    await db.query(
+      "SELECT c.relname AS upgrade_table FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname=ANY($1) AND c.relkind IN ('r','p')",
+      [upgradeTables],
+    )
+  ).rows;
+  if (
+    available.length &&
+    !history.validation.ledgers.some((l) =>
+      l.entries.some((e) => "name" in e && e.name === "007_admin_upgrade.sql"),
+    )
+  )
+    throw new ApiError(
+      409,
+      "UNTRACKED_ADMIN_UPGRADE",
+      "Optional Admin tables exist without verified 007 migration history. Review the read-only preflight.",
+    );
+  for (const name of upgradeTables.filter((t) =>
+    available.some((r) => r.upgrade_table === t),
+  ))
+    sources.push({ table: name, relation: "public." + name });
   for (const { table, relation } of sources) {
     const cursor = "efb_backup_" + table.replaceAll(".", "_");
     rows[table] = [];
@@ -405,31 +434,37 @@ export async function readFullPreview(
     );
     lossless_rows[table].sort();
   }
+  const schemaTables = [
+    ...backupTables,
+    ...upgradeTables.filter((t) =>
+      available.some((r) => r.upgrade_table === t),
+    ),
+  ];
   const schema: Record<string, unknown> = {};
   schema.migration_ledger_source = migrationLedger;
   schema.migration_history = history;
   schema.columns = (
     await db.query(
       "SELECT table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema='public' AND table_name=ANY($1) ORDER BY table_name,ordinal_position",
-      [backupTables],
+      [schemaTables],
     )
   ).rows;
   schema.constraints = (
     await db.query(
       "SELECT c.relname AS table_name,k.conname,pg_get_constraintdef(k.oid) AS definition FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname=ANY($1) ORDER BY c.relname,k.conname",
-      [backupTables],
+      [schemaTables],
     )
   ).rows;
   schema.policies = (
     await db.query(
       "SELECT * FROM pg_policies WHERE schemaname='public' AND tablename=ANY($1) ORDER BY tablename,policyname",
-      [backupTables],
+      [schemaTables],
     )
   ).rows;
   schema.indexes = (
     await db.query(
       "SELECT tablename,indexname,indexdef FROM pg_indexes WHERE schemaname='public' AND tablename=ANY($1) ORDER BY tablename,indexname",
-      [backupTables],
+      [schemaTables],
     )
   ).rows;
   schema.trigger_functions = (

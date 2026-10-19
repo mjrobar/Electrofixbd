@@ -1,0 +1,76 @@
+name: Admin upgrade regression (Linux and Windows, no database)
+
+on:
+  pull_request:
+    branches: [feat/issue-21-complete-cms]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    if: github.head_ref == 'feat/issue-29-admin-upgrade'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ""
+      MIGRATION_DATABASE_URL: ""
+      TEST_DATABASE_URL: ""
+      SECONDARY_DATABASE_URL: ""
+      SECURITY_DATABASE_URL: ""
+      ADMIN_UPGRADE_ENABLED: "false"
+      ADMIN_DELIVERY_WORKER_ENABLED: "false"
+      EMAIL_DELIVERY_ENABLED: "false"
+      WHATSAPP_RECEIPTS_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Locked install
+        run: npm ci --strict-peer-deps --no-audit --no-fund
+      - name: TypeScript lint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
+      - name: Reviewed baseline and optional migration manifests (no execution)
+        run: node --import tsx scripts/build-migration-manifest.ts --check
+      - name: Automated and contract tests (database cases stay skipped)
+        run: npm test
+      - name: Development and production startup with unavailable database
+        run: npm run test:startup
+      - name: Install isolated browser tooling (Linux only)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/efb-admin-browser" --no-save --package-lock=false playwright@1.64.1
+          node "$RUNNER_TEMP/efb-admin-browser/node_modules/playwright/cli.js" install --with-deps chromium
+          echo "PLAYWRIGHT_MODULE=$RUNNER_TEMP/efb-admin-browser/node_modules/playwright/index.mjs" >> "$GITHUB_ENV"
+          echo "CHROMIUM_EXECUTABLE=auto" >> "$GITHUB_ENV"
+      - name: Mobile/light/dark polling and operations UI (synthetic APIs)
+        if: runner.os == 'Linux'
+        env:
+          ADMIN_UPGRADE_UI_OUTPUT: work/issue29-ui
+        run: node --import tsx tests/issue29-ui.check.mjs
+      - name: Existing CMS and importer UI regression (synthetic APIs)
+        if: runner.os == 'Linux'
+        env:
+          ADMIN_UI_OUTPUT: work/issue29-cms-ui
+        run: node --import tsx tests/cms-ui.check.mjs
+      - uses: actions/upload-artifact@v4
+        if: always() && runner.os == 'Linux'
+        with:
+          name: admin-upgrade-synthetic-ui
+          path: |
+            work/issue29-ui
+            work/issue29-cms-ui
+          if-no-files-found: ignore

@@ -1,6 +1,9 @@
 // UI-only regression: all API requests are intercepted with synthetic in-memory fixtures.
 // Does not import a database helper, connect to PostgreSQL, migrate, or import data.
 import assert from "node:assert/strict";
+import sharp from "sharp";
+import { contentSchemas } from "../server/admin-content.ts";
+import { slugBase } from "../server/content-categories.ts";
 import express from "express";
 import { readFile, mkdir } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
@@ -32,7 +35,11 @@ const server = app.listen(0, "127.0.0.1");
 await new Promise((r) => server.once("listening", r));
 const browser = await chromium.launch({
   headless: true,
-  executablePath: process.env.CHROMIUM_EXECUTABLE || "/usr/bin/chromium",
+  ...(process.env.CHROMIUM_EXECUTABLE === "auto"
+    ? {}
+    : {
+        executablePath: process.env.CHROMIUM_EXECUTABLE || "/usr/bin/chromium",
+      }),
   args: ["--no-sandbox"],
 });
 try {
@@ -58,6 +65,35 @@ try {
       },
     ]),
   );
+  const legacy = {
+    services: [],
+    works: [],
+    testimonials: [
+      {
+        id: "pending-ui-fixture",
+        customer_name: "Pending fixture reviewer",
+        address: "Synthetic area",
+        review: "Synthetic pending review",
+        rating: 5,
+        service_id: "srv-fixture",
+        service_type: "Fixture service",
+        avatar_url: "",
+        media_url: "",
+        media_type: null,
+        is_published: false,
+        submission_source: "customer",
+        moderation_status: "pending",
+        revision: 0,
+        admin_draft: null,
+        archived_at: null,
+      },
+    ],
+  };
+  const uploadPng = await sharp({
+    create: { width: 40, height: 20, channels: 3, background: "#004179" },
+  })
+    .png()
+    .toBuffer();
   const history = new Map();
   const preview = buildFullPreview({
     format: "ui-mock-only",
@@ -88,13 +124,90 @@ try {
         statuses: [],
         audit: [],
       });
-    if (
-      p === "/api/admin/bookings" ||
-      p === "/api/admin/contacts" ||
-      p.startsWith("/api/admin/content/")
-    )
+    if (p === "/api/admin/slug-proposal")
+      return json({ slug: slugBase(url.searchParams.get("title") || "") });
+    if (p === "/api/admin/service-categories")
+      return json({
+        items: [
+          { id: "srv-fixture", name: "Fixture service", is_active: true },
+        ],
+      });
+    if (p === "/api/admin/media" && method === "POST")
+      return json(
+        {
+          image: {
+            id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
+            url: "/api/media/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
+            preview_url:
+              "/api/admin/media/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/blob",
+          },
+        },
+        201,
+      );
+    if (p.startsWith("/api/admin/media/") && p.endsWith("/blob"))
+      return route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        body: uploadPng,
+      });
+    if (p.startsWith("/api/admin/content/")) {
+      const [, , , , kind, id] = p.split("/"),
+        rows = legacy[kind];
+      if (method === "GET")
+        return json({
+          items:
+            url.searchParams.get("status") === "pending"
+              ? rows.filter(
+                  (r) =>
+                    r.submission_source === "customer" &&
+                    r.moderation_status === "pending" &&
+                    !r.is_published,
+                )
+              : rows,
+          total: rows.length,
+        });
+      const body = route.request().postDataJSON(),
+        parsed = contentSchemas[kind].safeParse(body);
+      assert.ok(parsed.success, JSON.stringify(parsed.error));
+      if (method === "POST") {
+        const item = {
+          ...parsed.data,
+          id: "new-" + kind + "-fixture",
+          revision: 0,
+          admin_draft: parsed.data,
+          is_published: false,
+          is_active: false,
+          archived_at: null,
+        };
+        rows.push(item);
+        return json({ item }, 201);
+      }
+      if (method === "PUT") {
+        const item = rows.find((r) => r.id === id);
+        assert.equal(body.revision, item.revision);
+        item.admin_draft = parsed.data;
+        item.revision++;
+        return json({ item });
+      }
+    }
+    if (p === "/api/admin/bookings" || p === "/api/admin/contacts")
       return json({ items: [], total: 0 });
-    if (p === "/api/admin/service-categories") return json({ items: [] });
+    if (p === "/api/admin/updates")
+      return json({
+        server_time: new Date().toISOString(),
+        change_token: "cms-ui-fixture",
+        unread: 0,
+        items: [],
+        latest_cursor: null,
+        read_state: "this-browser",
+      });
+    if (p === "/api/admin/analytics")
+      return json({
+        period: "day",
+        points: [],
+        range_label: "Last 30 calendar days",
+        time_zone: "Asia/Dhaka",
+      });
     if (p === "/api/admin/cms/documents")
       return json({
         definitions: catalog.documents.map((d) => ({
@@ -195,7 +308,7 @@ try {
   assert.equal((await cms.textContent()).includes("[object Object]"), false);
   const output = path.resolve(process.env.ADMIN_UI_OUTPUT || "work/cms-ui");
   await mkdir(output, { recursive: true });
-  for (const width of [375, 768, 1440]) {
+  for (const width of [375, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await cms.evaluate((el) => {
       el.scrollIntoView({ block: "start" });
@@ -240,7 +353,7 @@ try {
     .click();
   await importer.getByText(/50 eligible/).waitFor();
   await importer.getByText(/UI fixture only/).waitFor();
-  for (const width of [375, 768, 1440]) {
+  for (const width of [375, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await importer.evaluate((el) => {
       el.scrollIntoView({ block: "start" });
@@ -257,6 +370,116 @@ try {
       path: path.join(output, "import-" + width + ".png"),
     });
   }
+
+  // Legacy Services/Works/Review editors remain usable under the upgraded shell.
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const services = page.getByRole("region", { name: "services management" });
+  await services.getByRole("button", { name: "Add new", exact: true }).click();
+  await services
+    .getByLabel("Service title")
+    .fill("Synthetic service regression");
+  await services
+    .getByLabel("Short description")
+    .fill("Synthetic short description");
+  await services
+    .getByLabel("Full description")
+    .fill("Synthetic full description");
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll("label")).some(
+      (l) =>
+        l.textContent.startsWith("URL slug") &&
+        l.querySelector("input")?.value === "synthetic-service-regression",
+    ),
+  );
+  await services
+    .getByRole("button", { name: "Preview draft", exact: true })
+    .click();
+  await services
+    .getByRole("button", { name: "Save draft", exact: true })
+    .click();
+  await services
+    .getByRole("heading", { name: "services (1)", exact: true })
+    .waitFor();
+  await page.getByRole("button", { name: "works", exact: true }).click();
+  const works = page.getByRole("region", { name: "works management" });
+  await works.getByRole("button", { name: "Add new", exact: true }).click();
+  await works.getByLabel("Project title").fill("এসি ব্রাউজার প্রকল্প");
+  await works.getByLabel("Service Category").selectOption("srv-fixture");
+  await works
+    .getByLabel("Description", { exact: true })
+    .fill("Synthetic legacy upload regression");
+  await works.getByLabel("Upload from device").setInputFiles({
+    name: "synthetic-device.png",
+    mimeType: "image/png",
+    buffer: uploadPng,
+  });
+  await works.getByAltText("Uploaded image preview").waitFor();
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll("label")).some(
+      (l) =>
+        l.textContent.startsWith("URL slug") &&
+        /^item-[a-f0-9]{12}$/.test(l.querySelector("input")?.value || ""),
+    ),
+  );
+  for (const width of [375, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.ok(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      "Legacy upload overflow " + width,
+    );
+    await page.screenshot({
+      path: path.join(output, "legacy-upload-" + width + ".png"),
+    });
+  }
+  await works.getByRole("button", { name: "Save draft", exact: true }).click();
+  await works
+    .getByRole("heading", { name: "works (1)", exact: true })
+    .waitFor();
+  assert.equal(legacy.works[0].admin_draft.service_id, "srv-fixture");
+  assert.equal(legacy.works[0].is_published, false);
+  await page.getByRole("button", { name: "testimonials", exact: true }).click();
+  const testimonials = page.getByRole("region", {
+    name: "testimonials management",
+  });
+  await testimonials
+    .getByRole("button", { name: "Pending Review", exact: true })
+    .click();
+  await testimonials
+    .getByRole("button", { name: "Edit draft", exact: true })
+    .click();
+  await testimonials
+    .getByLabel("City / area (optional, public after approval)")
+    .fill("Synthetic Dhaka");
+  await testimonials
+    .getByRole("button", { name: "Preview draft", exact: true })
+    .click();
+  await testimonials
+    .getByRole("button", { name: "Save draft", exact: true })
+    .click();
+  await testimonials
+    .getByRole("heading", { name: "testimonials (1)", exact: true })
+    .waitFor();
+  assert.equal(legacy.testimonials[0].admin_draft.address, "Synthetic Dhaka");
+  assert.equal(legacy.testimonials[0].is_published, false);
+  assert.equal(legacy.testimonials[0].moderation_status, "pending");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page
+    .getByRole("button", { name: "Use dark mode", exact: true })
+    .click();
+  for (const width of [375, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.ok(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      "Legacy dark-theme overflow " + width,
+    );
+    await page.screenshot({
+      path: path.join(output, "legacy-dark-" + width + ".png"),
+    });
+  }
   assert.deepEqual(errors, []);
   assert.ok(
     requests.includes(
@@ -264,7 +487,7 @@ try {
     ),
   );
   console.log(
-    "PASS: mocked CMS edit/preview/save/publish/unpublish and complete import preview at 375/768/1440. No database was connected or modified.",
+    "PASS: mocked CMS edit/preview/save/publish/unpublish, complete import preview, legacy Services/Works drafts, dynamic categories/slugs/device upload and Pending Review location edits at 375/390/768/1440. No database was connected or modified.",
   );
 } finally {
   await browser.close();

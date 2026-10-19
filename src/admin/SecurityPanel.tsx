@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { adminRequest, Feedback, ui, type Row } from "./ui";
+import { bdDate } from "./operations-model";
 export default function SecurityPanel({ onLogout }: { onLogout: () => void }) {
   const [sessions, setSessions] = useState<Row[]>([]),
     [audit, setAudit] = useState<Row[]>([]),
@@ -47,7 +48,7 @@ export default function SecurityPanel({ onLogout }: { onLogout: () => void }) {
       <section className={ui.card + " space-y-4"}>
         <h2 className="text-lg font-bold">Admin security</h2>
         <p className="text-sm text-slate-500">
-          One trusted owner account is configured on the server. Sessions expire
+          One trusted owner account is maintained on the server. Sessions expire
           after 30 minutes idle or 8 hours maximum. Credential or session-secret
           rotation invalidates existing sessions.
         </p>
@@ -79,8 +80,8 @@ export default function SecurityPanel({ onLogout }: { onLogout: () => void }) {
         {sessions.map((s, i) => (
           <p key={i} className="text-sm">
             {s.current ? "This session" : "Other session"} · Last active{" "}
-            {new Date(String(s.last_seen_at)).toLocaleString()} · Expires{" "}
-            {new Date(String(s.expires_at)).toLocaleString()}
+            {bdDate(String(s.last_seen_at))} · Expires{" "}
+            {bdDate(String(s.expires_at))} · BDT
           </p>
         ))}
       </section>
@@ -96,8 +97,8 @@ export default function SecurityPanel({ onLogout }: { onLogout: () => void }) {
             className="break-words border-t border-[#DCE3E8] pt-3 text-sm"
           >
             {String(item.entity).replaceAll("_", " ")} · {String(item.action)} ·
-            Revision {String(item.revision)} ·{" "}
-            {new Date(String(item.created_at)).toLocaleString()}
+            Revision {String(item.revision)} · {bdDate(String(item.created_at))}{" "}
+            · BDT
           </p>
         ))}
         {!audit.length && (
