@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./admin.css";
 import OperationsPanel from "./OperationsPanel";
 import SecurityPanel from "./SecurityPanel";
@@ -122,6 +122,7 @@ export default function AdminApp() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const refreshInFlight = useRef(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   function refreshView() {
     if (canLeaveAdmin()) {
@@ -135,9 +136,13 @@ export default function AdminApp() {
       .catch(() => setAuthenticated(false))
       .finally(() => setChecking(false));
   }, []);
-  async function load() {
-    setRefreshing(true);
-    setError("");
+  async function load(silent = false) {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
+    if (!silent) {
+      setRefreshing(true);
+      setError("");
+    }
     try {
       const [a, b, c] = await Promise.all([
         request("/overview"),
@@ -148,13 +153,27 @@ export default function AdminApp() {
       setBookings(b.items);
       setContacts(c.items);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unable to load dashboard.");
+      if (!silent) setError(e instanceof Error ? e.message : "Unable to load dashboard.");
     } finally {
-      setRefreshing(false);
+      refreshInFlight.current = false;
+      if (!silent) setRefreshing(false);
     }
   }
   useEffect(() => {
-    if (authenticated) void load();
+    if (!authenticated) return;
+    void load();
+    const refreshVisibleData = () => {
+      if (document.visibilityState !== "visible" || !navigator.onLine) return;
+      void load(true);
+    };
+    const interval = window.setInterval(refreshVisibleData, 20_000);
+    window.addEventListener("focus", refreshVisibleData);
+    window.addEventListener("online", refreshVisibleData);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshVisibleData);
+      window.removeEventListener("online", refreshVisibleData);
+    };
   }, [authenticated]);
   async function login(e: React.FormEvent) {
     e.preventDefault();
